@@ -21,22 +21,26 @@
   config = {
 	# Shell config
 	sh.zsh.enable = true;
+	sh.aliases.enable = true;
+	sh.env-vars.enable = true;
 
-	#Desktop apps
+	# Desktop apps
 	apps.godot.enable = true;
 	apps.spotify.enable = true;
 	apps.kitty.enable = true;
 
-	#Fonts
+	# Fonts
 	fonts.nerd-fonts-caskaydia-cove.enable = true;
 
-	#Themes
+	# Themes
 	themes.godot.enable = true;
 
-	#Tools
+	# Tools
 	tools.cli.fastfetch.enable = true;
 	tools.cli.starship.enable = true;
 	tools.cli.zoxide.enable = true;
+
+	tools.editors.neovim.enable = true;
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 

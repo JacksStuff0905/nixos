@@ -6,8 +6,8 @@
 	};
 
 	config = lib.mkIf config.dev-utils.neovim.enable {
-		  environment.systemPackages = with pkgs; [
-			neovim
-		  ];
+		  programs.neovim = {
+			enable = true;
+		  };
 	};
 }
