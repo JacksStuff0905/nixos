@@ -15,7 +15,7 @@
 			settings = {
 				"$schema" = ''https://starship.rs/config-schema.json'';
 
-				format = lib.concatStrings = [
+				format = lib.concatStrings [
 					''[ ](fg:bg_color1)''
 					''$os''
 					''$username''
