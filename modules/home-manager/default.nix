@@ -36,6 +36,7 @@
 	#Tools
 	tools.cli.fastfetch.enable = true;
 	tools.cli.starship.enable = true;
+	tools.cli.zoxide.enable = true;
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 
