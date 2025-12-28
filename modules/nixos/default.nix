@@ -2,20 +2,23 @@
 
 {
 	imports = [
-	      ../../modules/nixos/temp.nix
-	      ../../modules/nixos/bootloader
-	      ../../modules/nixos/dev-utils
+	      ./bootloader
+	      ./dev-utils
+	      ./sh
 	];
 
 
   config = {
+	  # Bootloader
 	  bootloader.grub.enable = true;
 
 	  # Developer utilities
 	  dev-utils.gnumake.enable = true;
 	  dev-utils.neovim.enable = true;	
 
-
+	  # Shell config
+	  sh.aliases.enable = true;
+	  sh.zsh.enable = true;
 
 	  # Use latest kernel.
 	  boot.kernelPackages = pkgs.linuxPackages_latest;

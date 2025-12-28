@@ -6,6 +6,7 @@
 		./fonts
 		./themes
 		./tools
+		./sh
 	];
 
   options.default = {
@@ -18,22 +19,23 @@
   };
 
   config = {
-	programs.zsh.enable = true;
+	# Shell config
+	sh.zsh.enable = true;
 
-		#Desktop apps
-		apps.godot.enable = true;
-		apps.spotify.enable = true;
-		apps.kitty.enable = true;
+	#Desktop apps
+	apps.godot.enable = true;
+	apps.spotify.enable = true;
+	apps.kitty.enable = true;
 
-		#Fonts
-		fonts.nerd-fonts-caskaydia-cove.enable = true;
+	#Fonts
+	fonts.nerd-fonts-caskaydia-cove.enable = true;
 
-		#Themes
-		themes.godot.enable = true;
+	#Themes
+	themes.godot.enable = true;
 
-		#Tools
-		tools.cli.fastfetch.enable = true;
-		tools.cli.starship.enable = true;
+	#Tools
+	tools.cli.fastfetch.enable = true;
+	tools.cli.starship.enable = true;
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 

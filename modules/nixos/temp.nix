@@ -3,8 +3,6 @@
 {
 	users.groups.nixos = {};
 
-	programs.zsh.enable = true;
-
 	users.users.jacek = {
 		isNormalUser = true;
 		extraGroups = [ "wheel" "nixos" ];
