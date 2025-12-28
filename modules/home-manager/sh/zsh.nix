@@ -1,4 +1,4 @@
-{config, lib, ...}:
+{config, lib, pkgs, ...}:
 
 {
 	options.sh.zsh = {
@@ -25,12 +25,13 @@
 		programs.zsh = {
 			enable = true;
 
-			zplug = {
-				enable = true;
-				plugins = [
-					{ name = "jeffreytse/zsh-vi-mode"; }
-				];
-			};
+			plugins = [
+				{
+					name = "zsh-vi-mode";
+					src = pkgs.zsh-vi-mode;
+					file = "share/zsh-vi-mode/zsh-vi-mode.zsh";
+				}
+			];
 		};
 	};
 }
