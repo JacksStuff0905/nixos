@@ -7,6 +7,7 @@
 		./themes
 		./tools
 		./sh
+		./srv
 	];
 
   options.default = {
@@ -28,6 +29,11 @@
 	apps.godot.enable = true;
 	apps.spotify.enable = true;
 	apps.kitty.enable = true;
+	apps.keepass.enable = true;
+
+	# Services
+	srv.syncthing.enable = true;
+
 
 	# Fonts
 	fonts.nerd-fonts-caskaydia-cove.enable = true;
@@ -40,7 +46,11 @@
 	tools.cli.starship.enable = true;
 	tools.cli.zoxide.enable = true;
 
-	tools.editors.neovim.enable = true;
+	# Editors
+	tools.editors.neovim = {
+		enable = true;
+		profile = "full";
+	};
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 

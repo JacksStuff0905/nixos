@@ -32,6 +32,12 @@
 					file = "share/zsh-vi-mode/zsh-vi-mode.zsh";
 				}
 			];
+			
+			initContent = lib.mkIf config.programs.fastfetch.enable ''
+				if [[ -o interactive ]] && [[ -z "$VSCODE_SHELL_INTEGRATION" ]]; then
+					fastfetch
+				fi	
+			'';
 		};
 	};
 }

@@ -14,6 +14,9 @@
 			    "source": "~/.config/fastfetch/logo.txt",
 			    "type": "file"   
 			  },*/
+			  logo = {
+				#type = "small";
+			  };
 			  modules = [
 			    "break"
 			    "break"

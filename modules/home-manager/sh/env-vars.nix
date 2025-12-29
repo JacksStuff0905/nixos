@@ -10,7 +10,6 @@
 			# Neovim
 			(lib.optionalAttrs config.programs.neovim.enable {
 				MANPAGER = "nvim +Man!";
-				EDITOR = "$(which nvim)";
 			})
 		];
 	};
