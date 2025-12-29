@@ -1,7 +1,9 @@
-{config, lib, pkgs, ...}:
+{config, lib, pkgs, util, ...}:
 
 let
   profile = config.tools.editors.neovim.profile;
+  plugins-dir = ./plugins;
+  load-plugins = profile: (import ./load-plugins.nix { inherit util; dir = plugins-dir; vimPlugins = pkgs.vimPlugins; inherit profile; });
 in 
 {
 	options.tools.editors.neovim = {
@@ -19,19 +21,18 @@ in
 			({
 				enable = true;
 				defaultEditor = true;
+				plugins = (load-plugins "");
 			})
 
 			# Basic-only configs
 			(lib.mkIf (profile == "basic") {
-
+				plugins = (load-plugins "basic");
 			})
 
 			# Full-only configs
 			(lib.mkIf (profile == "full") {
 				withNodeJs = true;
-				plugins = with pkgs.vimPlugins; [
-				    #lazy-nvim
-				];
+				plugins = (load-plugins "full");
 			})
 		];
 

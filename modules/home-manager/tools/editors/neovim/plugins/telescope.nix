@@ -1,13 +1,19 @@
-return {
+[
+	
   {
-    "nvim-telescope/telescope.nvim",
-    tag = "0.1.8",
-    -- or                              , branch = '0.1.x',
-    dependencies = { "nvim-lua/plenary.nvim" },
-  },
+	plugin = "telescope-nvim";
+	dependencies = [ "plenary-nvim" ];
+
+	keybinds = ''
+		local builtin = require("telescope.builtin")
+		vim.keymap.set("n", "<leader>fd", builtin.find_files, {})
+		vim.keymap.set("n", "<leader>gr", builtin.live_grep, {})
+	'';
+  }
+
   {
-    "nvim-telescope/telescope-ui-select.nvim",
-    config = function()
+    plugin = "telescope-ui-select-nvim";
+    config = ''
       require("telescope").setup({
         extensions = {
           ["ui-select"] = {
@@ -21,6 +27,6 @@ return {
         },
       })
       require("telescope").load_extension("ui-select")
-    end,
-  },
-}
+    '';
+  }
+]
