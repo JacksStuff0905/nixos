@@ -1,15 +1,13 @@
-return {
+[
+	"cmp-nvim-lsp"
 	{
-		"hrsh7th/cmp-nvim-lsp",
-	},
-	{
-		"L3MON4D3/LuaSnip",
-		dependencies = {
-			"saadparwaiz1/cmp_luasnip",
-			"rafamadriz/friendly-snippets",
-		},
-	},
-	--[[ {
+		plugin = "luasnip";
+		dependencies = [
+			"cmp_luasnip"
+			"friendly-snippets"
+		];
+	}
+	/* {
 		"tzachar/cmp-ai",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		lazy = false,
@@ -35,10 +33,10 @@ return {
 				run_on_every_keystroke = true,
 			})
 		end,
-	}, ]]--
+	}, */
 	{
-		"hrsh7th/nvim-cmp",
-		config = function()
+		plugin = "nvim-cmp";
+		config = ''
 			local cmp = require("cmp")
 
 			-- Load vscode-like snippets from friendly-snippets to Luasnip
@@ -80,6 +78,6 @@ return {
 					{ name = "buffer" },
 				}),
 			})
-		end,
-	},
-}
+		'';
+	}
+]

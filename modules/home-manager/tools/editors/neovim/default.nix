@@ -3,7 +3,7 @@
 let
   profile = config.tools.editors.neovim.profile;
   plugins-dir = ./plugins;
-  load-plugins = profile: (import ./load-plugins.nix { inherit util; dir = plugins-dir; vimPlugins = pkgs.vimPlugins; inherit profile; });
+  load-plugins = profile: (import ./util/load-plugins.nix { inherit lib; inherit util; dir = plugins-dir; vimPlugins = pkgs.vimPlugins; inherit profile; });
 in 
 {
 	options.tools.editors.neovim = {

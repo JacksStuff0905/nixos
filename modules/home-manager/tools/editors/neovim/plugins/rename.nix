@@ -1,7 +1,7 @@
-return {
+[
   {
-    "filipdutescu/renamer.nvim",
-    config = function()
+    plugin = "renamer-nvim";
+    config = ''
       local mappings_utils = require("renamer.mappings.utils")
       require("renamer").setup({
         -- The popup title, shown if `border` is true
@@ -44,6 +44,6 @@ return {
         -- the LSP 'textDocument/rename' raw response as its parameter.
         handler = nil,
       })
-    end,
-  },
-}
+    '';
+  }
+]
