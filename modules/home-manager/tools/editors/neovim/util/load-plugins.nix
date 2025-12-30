@@ -33,14 +33,14 @@ let
 
 	parse-plugin =
 		plugin:
-			if (builtins.isString plugin) then
-				[{
-					plugin = vimPlugins.${plugin};
-					config = (default-config plugin);
-					type = "lua";
-				}]
-			else
-				if ((plugin.profile or "") == profile) then
+			if ((plugin.profile or "") == profile) then
+				if (builtins.isString plugin) then
+					[{
+						plugin = vimPlugins.${plugin};
+						config = (default-config plugin);
+						type = "lua";
+					}]
+				else
 					let
 						opts = (parse-opts plugin);
 						config =
@@ -59,8 +59,8 @@ let
 						type = "lua";
 						plugin = vimPlugins.${plugin.plugin};
 					}]
-				else
-					[];
+			else
+				[];
 
 	load-plugin =
 		plugin:
@@ -85,6 +85,6 @@ let
 		"lua"
 	];
 			
-	file-list = (util.get_import_dir plugins-dir ignore);
+	file-list = (util.get-import-dir plugins-dir ignore);
 in
 (builtins.concatMap import-file file-list)

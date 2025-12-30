@@ -6,7 +6,7 @@ let
   ];
 in
 {
-	imports = util.get_import_dir ./. file_to_not_import;
+	imports = util.get-import-dir ./. file_to_not_import;
 
 	options.themes.godot = {
 		enable = lib.mkEnableOption "Enable godot theme module";

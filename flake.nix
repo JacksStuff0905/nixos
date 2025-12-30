@@ -16,7 +16,8 @@
 	  pkgs = import nixpkgs { inherit system; };
 
 	util = {
-	  	get_import_dir = dir: ignore: import ./util/get_import_dir.nix {lib = pkgs.lib; dir = dir; ignore = ignore; self = import ./util/get_import_dir.nix;};
+	  	get-import-dir = dir: ignore: import ./util/get-import-dir.nix {lib = pkgs.lib; dir = dir; ignore = ignore; self = import ./util/get-import-dir.nix;};
+	  	get-files-dir = dir: ignore: import ./util/get-files-dir.nix {lib = pkgs.lib; dir = dir; ignore = ignore; self = import ./util/get-files-dir.nix;};
 	};
   in
   {

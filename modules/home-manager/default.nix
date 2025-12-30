@@ -50,6 +50,7 @@
 	tools.editors.neovim = {
 		enable = true;
 		profile = "full";
+		#debug.print-config = true;
 	};
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";

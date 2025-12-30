@@ -45,5 +45,10 @@
         handler = nil,
       })
     '';
+
+    keybinds = ''
+	-- Configure renaming
+	vim.keymap.set("n", "<leader>rn", require("renamer").rename, { desc = "Rename" })
+    '';
   }
 ]

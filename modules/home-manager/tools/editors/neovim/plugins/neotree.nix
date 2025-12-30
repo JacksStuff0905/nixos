@@ -19,5 +19,9 @@
 				},
 			},
 		'';
+		keybinds = ''
+			-- Configure neotree
+			vim.keymap.set("n", "<leader>fs", ":Neotree filesystem toggle left<CR>", {})
+		'';
 	}
 ]
