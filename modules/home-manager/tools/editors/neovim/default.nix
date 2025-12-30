@@ -3,8 +3,19 @@
 let
   profile = config.tools.editors.neovim.profile;
   plugins-dir = ./plugins;
-  load-plugins = profile: (import ./util/load-plugins.nix { inherit lib; inherit util; dir = plugins-dir; vimPlugins = pkgs.vimPlugins; inherit profile; });
-  combine-configs = configs: (import ./util/combine-configs.nix {inherit configs; inherit lib;});
+  load-plugins = profile: (import ./util/load-plugins.nix {
+    inherit lib;
+    inherit util;
+    dir = plugins-dir;
+    vimPlugins = pkgs.vimPlugins;
+    vimUtils = pkgs.vimUtils;
+    inherit profile;
+    print = config.tools.editors.neovim.debug.print-plugins;
+  });
+  combine-configs = configs: (import ./util/combine-configs.nix {
+    inherit configs;
+    inherit lib;
+  });
 in 
 {
 	options.tools.editors.neovim = {
@@ -16,7 +27,8 @@ in
 		};
 		debug = {
 			print-config = lib.mkEnableOption "Show the full neovim config when building";
-		};
+      print-plugins = lib.mkEnableOption "Show the loaded neovim plugin list when building";
+	};
 	};
 
 	config = let
