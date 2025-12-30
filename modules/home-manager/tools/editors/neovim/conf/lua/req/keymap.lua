@@ -28,7 +28,7 @@ vim.keymap.set("n", "<leader>nh", ":noh<CR>", { desc = "Hide highlight" })
 
 
 -- Configure git
---[[ local gitsigns = require("gitsigns")
+local gitsigns = require("gitsigns")
 vim.keymap.set("n", "<leader>sh", gitsigns.stage_hunk, { desc = "Stage hunk" })
 vim.keymap.set("n", "<leader>sb", gitsigns.stage_buffer, { desc = "Stage buffer" })
 
@@ -36,4 +36,3 @@ vim.keymap.set("n", "<leader>rh", gitsigns.reset_hunk, { desc = "Reset hunk" })
 vim.keymap.set("n", "<leader>rb", gitsigns.reset_buffer, { desc = "Reset buffer" })
 
 vim.keymap.set("n", "<leader>td", gitsigns.toggle_word_diff, { desc = "Toggle word diff" })
-]]--

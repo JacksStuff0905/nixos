@@ -1,0 +1,4 @@
+[
+  "gitsigns-nvim"
+  "vim-fugitive"
+]
