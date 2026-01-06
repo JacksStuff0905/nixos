@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 {
 	imports = [
@@ -8,6 +8,8 @@
 		./tools
 		./sh
 		./srv
+
+                inputs.nvim-nix.homeManagerModules.default
 	];
 
   options.default = {
@@ -21,38 +23,37 @@
 
   config = {
 	# Shell config
-	sh.zsh.enable = true;
-	sh.aliases.enable = true;
-	sh.env-vars.enable = true;
+	sh.zsh.enable = lib.mkDefault true;
+	sh.aliases.enable = lib.mkDefault true;
+	sh.env-vars.enable = lib.mkDefault true;
 
 	# Desktop apps
-	apps.godot.enable = true;
-	apps.spotify.enable = true;
-	apps.kitty.enable = true;
-	apps.keepass.enable = true;
+	apps.game-engines.godot.enable = lib.mkDefault true;
+	apps.media.music.spotify.enable = lib.mkDefault true;
+	apps.terminals.kitty.enable = lib.mkDefault true;
+	apps.secrets.keepass.enable = lib.mkDefault true;
 
 	# Services
-	srv.syncthing.enable = true;
+	srv.syncthing.enable = lib.mkDefault true;
 
 
 	# Fonts
-	fonts.nerd-fonts-caskaydia-cove.enable = true;
+	fonts.nerd-fonts-caskaydia-cove.enable = lib.mkDefault true;
 
 	# Themes
-	themes.godot.enable = true;
+	themes.godot.enable = lib.mkDefault true;
 
 	# Tools
-	tools.cli.fastfetch.enable = true;
-	tools.cli.starship.enable = true;
-	tools.cli.zoxide.enable = true;
+	tools.cli.fastfetch.enable = lib.mkDefault true;
+	tools.cli.starship.enable = lib.mkDefault true;
+	tools.cli.zoxide.enable = lib.mkDefault true;
+        tools.cli.git.enable = lib.mkDefault true;
 
-	# Editors
-	tools.editors.neovim = {
-		enable = true;
-		profile = "full";
-		#debug.print-config = true;
-		debug.print-plugins = true;
-	};
+        programs.nvim-nix = {
+                enable = true;
+                profile = "full";
+        };
+
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 

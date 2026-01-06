@@ -8,6 +8,8 @@
 	url = "github:nix-community/home-manager";
 	inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nvim-nix.url = "github:JacksStuff0905/nvim-nix";
   };
 
   outputs = { self, nixpkgs, home-manager, ... }@inputs: 
@@ -30,6 +32,7 @@
 				inputs.home-manager.nixosModules.default {
 					home-manager.extraSpecialArgs = { inherit util;};
 				}
+                                inputs.nvim-nix.nixosModules.default
 			];
 		};
   	};

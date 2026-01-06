@@ -12,9 +12,12 @@
 	  # Bootloader
 	  bootloader.grub.enable = true;
 
+          # Filesystems
+          boot.supportedFilesystems = [ "ntfs" ];
+
 	  # Developer utilities
 	  dev-utils.gnumake.enable = true;
-	  dev-utils.neovim.enable = true;	
+	  dev-utils.neovim.enable = false;	
 
 	  # Shell config
 	  sh.aliases.enable = true;
@@ -28,6 +31,11 @@
 
 	  # Enable flakes
 	  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+          programs.nvim-nix = {
+                  enable = true;
+                  profile = "basic";
+          };
 
 	  # Set your time zone.
 	  time.timeZone = "Europe/Warsaw";
