@@ -15,7 +15,7 @@ in
 
 	config = lib.mkIf config.apps.game-engines.godot.enable {
 		home.packages = with pkgs; [
-			if (cfg.mono-support) then godot-mono else godot
+			(if (cfg.mono-support) then godot-mono else godot)
 		];
 	};
 }
