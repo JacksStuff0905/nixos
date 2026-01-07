@@ -7,6 +7,10 @@ let
                         cfg.font-override.font
                 else
                         "monospace";
+
+        available-themes = lib.mapAttrsToList (name: type: lib.removeSuffix ".nix" name) (builtins.readDir ./themes);
+
+        current-theme = import (./themes + ("/" + cfg.theme.name + ".nix"));
 in
 {
 	options.apps.terminals.kitty = {
@@ -16,6 +20,17 @@ in
                         font = lib.mkOption {
                                 type = lib.types.str;
                                 default = "Caskaydia Cove Nerd Font";
+                        };
+                };
+
+                theme = {
+                        name = lib.mkOption {
+                                type = lib.types.enum available-themes;
+                                default = config.themes.theme.name;
+                        };
+                        style = lib.mkOption {
+                                type = lib.types.enum ["light" "dark"];
+                                default = config.themes.theme.style;
                         };
                 };
 
@@ -60,6 +75,7 @@ in
 			enable = true;
 			settings = lib.mkMerge [
                                 cfg.settings
+                                current-theme
                         ];
 
                         font = {

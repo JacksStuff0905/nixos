@@ -41,7 +41,10 @@
 	fonts.enable = lib.mkDefault true;
 
 	# Themes
-	themes.godot.enable = lib.mkDefault true;
+	themes.theme = lib.mkDefault {
+                name = "godot";
+                style = "dark";
+        };
 
 	# Tools
 	tools.cli.fastfetch.enable = lib.mkDefault true;
