@@ -32,10 +32,6 @@
 	  # Enable flakes
 	  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-          programs.nvim-nix = {
-                  enable = true;
-                  profile = "basic";
-          };
 
 	  # Set your time zone.
 	  time.timeZone = "Europe/Warsaw";

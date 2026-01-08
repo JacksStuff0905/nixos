@@ -8,8 +8,6 @@
 		./tools
 		./sh
 		./srv
-
-                inputs.nvim-nix.homeManagerModules.default
 	];
 
   options.default = {
@@ -52,10 +50,7 @@
 	tools.cli.zoxide.enable = lib.mkDefault true;
         tools.cli.git.enable = lib.mkDefault true;
 
-        programs.nvim-nix = {
-                enable = true;
-                profile = "full";
-        };
+        tools.editors.neovim.enable = lib.mkDefault true;
 
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
