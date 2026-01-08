@@ -63,7 +63,7 @@ local theme = lush(function(injected_functions)
 		--
 		-- ColorColumn    { }, -- Columns set with 'colorcolumn'
 		-- Conceal        { }, -- Placeholder characters substituted for concealed text (see 'conceallevel')
-		Cursor        { fg = "#000000", bg = "#FF0000" }, -- Character under the cursor
+		Cursor        { fg = "#000000", bg = "#F8F8F0" }, -- Character under the cursor
 		-- CurSearch      { }, -- Highlighting a search pattern under the cursor (see 'hlsearch')
 		-- lCursor        { }, -- Character under the cursor when |language-mapping| is used (see 'guicursor')
 		-- CursorIM       { }, -- Like Cursor, but used when in IME mode |CursorIM|
@@ -96,7 +96,7 @@ local theme = lush(function(injected_functions)
 		-- MsgSeparator   { }, -- Separator for scrolled messages, `msgsep` flag of 'display'
 		MoreMsg        { fg="#E6DB74" }, -- |more-prompt|
 		NonText        { fg="#394354" }, -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-		Normal         { fg="#CDCFD2", bg="#FF2229" }, -- Normal text
+		Normal         { fg="#CDCFD2", bg="#1D2229" }, -- Normal text
 		NormalFloat    { fg=Normal.fg }, -- Normal text in floating windows.
 		-- FloatBorder    { }, -- Border of floating windows.
 		-- FloatTitle     { }, -- Title of floating windows.

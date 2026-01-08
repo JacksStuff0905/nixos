@@ -31,23 +31,21 @@ in
                 };
         };
         
-        config.programs.nvf = {
-                enable = cfg.enable;
-                settings.nvim-nix = lib.mkIf cfg.enable {
+        config.programs.nvim-nix = lib.mkIf cfg.enable {
+                enable = true;
 
-                        profile = cfg.profile;
+                profile = cfg.profile;
 
-                        themes = {
-                                enable = true;
+                themes = {
+                        enable = true;
 
-                                theme = {
-                                        name = (builtins.trace cfg.theme.name cfg.theme.name);
-                                        style = cfg.theme.style;
+                        theme = {
+                                name = (builtins.trace cfg.theme.name cfg.theme.name);
+                                style = cfg.theme.style;
 
-                                        path = (if (builtins.elem cfg.theme.name available-themes) then
-                                                ./themes + ("/" + cfg.theme.name)
-                                        else null);
-                                };
+                                path = (if (builtins.elem cfg.theme.name available-themes) then
+                                        ./themes + ("/" + cfg.theme.name)
+                                else null);
                         };
                 };
         };
