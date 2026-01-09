@@ -52,6 +52,11 @@
 
         tools.editors.neovim.enable = lib.mkDefault true;
 
+        # Allow unfree packages
+        nixpkgs.config = {
+                allowUnfree = true;
+        };
+
 
 	  default.homeDirectory = lib.mkDefault "/home/${config.default.username}";
 

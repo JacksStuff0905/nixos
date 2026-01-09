@@ -1,7 +1,7 @@
 {config, pkgs, lib, inputs, ...}:
 
 let
-        available-themes = builtins.attrNames (builtins.readDir ./themes);
+        available-themes = if (builtins.pathExists ./themes) then builtins.attrNames (builtins.readDir ./themes) else [];
 
         cfg = config.tools.editors.neovim;
 in
@@ -40,7 +40,7 @@ in
                         enable = true;
 
                         theme = {
-                                name = (builtins.trace cfg.theme.name cfg.theme.name);
+                                name = cfg.theme.name;
                                 style = cfg.theme.style;
 
                                 path = (if (builtins.elem cfg.theme.name available-themes) then

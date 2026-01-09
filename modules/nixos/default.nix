@@ -26,6 +26,12 @@
 	  # Use latest kernel.
 	  boot.kernelPackages = pkgs.linuxPackages_latest;
 
+          # Allow unfree packages
+          nixpkgs.config = {
+                allowUnfree = true;
+          };
+
+
 	  # Enable networking
 	  networking.networkmanager.enable = true;
 
