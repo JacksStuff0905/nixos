@@ -6,11 +6,6 @@
 		../../modules/home-manager/default.nix
 	];
 
-  # Allow unfree packages
-  nixpkgs.config = {
-	allowUnfree = true;
-  };
-
 	default.username = "jacek";
 
 
