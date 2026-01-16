@@ -49,6 +49,7 @@
 	tools.cli.starship.enable = lib.mkDefault true;
 	tools.cli.zoxide.enable = lib.mkDefault true;
         tools.cli.git.enable = lib.mkDefault true;
+        tools.cli.nrun.enable = lib.mkDefault true;
 
         tools.editors.neovim.enable = lib.mkDefault true;
 
