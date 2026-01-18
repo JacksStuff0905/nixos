@@ -2,7 +2,6 @@
 
 {
 	imports = [
-		../../modules/home-manager/temp.nix
 		../../modules/home-manager/default.nix
 	];
 

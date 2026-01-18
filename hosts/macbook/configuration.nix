@@ -9,10 +9,11 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       inputs.home-manager.nixosModules.default
-      ../../modules/nixos/temp.nix
       ../../modules/nixos/bootloader
       ../../modules/nixos/dev-utils
       ../../modules/nixos/sh
+      ../../modules/nixos/de
+      ../../modules/nixos/dm
     ];
 
 
@@ -29,7 +30,24 @@
   dev-utils.gnumake.enable = true;
   dev-utils.neovim.enable = false;	
 
+  # GUI
+  de.gnome.enable = true;
+  dm.gdm.enable = true;
+
+  # Users
+	users.groups.nixos = {};
+
+	users.users.jacek = {
+		isNormalUser = true;
+		extraGroups = [ "wheel" "nixos" ];
+		shell = pkgs.zsh;
+	};
+
   # Virtualization
+  dev-utils.virtualization.docker = {
+    enable = true;	
+    users = ["jacek"];
+  };
 
   # Shell config
   sh.aliases.enable = true;
@@ -76,6 +94,17 @@
 
   # Configure console keymap
   console.keyMap = "pl2";
+
+  # Garbage collect
+	nix.gc.automatic = true;
+
+  # HM integration
+	home-manager = {
+		extraSpecialArgs = {inherit inputs;};
+		users = {
+			"jacek" = import ./home.nix;
+		};
+	};
 
   system.stateVersion = "25.11";
 }
