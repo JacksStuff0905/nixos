@@ -6,6 +6,9 @@
   ...
 }:
 
+let
+  stacks-device = "192.168.10.6:/mnt/Main4TB/VM-Data/Portainer";
+in
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
@@ -37,6 +40,14 @@
       "dmask=0022"
     ];
   };
+
+  # Mount stacks NFS
+  fileSystems."/data/stacks" = {
+    device = "${stacks-device}";
+    fsType = "nfs";
+    options = [ "nfsvers=4.2" ];
+  };
+  boot.supportedFilesystems = [ "nfs" ];
 
   swapDevices = [ ];
 

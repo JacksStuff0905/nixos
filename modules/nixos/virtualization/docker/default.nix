@@ -11,12 +11,12 @@ let
     "default.nix"
   ];
 
-  cfg = config.dev-utils.virtualization.docker;
+  cfg = config.virtualization.docker;
 in
 {
   imports = util.get-import-dir ./. file_to_not_import;
 
-  options.dev-utils.virtualization.docker = {
+  options.virtualization.docker = {
     enable = lib.mkEnableOption "Enable docker module";
     rootless = lib.mkOption {
       type = lib.types.bool;
@@ -25,6 +25,11 @@ in
     users = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
+    };
+
+    use-for-oci = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
     };
   };
 
@@ -41,5 +46,7 @@ in
     };
 
     users.groups.docker.members = cfg.users;
+
+    virtualisation.oci-containers.backend = lib.mkIf cfg.use-for-oci "docker";
   };
 }

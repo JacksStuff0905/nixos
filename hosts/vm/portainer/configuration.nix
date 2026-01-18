@@ -18,6 +18,8 @@ in
       ../../../modules/nixos/de
       ../../../modules/nixos/dm
       ../../../modules/nixos/srv
+      ../../../modules/nixos/virtualization
+      ./stacks
     ];
 
 
@@ -37,10 +39,6 @@ in
   dev-utils.gnumake.enable = true;
   dev-utils.neovim.enable = false;	
 
-  # GUI
-  #de.gnome.enable = true;
-  #dm.gdm.enable = true;
-
   # Users
 	users.groups.nixos = {};
 
@@ -51,9 +49,14 @@ in
 	};
 
   # Virtualization
-  dev-utils.virtualization.${main-user} = {
+  virtualization.docker = {
     enable = true;	
     users = ["${main-user}"];
+  };
+
+  # Docker stacks
+  virtualization.docker.stacks = {
+    nginx-proxy-manager.enable = true;
   };
 
   # Shell config
