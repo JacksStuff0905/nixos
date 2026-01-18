@@ -24,8 +24,8 @@ in
         PGID = "3004";
       };
       volumes = [
-        "/data/stacks/${name}/data:/data"
-        "/data/stacks/${name}/letsencrypt:/etc/letsencrypt"
+        "/data/stacks/remote/${name}/data:/data"
+        "/data/stacks/remote/${name}/letsencrypt:/etc/letsencrypt"
       ];
     };
   };

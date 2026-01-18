@@ -42,7 +42,7 @@ in
   };
 
   # Mount stacks NFS
-  fileSystems."/data/stacks" = {
+  fileSystems."/data/stacks/remote" = {
     device = "${stacks-device}";
     fsType = "nfs";
     options = [ "nfsvers=4.2" ];
