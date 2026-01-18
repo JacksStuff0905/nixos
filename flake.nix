@@ -35,6 +35,18 @@
                                 inputs.nvim-nix.nixosModules.default
 			];
 		};
+
+		vm-portainer = nixpkgs.lib.nixosSystem {
+			specialArgs = {inherit inputs; inherit util;};
+
+			modules = [
+				./hosts/vm/portainer/configuration.nix
+				inputs.home-manager.nixosModules.default {
+					home-manager.extraSpecialArgs = { inherit util;};
+				}
+                                inputs.nvim-nix.nixosModules.default
+			];
+		};
   	};
   };
 }

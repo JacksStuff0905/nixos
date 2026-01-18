@@ -7,17 +7,17 @@
 }:
 
 let
-	username = "jacek";
+	username = "docker";
 	homeDirectory = "/home/${username}";
 in
 {
   imports = [
-    ../../modules/home-manager/apps
-    ../../modules/home-manager/fonts
-    ../../modules/home-manager/themes
-    ../../modules/home-manager/tools
-    ../../modules/home-manager/sh
-    ../../modules/home-manager/srv
+    ../../../modules/home-manager/apps
+    ../../../modules/home-manager/fonts
+    ../../../modules/home-manager/themes
+    ../../../modules/home-manager/tools
+    ../../../modules/home-manager/sh
+    ../../../modules/home-manager/srv
   ];
 
   config = {
@@ -25,16 +25,6 @@ in
     sh.zsh.enable = true;
     sh.aliases.enable = true;
     sh.env-vars.enable = true;
-
-    # Desktop apps
-    apps.game-engines.godot.enable = true;
-    apps.media.music.spotify.enable = true;
-    apps.terminals.kitty.enable = true;
-    apps.secrets.keepass.enable = true;
-    apps.browsers.firefox.enable = true;
-
-    # Services
-    srv.syncthing.enable = true;
 
     # Fonts
     fonts.enable = true;
