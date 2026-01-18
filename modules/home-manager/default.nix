@@ -51,6 +51,9 @@
         tools.cli.git.enable = lib.mkDefault true;
         tools.cli.nrun.enable = lib.mkDefault true;
 
+    # Virtualization
+        tools.virtualization.docker.enable = lib.mkDefault true;
+
         tools.editors.neovim.enable = lib.mkDefault true;
 
         # Allow unfree packages

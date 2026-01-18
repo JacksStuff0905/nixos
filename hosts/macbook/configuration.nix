@@ -29,6 +29,8 @@
   dev-utils.gnumake.enable = true;
   dev-utils.neovim.enable = false;	
 
+  # Virtualization
+
   # Shell config
   sh.aliases.enable = true;
   sh.zsh.enable = true;

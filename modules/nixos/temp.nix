@@ -17,6 +17,10 @@
 
 	services.xserver.enable = true;
 
+  dev-utils.virtualization.docker = {
+    enable = true;	
+    users = ["jacek"];
+  };
         
 	services.displayManager.gdm.enable = true;
 	services.desktopManager.gnome.enable = true;
