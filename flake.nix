@@ -61,7 +61,7 @@
           ];
         };
 
-        vm-portainer = nixpkgs.lib.nixosSystem {
+        vm-docker = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
             inherit util;
@@ -69,7 +69,7 @@
           };
 
           modules = [
-            ./hosts/vm/portainer/configuration.nix
+            ./hosts/vm/docker/configuration.nix
             inputs.home-manager.nixosModules.default
             {
               home-manager.extraSpecialArgs = { inherit util; inherit system; };

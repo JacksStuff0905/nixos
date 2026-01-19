@@ -7,7 +7,7 @@
 }:
 
 let
-  stacks-device = "192.168.10.6:/mnt/Main4TB/VM-Data/Portainer";
+  stacks-device = "192.168.10.6:/mnt/Main4TB/VM-Data/Docker";
 in
 {
   imports = [
