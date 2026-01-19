@@ -41,6 +41,12 @@ in
     ];
   };
 
+  # Mount docker data from hypervisor
+  fileSystems."/var/lib/docker" = {
+    device = "/dev/disk/by-uuid/aad84b24-eb0b-4425-a502-a4b8be513fe3";
+    fsType = "ext4";
+  };
+
   # Mount stacks NFS
   fileSystems."/data/stacks/remote" = {
     device = "${stacks-device}";

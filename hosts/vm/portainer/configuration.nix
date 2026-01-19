@@ -58,6 +58,7 @@ in
   virtualization.docker.stacks = {
     nginx-proxy-manager.enable = true;
     calibre.enable = true;
+    main-www-server.enable = true;
   };
 
   # Shell config

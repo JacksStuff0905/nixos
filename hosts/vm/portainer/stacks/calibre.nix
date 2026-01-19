@@ -12,6 +12,9 @@ in
   config.virtualisation.oci-containers.containers = lib.mkIf cfg.enable {
     calibre-admin = {
       image = "lscr.io/linuxserver/calibre:latest";
+
+      autoStart = false;
+
       environment = {
         PUID = "3002";
         PGID = "3004";
