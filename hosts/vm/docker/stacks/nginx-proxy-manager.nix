@@ -21,7 +21,8 @@ in
       environment = { 
         TZ = "Poland/Warsaw";
         PUID = "3002";
-        PGID = "3004";
+        PGID = "3003";
+        SKIP_CERTBOT_OWNERSHIP = "true";
       };
       volumes = [
         "/data/stacks/remote/${name}/data:/data"
