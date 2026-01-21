@@ -32,11 +32,17 @@
 					file = "share/zsh-vi-mode/zsh-vi-mode.zsh";
 				}
 			];
-			
+
+      enableCompletion = true;
 			initContent = lib.mkIf config.programs.fastfetch.enable ''
 				if [[ -o interactive ]] && [[ -z "$VSCODE_SHELL_INTEGRATION" ]]; then
 					fastfetch
 				fi	
+
+
+        # Case insensitive completions
+        zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+        zstyle ':completion:*' menu select
 			'';
 		};
 	};
