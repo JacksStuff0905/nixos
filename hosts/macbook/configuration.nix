@@ -11,6 +11,7 @@
       inputs.home-manager.nixosModules.default
       ../../modules/nixos/bootloader
       ../../modules/nixos/dev-utils
+      ../../modules/nixos/virtualization
       ../../modules/nixos/sh
       ../../modules/nixos/de
       ../../modules/nixos/dm
@@ -44,7 +45,7 @@
 	};
 
   # Virtualization
-  dev-utils.virtualization.docker = {
+  virtualization.docker = {
     enable = true;	
     users = ["jacek"];
   };
