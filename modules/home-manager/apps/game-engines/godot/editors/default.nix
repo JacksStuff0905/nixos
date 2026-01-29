@@ -19,10 +19,11 @@ in
     };
   };
 
-  config.apps.game-engines.godot.editors = lib.mkIf cfg.enable {
+  config.programs.godot-nix = lib.mkIf cfg.enable {
     settings = lib.mkMerge [
       (lib.mkIf cfg.editors.neovim.enable {
         text_editor.external.exec_path = (lib.getExe config.programs.nvf.finalPackage);
+        text_editor.external.exec_flags = ''--server {project}/server.pipe --remote-send "<C-\><C-N>:e {file}<CR>:call cursor({line},{col})<CR>"'';
         text_editor.external.use_external_editor = true;
       })
     ];

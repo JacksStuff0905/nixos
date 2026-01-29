@@ -12,6 +12,7 @@ in
 {
   imports = [
     inputs.godot-nix.homeManagerModules.default
+    ./editors
   ];
 
   options.apps.game-engines.godot = {
@@ -31,10 +32,8 @@ in
   config = lib.mkIf cfg.enable {
     programs.godot-nix = {
       enable = true;
-      mono = cfg.mono;
+      package = lib.mkIf cfg.mono pkgs.godot-mono;
       settings = cfg.settings;
-        text_editor.external.exec_path = (lib.getExe);
-        text_editor.external.use_external_editor = true;
     };
   };
 }

@@ -77,11 +77,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1769631466,
-        "narHash": "sha256-P04aAcrBOi/zu5AidiDr+Beh3V6TuFH/t7FD1lUxdsY=",
+        "lastModified": 1769712817,
+        "narHash": "sha256-+Kgtf+fRLpjzKg1T9sej1PUOOely86tb7/lm3a/iXQ0=",
         "owner": "JacksStuff0905",
         "repo": "godot-nix",
-        "rev": "549479840ecc8443bfd01752aa1eaa9e24fcbdf3",
+        "rev": "42327ea041dd50c26ce68f522a8c0b5b8aed8372",
         "type": "github"
       },
       "original": {
@@ -241,11 +241,11 @@
         "nvf": "nvf"
       },
       "locked": {
-        "lastModified": 1769709220,
-        "narHash": "sha256-oqoqVtdEBN0p724nup+NhVGquSIY653BFrZRni8eU4E=",
+        "lastModified": 1769713699,
+        "narHash": "sha256-L8HVxjYWStrXEsvXVYRwjTGGlGWVPrnLiHN/arlUzFA=",
         "owner": "JacksStuff0905",
         "repo": "nvim-nix",
-        "rev": "aa1c2961fff64d5986fd09f2ba8060990292d91a",
+        "rev": "7ccf0c5c513bd19343af8d2527b5b9082509927b",
         "type": "github"
       },
       "original": {

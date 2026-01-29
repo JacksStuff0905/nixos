@@ -10,6 +10,7 @@
     };
 
     nvim-nix.url = "github:JacksStuff0905/nvim-nix";
+    godot-nix.url = "github:JacksStuff0905/godot-nix";
   };
 
   outputs =
