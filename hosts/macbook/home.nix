@@ -27,7 +27,7 @@ in
     sh.env-vars.enable = true;
 
     # Desktop apps
-    apps.game-engines.godot.enable = true;
+    apps.game-engines.godot.enable = false; # Godot will be enabled in project shells
     apps.media.music.spotify.enable = true;
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
