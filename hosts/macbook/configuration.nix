@@ -15,6 +15,7 @@
       ../../modules/nixos/sh
       ../../modules/nixos/de
       ../../modules/nixos/dm
+      ../../modules/nixos/srv
     ];
 
 
@@ -53,6 +54,10 @@
   # Shell config
   sh.aliases.enable = true;
   sh.zsh.enable = true;
+
+  # Services
+  srv.ssh.enable = false;
+  srv.printing.enable = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
