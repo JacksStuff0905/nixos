@@ -32,6 +32,13 @@ in
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;
+    apps.launchers = {
+      games = {
+        lutris.enable = true;
+        steam.enable = true;
+      };
+      bottles.enable = true;
+    };
 
     # Services
     srv.syncthing.enable = true;
