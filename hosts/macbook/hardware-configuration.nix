@@ -63,4 +63,21 @@
   };
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+
+    extraPackages = with pkgs; [
+      intel-media-driver # VAAPI Video accel
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-extension-layer
+    ];
+  };
+
+  # Enable Vulkan 1.0
+  environment.variables = {
+    MESA_LOADER_DRIVER_OVERRIDE = "crocus";
+  };
 }
