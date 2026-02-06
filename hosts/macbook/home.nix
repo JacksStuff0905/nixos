@@ -18,9 +18,13 @@ in
     ../../modules/home-manager/tools
     ../../modules/home-manager/sh
     ../../modules/home-manager/srv
+    ../../modules/home-manager/de
   ];
 
   config = {
+    # GUI
+    de.hyprland.enable = true;
+
     # Shell config
     sh.zsh.enable = true;
     sh.aliases.enable = true;

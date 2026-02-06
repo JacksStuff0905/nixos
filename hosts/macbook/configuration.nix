@@ -34,6 +34,7 @@
 
   # GUI
   de.gnome.enable = true;
+  de.hyprland.enable = true;
   dm.gdm.enable = true;
 
   # Users
