@@ -18,20 +18,31 @@ in
     ../../modules/home-manager/tools
     ../../modules/home-manager/sh
     ../../modules/home-manager/srv
+    ../../modules/home-manager/de
   ];
 
   config = {
+    # GUI
+    de.hyprland.enable = true;
+
     # Shell config
     sh.zsh.enable = true;
     sh.aliases.enable = true;
     sh.env-vars.enable = true;
 
     # Desktop apps
-    apps.game-engines.godot.enable = true;
+    apps.game-engines.godot.enable = false; # Godot will be enabled in project shells
     apps.media.music.spotify.enable = true;
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;
+    apps.launchers = {
+      games = {
+        lutris.enable = true;
+        steam.enable = true;
+      };
+      bottles.enable = true;
+    };
 
     # Services
     srv.syncthing.enable = true;

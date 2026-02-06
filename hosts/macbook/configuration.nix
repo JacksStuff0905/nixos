@@ -11,9 +11,11 @@
       inputs.home-manager.nixosModules.default
       ../../modules/nixos/bootloader
       ../../modules/nixos/dev-utils
+      ../../modules/nixos/virtualization
       ../../modules/nixos/sh
       ../../modules/nixos/de
       ../../modules/nixos/dm
+      ../../modules/nixos/srv
     ];
 
 
@@ -32,6 +34,7 @@
 
   # GUI
   de.gnome.enable = true;
+  de.hyprland.enable = true;
   dm.gdm.enable = true;
 
   # Users
@@ -44,7 +47,7 @@
 	};
 
   # Virtualization
-  dev-utils.virtualization.docker = {
+  virtualization.docker = {
     enable = true;	
     users = ["jacek"];
   };
@@ -52,6 +55,10 @@
   # Shell config
   sh.aliases.enable = true;
   sh.zsh.enable = true;
+
+  # Services
+  srv.ssh.enable = false;
+  srv.printing.enable = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
