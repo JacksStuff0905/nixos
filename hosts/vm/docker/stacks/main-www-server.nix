@@ -11,16 +11,17 @@ let
 
   cfg = config.virtualization.docker.stacks."${name}";
 
-  nvim-profile = "full";
+  nvim-profile = "devbox";
   nvim-package = inputs.nvim-nix.packages."${system}"."${nvim-profile}";
 
   nvim-password-hash = "$6$0G1ZyPZXuA.O8Cl9$awtXc9.QgL2lQTucAeZORZbB3p5JTFsjLNMu/2uTiim37RmLHFLyhSZvAPmKdSEknsU96xRFCmIzxl382CVWc1";
+
+  workspace-path = "/workspace";
 
   nvim-www-image = pkgs.dockerTools.buildLayeredImage {
     name = "nvim-www";
     tag = "latest";
 
-    # What packages go INSIDE the container?
     contents = [
       nvim-package
       pkgs.ttyd
@@ -30,7 +31,13 @@ let
       pkgs.coreutils # sleep
     ];
 
-    extraCommands = "";
+    extraCommands = ''
+    mkdir -p etc
+
+    # Mark the workspace as safe
+    echo "[safe]" > etc/gitconfig
+    echo "    directory = ${workspace-path}" >> etc/gitconfig
+    '';
 
     config = {
       Cmd = [
@@ -42,7 +49,7 @@ let
         ''fontFamily="Caskaydia Cove Nerd Font''
         "/bin/bash"
         "-c"
-        (ttyd-auth-script nvim-password-hash "nvim /workspace" "echo \"Access denied\"; sleep 2; exit 1")
+        (ttyd-auth-script nvim-password-hash "cd ${workspace-path}; nix develop" "echo \"Access denied\"; sleep 2; exit 1")
       ];
 
       ExposedPorts = {
@@ -67,6 +74,27 @@ let
         exec ${failure-cmd}
     fi
   )'';
+
+
+  react-image = pkgs.dockerTools.buildLayeredImage {
+    name = "react";
+    tag = "latest";
+    fromImage = "node:latest";
+
+
+
+    extraCommands = ''
+    '';
+
+    config = {
+      Workdir = "/app";
+
+      ExposedPorts = {
+        "5173" = { };
+      };
+    };
+  };
+
 in
 {
   options.virtualization.docker.stacks."${name}" = {
@@ -74,15 +102,19 @@ in
   };
 
   config.virtualisation.oci-containers.containers = lib.mkIf cfg.enable {
-    main-www-nginx = {
-      image = "nginx:latest";
+    main-www-react = {
+      image = "react:latest";
+      imageFile = react-image;
       ports = [
-        "880:80"
-        "4443:443"
+        "880:5173"
       ];
+      environment = {
+        PUID = "3002";
+        PGID = "3003";
+      };
       volumes = [
-        "/data/stacks/remote/${name}/conf/nginx/:/etc/nginx/conf.d/"
-        "/data/stacks/remote/${name}/src/:/data/www/"
+        #"/data/stacks/remote/${name}/conf/nginx/:/etc/nginx/"
+        "/data/stacks/remote/${name}/app/:/app/"
       ];
     };
 
@@ -95,11 +127,13 @@ in
       ];
 
       environment = {
+        PUID = "3002";
+        PGID = "3003";
         TERM = "xterm-256color";
       };
 
       volumes = [
-        "/data/stacks/remote/${name}/src/:/workspace"
+        "/data/stacks/remote/${name}/:${workspace-path}"
       ];
     };
   };

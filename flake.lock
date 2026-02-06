@@ -189,11 +189,11 @@
         "nvf": "nvf"
       },
       "locked": {
-        "lastModified": 1768945081,
-        "narHash": "sha256-17iUaCM9wPMK/3e0IN+94yta0lliumvNOBGFAUcU6Dc=",
+        "lastModified": 1768947635,
+        "narHash": "sha256-5JYBBj10cc9tQjPFex9NUFPKvy2dWv4qQ9S/8nDBQzY=",
         "owner": "JacksStuff0905",
         "repo": "nvim-nix",
-        "rev": "da2404f296113678c887350a1d7f18b8a110b30f",
+        "rev": "fa235d7fcfbac65edd0323a9c055615b7a6cb9f7",
         "type": "github"
       },
       "original": {
