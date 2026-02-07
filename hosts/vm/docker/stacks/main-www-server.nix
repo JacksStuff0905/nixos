@@ -32,14 +32,15 @@ let
     ];
 
     extraCommands = ''
-    mkdir -p etc
+      mkdir -p etc
 
-    # Mark the workspace as safe
-    echo "[safe]" > etc/gitconfig
-    echo "    directory = ${workspace-path}" >> etc/gitconfig
+      # Mark the workspace as safe
+      echo "[safe]" > etc/gitconfig
+      echo "    directory = ${workspace-path}" >> etc/gitconfig
     '';
 
     config = {
+      Workdir = workspace-path;
       Cmd = [
         "ttyd"
         "--writable"
@@ -49,7 +50,9 @@ let
         ''fontFamily="Caskaydia Cove Nerd Font''
         "/bin/bash"
         "-c"
-        (ttyd-auth-script nvim-password-hash "cd ${workspace-path}; nix develop" "echo \"Access denied\"; sleep 2; exit 1")
+        (ttyd-auth-script nvim-password-hash "nix develop"
+          "echo \"Access denied\"; sleep 2; exit 1"
+        )
       ];
 
       ExposedPorts = {
@@ -58,42 +61,23 @@ let
     };
   };
 
-  ttyd-auth-script = password-hash: success-cmd: failure-cmd: ''(
-    echo "=== Authentication Required ==="
-    read -s -p "Password: " PASSWORD_INPUT
-    echo ""
+  ttyd-auth-script = password-hash: success-cmd: failure-cmd: ''
+    (
+        echo "=== Authentication Required ==="
+        read -s -p "Password: " PASSWORD_INPUT
+        echo ""
 
-    export PASS="$PASSWORD_INPUT"
-    export HASH='${password-hash}'
-    perl -e '
-      exit(crypt($ENV{PASS}, $ENV{HASH}) eq $ENV{HASH} ? 0 : 1)
-    '
-    if [ $? -eq 0 ]; then
-        exec ${success-cmd}
-    else
-        exec ${failure-cmd}
-    fi
-  )'';
-
-
-  react-image = pkgs.dockerTools.buildLayeredImage {
-    name = "react";
-    tag = "latest";
-    fromImage = "node:latest";
-
-
-
-    extraCommands = ''
-    '';
-
-    config = {
-      Workdir = "/app";
-
-      ExposedPorts = {
-        "5173" = { };
-      };
-    };
-  };
+        export PASS="$PASSWORD_INPUT"
+        export HASH='${password-hash}'
+        perl -e '
+          exit(crypt($ENV{PASS}, $ENV{HASH}) eq $ENV{HASH} ? 0 : 1)
+        '
+        if [ $? -eq 0 ]; then
+            exec ${success-cmd}
+        else
+            exec ${failure-cmd}
+        fi
+      )'';
 
 in
 {
@@ -103,8 +87,7 @@ in
 
   config.virtualisation.oci-containers.containers = lib.mkIf cfg.enable {
     main-www-react = {
-      image = "react:latest";
-      imageFile = react-image;
+      image = "node:latest";
       ports = [
         "880:5173"
       ];
@@ -112,6 +95,11 @@ in
         PUID = "3002";
         PGID = "3003";
       };
+      cmd = [
+        "sh"
+        "-c"
+        "npm install && npm run dev -- --host 0.0.0.0"
+      ];
       volumes = [
         #"/data/stacks/remote/${name}/conf/nginx/:/etc/nginx/"
         "/data/stacks/remote/${name}/app/:/app/"
