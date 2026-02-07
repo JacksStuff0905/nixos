@@ -45,7 +45,10 @@ in
     # Virtualization
     tools.virtualization.docker.enable = true;
 
-    tools.editors.neovim.enable = true;
+    tools.editors.neovim = {
+      enable = true;
+      profile = "basic";
+    };
 
     # Allow unfree packages
     nixpkgs.config = {
