@@ -44,7 +44,7 @@
       };
     in
     {
-      nixosConfigurations = {
+      nixosConfigurations = ({
         macbook = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
@@ -56,7 +56,10 @@
             ./hosts/macbook/configuration.nix
             inputs.home-manager.nixosModules.default
             {
-              home-manager.extraSpecialArgs = { inherit util; inherit system; };
+              home-manager.extraSpecialArgs = {
+                inherit util;
+                inherit system;
+              };
             }
             inputs.nvim-nix.nixosModules.default
           ];
@@ -73,11 +76,20 @@
             ./hosts/vm/docker/configuration.nix
             inputs.home-manager.nixosModules.default
             {
-              home-manager.extraSpecialArgs = { inherit util; inherit system; };
+              home-manager.extraSpecialArgs = {
+                inherit util;
+                inherit system;
+              };
             }
             inputs.nvim-nix.nixosModules.default
           ];
         };
-      };
+      })
+
+      # LXCs
+      // (import ./hosts/vm/lxc/containers/default.nix {
+        lib = pkgs.lib;
+        inherit util inputs system nixpkgs;
+      });
     };
 }
