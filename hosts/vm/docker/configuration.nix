@@ -11,11 +11,9 @@ in
       ../../../modules/nixos/bootloader
       ../../../modules/nixos/dev-utils
       ../../../modules/nixos/sh
-      ../../../modules/nixos/de
-      ../../../modules/nixos/dm
       ../../../modules/nixos/srv
-      ../../../modules/nixos/virtualization
-      ./stacks
+      #../../../modules/nixos/virtualization
+      #./stacks
     ];
 
 
@@ -45,17 +43,14 @@ in
 	};
 
   # Virtualization
-  virtualization.docker = {
-    enable = true;	
-    users = ["${main-user}"];
-  };
+    #virtualization.docker = {
+    #enable = true;	
+    #users = ["${main-user}"];
+  #};
 
-  # Docker stacks
-  virtualization.docker.stacks = {
-    nginx-proxy-manager.enable = true;
+  # Services
+  srv.server = {
     calibre.enable = true;
-    filebrowser.enable = true;
-    main-www-server.enable = true;
   };
 
   # Shell config
@@ -76,6 +71,7 @@ in
 
   # Enable flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
 
 
   # Set your time zone.

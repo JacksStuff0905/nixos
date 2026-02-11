@@ -2,7 +2,7 @@
 let
   name = "calibre";
 
-  cfg = config.virtualization.docker.stacks."${name}";
+  cfg = config.srv.server."${name}";
 
   web-port = 8083;
   admin-port-desktop-rp = 8080;
@@ -10,7 +10,7 @@ let
   admin-port-webserver = 8081;
 in
 {
-  options.virtualization.docker.stacks."${name}" = {
+  options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name} docker stack";
   };
 
@@ -22,7 +22,12 @@ in
       admin-port-webserver
     ];
 
-    virtualisation.oci-containers.containers = {
+    services.calibre-server = {
+      enable = true;
+      libraries = [ "/data/stacks/remote/${name}/books" ];
+    };
+
+    virtualisation.oci-containers.containers = lib.mkIf false {
       calibre-admin = {
         image = "lscr.io/linuxserver/calibre:latest";
 
@@ -44,7 +49,7 @@ in
         ];
       };
 
-      calibre-web = {
+      calibre-web = lib.mkIf false {
         image = "lscr.io/linuxserver/calibre-web:latest";
         environment = {
           PUID = "3002";

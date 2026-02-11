@@ -42,9 +42,6 @@ in
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
 
-    # Virtualization
-    tools.virtualization.docker.enable = true;
-
     tools.editors.neovim = {
       enable = true;
       profile = "basic";

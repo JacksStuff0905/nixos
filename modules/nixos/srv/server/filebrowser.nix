@@ -7,7 +7,7 @@
 let
   name = "filebrowser";
 
-  cfg = config.virtualization.docker.stacks."${name}";
+  cfg = config.srv.server."${name}";
 
   port = 30051;
 
@@ -29,7 +29,7 @@ let
     ];
 in
 {
-  options.virtualization.docker.stacks."${name}" = {
+  options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name} docker stack";
   };
 

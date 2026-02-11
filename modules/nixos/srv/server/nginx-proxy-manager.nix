@@ -2,10 +2,10 @@
 let
   name = "nginx-proxy-manager";
 
-  cfg = config.virtualization.docker.stacks."${name}";
+  cfg = config.srv.server."${name}";
 in
 {
-  options.virtualization.docker.stacks."${name}" = {
+  options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name} docker stack";
   };
 
