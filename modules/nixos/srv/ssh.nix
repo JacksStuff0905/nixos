@@ -5,6 +5,7 @@ in
 {
   options.srv.ssh = {
     enable = lib.mkEnableOption "Enable openssh module";
+    enableRoot = lib.mkEnableOption "Enable root";
     ports = lib.mkOption {
       type = lib.types.listOf lib.types.int;
       default = [22];
@@ -15,6 +16,7 @@ in
     services.openssh = {
       enable = true;
       ports = cfg.ports;
+      settings.PermitRootLogin = if cfg.enableRoot then "yes" else "no";
     };
     
     networking.firewall.allowedTCPPorts = cfg.ports;

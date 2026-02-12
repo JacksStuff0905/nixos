@@ -3,22 +3,27 @@
   pkgs,
   lib,
   inputs,
+  modulesPath,
   ...
 }:
 {
   imports = [
     inputs.nvim-nix.nixosModules.default
+    (modulesPath + "/virtualisation/proxmox-lxc.nix")
+    ../../../modules/nixos/dev-utils
+    ../../../modules/nixos/sh
+    ../../../modules/nixos/srv
   ];
 
+
+  # ENABLE COMMANDS
+  # =============================================
+  # export PATH=/run/current-system/sw/bin:$PATH
+  # =============================================
+
   config = {
+    # LXC specific config
     boot.isContainer = true;
-
-    nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-
-    # Console setup (Proxmox)
-    systemd.services."getty@".enable = false;
-    systemd.services."autovt@".enable = false;
-    systemd.services."console-getty".enable = true;
 
     # Enable flakes
     nix.settings.experimental-features = [
@@ -26,34 +31,68 @@
       "flakes"
     ];
 
-    # Enable networking
-    networking.networkmanager.enable = true;
-    networking.firewall.enable = true;
+    # Supress systemd units that don't work because of LXC
+    systemd.suppressedSystemUnits = [
+      "dev-mqueue.mount"
+      "sys-kernel-debug.mount"
+      "sys-fs-fuse-connections.mount"
+    ];
 
-    networking.enableIPv6 = false;
-    nix.settings.http2 = false;
-    nix.settings.connect-timeout = 5;
-    nix.settings.stalled-download-timeout = 5;
+    # start tty1 on serial console
+    systemd.services."getty@tty1" = {
+      enable = true;
+      wantedBy = [ "getty.target" ]; # to start at boot
+      serviceConfig.Restart = "always"; # restart when session is closed
+      serviceConfig.ExecStart = [
+        ""
+        "@${pkgs.util-linux}/sbin/agetty agetty --login-program ${config.services.getty.loginProgram} --noclear --keep-baud %I 115200,38400,9600 $TERM"
+      ];
+    };
+
+    environment.systemPackages = with pkgs; [
+      binutils
+    ];
+
+    # Proxmox
+    nix.settings = {
+      sandbox = false;
+    };
+    proxmoxLXC = {
+      manageNetwork = false;
+      privileged = true;
+      manageHostName = true;
+    };
+    security.pam.services.sshd.allowNullPassword = true;
+    services.fstrim.enable = false; # Let Proxmox host handle fstrim
+    services.openssh = {
+      enable = true;
+      openFirewall = true;
+      settings = {
+        PermitRootLogin = "yes";
+        PasswordAuthentication = true;
+        PermitEmptyPasswords = "yes";
+      };
+    };
 
     # Shell config
     sh.aliases.enable = true;
     sh.zsh.enable = true;
 
     # Services
-    srv.ssh.enable = true;
+    srv.ssh = {
+      enable = true;
+      enableRoot = true;
+    };
 
     # Developer utilities
-    dev-utils.neovim.enable = false;
     programs.nvim-nix = {
       enable = true;
       profile = "basic";
     };
 
+    dev-utils.git.enable = true;
+
     users.users.root = {
-      extraGroups = [
-        "wheel"
-        "nixos"
-      ];
       shell = pkgs.zsh;
     };
 
@@ -80,6 +119,8 @@
 
     # Garbage collect
     nix.gc.automatic = true;
+
+    nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
     system.stateVersion = "25.11";
   };

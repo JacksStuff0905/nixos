@@ -4,12 +4,13 @@
   inputs,
   ...
 }:
+let
+  library-path = "/var/lib/calibre/books";
+in
 {
   imports = [
-    ../base-lxc.nix
-    ../../../../modules/nixos/dev-utils
-    ../../../../modules/nixos/sh
-    ../../../../modules/nixos/srv
+    ../../base-lxc.nix
+    ../../../../../modules/nixos/srv
   ];
 
   config = {
@@ -17,8 +18,13 @@
 
     # Services
     srv.server = {
-      calibre.enable = true;
+      calibre = {
+        enable = true;
+        library = "${library-path}";
+      };
     };
+  
+    networking.firewall.enable = true;
 
     # Allow unfree packages
     nixpkgs.config = {

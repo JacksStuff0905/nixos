@@ -13,7 +13,7 @@ let
 in
 (builtins.listToAttrs (
   builtins.map (f: {
-    name = "ct-" + (lib.removeSuffix ".nix" (builtins.baseNameOf f));
+    name = "ct-" + (builtins.baseNameOf f);
     value = (
       nixpkgs.lib.nixosSystem {
         specialArgs = {
@@ -21,7 +21,7 @@ in
         };
 
         modules = [
-          f
+          (f + "/configuration.nix")
         ];
       }
     );
