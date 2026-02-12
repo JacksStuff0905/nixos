@@ -31,6 +31,7 @@
     networking.firewall.enable = true;
 
     networking.enableIPv6 = false;
+    nix.settings.http2 = false;
     nix.settings.connect-timeout = 5;
     nix.settings.stalled-download-timeout = 5;
 
