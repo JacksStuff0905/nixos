@@ -30,6 +30,9 @@
     networking.networkmanager.enable = true;
     networking.firewall.enable = true;
 
+    nix.settings.connect-timeout = 5;
+    nix.settings.stalled-download-timeout = 5;
+
     # Shell config
     sh.aliases.enable = true;
     sh.zsh.enable = true;
