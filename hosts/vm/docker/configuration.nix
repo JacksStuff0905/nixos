@@ -17,7 +17,7 @@ in
     ];
 
 
-  networking.hostName = "DockerVM";
+  networking.hostName = "vm-docker";
   programs.zsh.enable = true;
 
   # Bootloader

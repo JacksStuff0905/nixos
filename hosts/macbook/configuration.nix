@@ -19,7 +19,7 @@
     ];
 
 
-  networking.hostName = "JacekMacbook";
+  networking.hostName = "macbook";
   programs.zsh.enable = true;
 
   # Bootloader
