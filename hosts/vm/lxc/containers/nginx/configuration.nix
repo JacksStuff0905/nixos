@@ -29,7 +29,7 @@
           sslCertificate = "/var/lib/nginx/certs/srv.lan/crt";
           sslCertificateKey = "/var/lib/nginx/certs/srv.lan/key";
           locations."/" = {
-            proxyPass = "http://192.168.10.9:30051";
+            proxyPass = "http://192.168.10.13:30051";
             proxyWebsockets = true;
           };
         };
