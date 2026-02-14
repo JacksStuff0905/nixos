@@ -11,7 +11,7 @@ let
 in
 {
   options.srv.server."${name}" = {
-    enable = lib.mkEnableOption "Enable ${name} docker stack";
+    enable = lib.mkEnableOption "Enable ${name}";
 
     mounts = {
       nfs = lib.mkOption {

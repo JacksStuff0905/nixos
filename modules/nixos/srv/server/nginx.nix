@@ -25,7 +25,7 @@ let
 in
 {
   options.srv.server."${name}" = {
-    enable = lib.mkEnableOption "Enable ${name} docker stack";
+    enable = lib.mkEnableOption "Enable ${name}";
     virtualHosts = lib.mkOption {
       type = lib.types.attrs;
       default = { };

@@ -12,7 +12,7 @@ let
 in
 {
   options.srv.server."${name}" = {
-    enable = lib.mkEnableOption "Enable ${name} docker stack";
+    enable = lib.mkEnableOption "Enable ${name}";
     library = lib.mkOption {
       type = lib.types.str;
       default = "";
