@@ -18,6 +18,10 @@ in
         type = lib.types.attrsOf lib.types.str;
         default = [ ];
       };
+      smb = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = [ ];
+      };
     };
 
     fbData = lib.mkOption {
@@ -32,20 +36,50 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ pkgs.nfs-utils ];
+    environment.systemPackages = [
+      pkgs.nfs-utils
+      pkgs.cifs-utils
+    ];
+
     boot.supportedFilesystems = [ "nfs" ];
 
     networking.firewall.allowedTCPPorts = [
       cfg.port
     ];
 
-    fileSystems = lib.mapAttrs' (name: value: {
-      name = "/mnt/filebrowser/${name}";
-      value = {
-        device = value;
-        fsType = "nfs";
-      };
-    }) cfg.mounts.nfs;
+    fileSystems = lib.mkMerge [
+      (lib.mapAttrs' (name: value: {
+        name = "/mnt/filebrowser/${name}";
+        value = {
+          device = value;
+          fsType = "nfs";
+        };
+      }) cfg.mounts.nfs)
+
+      # WIP!!!
+      /* (lib.mapAttrs' (name: value: {
+        name = "/mnt/filebrowser/${name}";
+        value = {
+          device = value;
+          fsType = "cifs";
+          options = [
+            "x-systemd.automount"
+            "_netdev"
+            "username=guest"
+            "password="
+            "uid=1000"
+            "gid=100"
+            "nofail"
+            "noauto"
+            "x-systemd.idle-timeout=60"
+            "x-systemd.device-timeout=5s"
+            "x-systemd.mount-timeout=5s"
+
+            #,credentials=/etc/nixos/smb-secrets" ];
+          ];
+        };
+      }) cfg.mounts.smb) */
+    ];
 
     users.users.filebrowser = {
       uid = 3002;

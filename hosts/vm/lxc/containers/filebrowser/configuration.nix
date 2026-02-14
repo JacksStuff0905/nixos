@@ -4,6 +4,10 @@
   inputs,
   ...
 }:
+let
+  nasIP = "192.168.10.6";
+  nfsPath = "/mnt/Main4TB";
+in
 {
   imports = [
     ../../base-lxc.nix
@@ -17,9 +21,15 @@
     srv.server = {
       filebrowser = {
         enable = true;
-        mounts.nfs = {
-          "VM-Data/Data" = "192.168.10.6:/mnt/Main4TB/VM-Data/Data";
-          "VM-Data/Proxmox" = "192.168.10.6:/mnt/Main4TB/VM-Data/Proxmox";
+        mounts = {
+          nfs = {
+            "VM-Data/Data" = "${nasIP}:${nfsPath}/VM-Data/Data";
+            "VM-Data/Proxmox" = "${nasIP}:${nfsPath}/VM-Data/Proxmox";
+          };
+          smb = {
+            #"Backups" = "//${nasIP}/Backups";
+            #"Files/Games" = "//${nasIP}/Games";
+          };
         };
       };
     };
