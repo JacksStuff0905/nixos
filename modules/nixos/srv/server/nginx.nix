@@ -43,6 +43,8 @@ in
     services.nginx = {
       enable = true;
 
+      mapHashMaxSize = 512;
+
       recommendedGzipSettings = true;
       recommendedOptimisation = true;
       recommendedProxySettings = true;
