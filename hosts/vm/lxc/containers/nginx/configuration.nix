@@ -23,7 +23,6 @@
       ];
 
       virtualHosts = {
-        # Browse & Drive (shared config)
         "browse.srv.lan" = {
           serverAliases = [ "drive.srv.lan" ];
           forceSSL = true;
@@ -35,14 +34,12 @@
           };
         };
 
-        # Test (HTTP only)
         "test.srv.lan" = {
           locations."/" = {
             proxyPass = "http://192.168.10.9:880";
           };
         };
 
-        # Home + /develop/
         "home.srv.lan" = {
           forceSSL = true;
           sslCertificate = "/var/lib/nginx/certs/srv.lan/crt";
@@ -57,7 +54,6 @@
           };
         };
 
-        # DNS (Pi-hole?)
         "dns.srv.lan" = {
           forceSSL = true;
           http2 = true;
@@ -72,7 +68,6 @@
           };
         };
 
-        # Router (HTTPS backend)
         "router.srv.lan" = {
           forceSSL = true;
           sslCertificate = "/var/lib/nginx/certs/srv.lan/crt";
@@ -83,7 +78,6 @@
           };
         };
 
-        # NAS (HTTPS backend)
         "nas.srv.lan" = {
           forceSSL = true;
           sslCertificate = "/var/lib/nginx/certs/srv.lan/crt";
@@ -94,18 +88,6 @@
           };
         };
 
-        # Docker
-        "docker.srv.lan" = {
-          forceSSL = true;
-          sslCertificate = "/var/lib/nginx/certs/srv.lan/crt";
-          sslCertificateKey = "/var/lib/nginx/certs/srv.lan/key";
-          locations."/" = {
-            proxyPass = "http://192.168.10.9:80";
-            proxyWebsockets = true;
-          };
-        };
-
-        # Calibre (with special settings)
         "calibre.srv.lan" = {
           forceSSL = true;
           http2 = true;
