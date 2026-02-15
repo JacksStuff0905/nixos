@@ -15,6 +15,11 @@
 
     srv.server.traefik = {
       enable = true;
+      authentik = {
+        enable = true;
+        url = "https://192.168.10.7:9443";
+        domain = "srv.lan";
+      };
 
       certificates = [
         "srv.lan"
@@ -22,37 +27,7 @@
       ];
 
       http = {
-        middlewares = {
-          authentik = {
-            forwardAuth = {
-              tls.insecureSkipVerify = true;
-              address = "https://192.168.10.7:9443/outpost.goauthentik.io/auth/traefik";
-              trustForwardHeader = true;
-              authResponseHeaders = [
-                "X-authentik-username"
-                "X-authentik-groups"
-                "X-authentik-email"
-                "X-authentik-name"
-                "X-authentik-uid"
-                "X-authentik-jwt"
-                "X-authentik-meta-jwks"
-                "X-authentik-meta-outpost"
-                "X-authentik-meta-provider"
-                "X-authentik-meta-app"
-                "X-authentik-meta-version"
-              ];
-            };
-          };
-        };
-
         routers = {
-          auth = {
-            entryPoints = [ "websecure" ];
-            rule = "Host(`auth.srv.lan`) || HostRegexp(`{subdomain:[a-z0-9]+}.srv.lan`) && PathPrefix(`/outpost.goauthentik.io/`)";
-            service = "auth";
-            tls = { };
-          };
-
           browse-srv = {
             rule = "Host(`browse.srv.lan`) || Host(`drive.srv.lan`)";
             entryPoints = [ "websecure" ];
@@ -63,12 +38,6 @@
         };
 
         services = {
-          auth.loadBalancer.servers = [
-            {
-              url = "http://192.168.10.7:9000";
-            }
-          ];
-
           browse-service = {
             loadBalancer = {
               servers = [

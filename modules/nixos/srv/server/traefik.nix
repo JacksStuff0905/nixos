@@ -38,11 +38,21 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
     };
+    authentik = {
+      enable = lib.mkEnableOption "Enable authentik integration";
+      url = lib.mkOption {
+        type = lib.types.str;
+      };
+      domain = lib.mkOption {
+        type = lib.types.str;
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
+
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
-      builtins.map mkCert cfg.certificates
+      builtins.map mkCert (if cfg.authentik.enable then (cfg.certificates // [ cfg.authentik.domain ]) else cfg.certificates)
     );
 
     services.traefik = {
@@ -99,7 +109,50 @@ in
       };
 
       dynamicConfigOptions = {
-        http = cfg.http;
+        http = lib.mkMerge [
+          cfg.http
+          {
+            middlewares = {
+              authentik = {
+                forwardAuth = {
+                  tls.insecureSkipVerify = true;
+                  address = "${cfg.authentik.url}/outpost.goauthentik.io/auth/traefik";
+                  trustForwardHeader = true;
+                  authResponseHeaders = [
+                    "X-authentik-username"
+                    "X-authentik-groups"
+                    "X-authentik-email"
+                    "X-authentik-name"
+                    "X-authentik-uid"
+                    "X-authentik-jwt"
+                    "X-authentik-meta-jwks"
+                    "X-authentik-meta-outpost"
+                    "X-authentik-meta-provider"
+                    "X-authentik-meta-app"
+                    "X-authentik-meta-version"
+                  ];
+                };
+              };
+            };
+
+            routers = {
+              auth = {
+                entryPoints = [ "websecure" ];
+                rule = "Host(`auth.${cfg.authentik.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
+                service = "auth";
+                tls = { };
+              };
+
+              services = {
+                auth.loadBalancer.servers = [
+                  {
+                    url = "${cfg.authentik.url}";
+                  }
+                ];
+              };
+            };
+          }
+        ];
         https = cfg.https;
 
         tls = {
