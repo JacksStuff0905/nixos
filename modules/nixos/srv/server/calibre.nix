@@ -17,6 +17,10 @@ in
       type = lib.types.str;
       default = "";
     };
+    authentik = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -35,6 +39,11 @@ in
       options = {
         calibreLibrary = cfg.library;
         enableBookConversion = true;
+        enableBookUploading = true;
+        reverseProxyAuth = lib.mkIf cfg.authentik {
+          enable = true;
+          header = "X-authentik-username";
+        };
       };
     };
   };

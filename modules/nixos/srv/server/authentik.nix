@@ -31,6 +31,10 @@ in
     secretsPath = lib.mkOption {
       type = lib.types.path;
     };
+    blueprints = lib.mkOption {
+      type = lib.types.listOf lib.types.path;
+      default = [ ];
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -40,6 +44,11 @@ in
     ];
 
     users.groups.authentik = { };
+    users.users.authentik = {
+      isSystemUser = true;
+      group = "authentik";
+      extraGroups = [ "wheel" ];
+    };
 
     # Agenix
     age.secrets.authentik-secret-key = {
@@ -48,6 +57,10 @@ in
       group = "authentik";
       mode = "0640";
     };
+
+    systemd.services.authentik-migrate.serviceConfig.DynamicUser = lib.mkForce false;
+    systemd.services.authentik-worker.serviceConfig.DynamicUser = lib.mkForce false;
+    systemd.services.authentik.serviceConfig.DynamicUser = lib.mkForce false;
 
     services.authentik = {
       enable = true;
@@ -59,13 +72,20 @@ in
           listen_http = "0.0.0.0:${toString cfg.ports.http}";
           listen_https = "0.0.0.0:${toString cfg.ports.https}";
         };
-
-        # Allow proxy
-        nginx = {
-          use_x_forwarded = true;
-        };
       };
     };
+
+    environment.etc = (
+      builtins.listToAttrs
+        (
+          builtins.map (f: {
+            name = "authentik/blueprints/custom/${builtins.baseNameOf f}";
+            value = {
+              source = "${f}";
+            };
+          }) cfg.blueprints
+        )
+    );
 
     services.postgresql = {
       enable = true;

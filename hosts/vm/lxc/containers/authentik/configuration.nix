@@ -2,8 +2,16 @@
   config,
   pkgs,
   inputs,
+  util,
+  lib,
   ...
 }:
+let
+  blueprintPath = ./blueprints;
+
+  file_to_not_import = [
+  ];
+in
 {
   imports = [
     ../../base-lxc.nix
@@ -18,9 +26,10 @@
       authentik = {
         enable = true;
         secretsPath = ./secrets;
+        blueprints = util.get-files-dir blueprintPath file_to_not_import;
       };
     };
-  
+
     networking.firewall.enable = true;
 
     # Allow unfree packages

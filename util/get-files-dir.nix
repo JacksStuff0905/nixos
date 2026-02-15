@@ -18,7 +18,7 @@ let
             else if type == "directory" then
               walk thisAbsPath thisRelPath
               
-            else if (type == "regular" || type == "symlink") && lib.hasSuffix ".nix" name then
+            else if (type == "regular" || type == "symlink") then
               [ thisAbsPath ]
               
             else 

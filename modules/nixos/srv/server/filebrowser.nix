@@ -105,13 +105,10 @@ in
     };
 
     systemd.services.filebrowser = {
-      after = [ "agenix.service" ];
-      requires = [ "agenix.service" ];
-
       serviceConfig = {
-        EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
+        #EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
 
-        Environment = lib.mkIf cfg.authentik [
+        /*Environment = lib.mkIf cfg.authentik [
           "FB_AUTH_METHOD=oidc"
           "FB_OIDC_CLIENT_ID=fAQAxLoxnHhyxNd3vZxMz0ynpUtrSM8Z45cWpT8u"
           "FB_OIDC_AUTH_URL=https://auth.srv.lan/application/o/authorize/"
@@ -119,7 +116,7 @@ in
           "FB_OIDC_USERINFO_URL=https://auth.srv.lan/application/o/userinfo/"
           "FB_OIDC_REDIRECT_URL=https://drive.srv.lan/oauth2/callback"
           "FB_OIDC_SCOPE=openid profile email"
-        ];
+        ];*/
       };
     };
 
