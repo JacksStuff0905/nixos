@@ -1,0 +1,33 @@
+scheme: "Godot theme"
+
+#: black
+base00: "000000"
+base08: "1D2229"
+
+#: red
+base01: "FF7085"
+base09: "FF0000"
+
+#: green
+base02: "A1FFE0";
+base0A: "A6E22E"
+
+#: yellow
+base03: "FFEDA1"
+base0B: "FFB373"
+
+#: blue
+base04: "66D9EF"
+base0C: "57B3FF"
+
+#: magenta
+base05: "FF8CCC"
+base0D: "F92672"
+
+#: cyan
+base06: "BCE0FF"
+base0E: "70F0F0"
+
+#: white
+base07: "F8F8F0"
+base0F: "FFFFFF"
