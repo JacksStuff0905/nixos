@@ -21,6 +21,7 @@ in
     srv.server = {
       filebrowser = {
         enable = true;
+        secretFile = ./secrets/filebrowser-secret.age;
         mounts = {
           nfs = {
             "VM-Data/Data" = "${nasIP}:${nfsPath}/VM-Data/Data";

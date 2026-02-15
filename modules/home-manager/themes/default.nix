@@ -16,7 +16,7 @@ let
   availableThemes = builtins.map (f: builtins.baseNameOf f) (util.get-import-dir ./. file_to_not_import);
 in
 {
-  imports = lib.mkMerge [
+  imports = [
     (inputs.stylix.homeModules.stylix)
   ];
 
@@ -53,7 +53,7 @@ in
       };
     };
 
-    stylix = cfg.stylix {
+    stylix = lib.mkIf cfg.stylix {
       enable = true;
       base16Scheme = ./. + "/${cfg.theme.name}/base16.yaml";
     };

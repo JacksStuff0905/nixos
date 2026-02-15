@@ -11,6 +11,18 @@
 
     nvim-nix.url = "github:JacksStuff0905/nvim-nix";
     godot-nix.url = "github:JacksStuff0905/godot-nix";
+
+    authentik-nix.url = "github:nix-community/authentik-nix";
+
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -89,7 +101,12 @@
       # LXCs
       // (import ./hosts/vm/lxc/containers/default.nix {
         lib = pkgs.lib;
-        inherit util inputs system nixpkgs;
+        inherit
+          util
+          inputs
+          system
+          nixpkgs
+          ;
       });
     };
 }

@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 let
@@ -10,8 +11,21 @@ let
   cfg = config.srv.server."${name}";
 in
 {
+  imports = [
+    inputs.agenix.nixosModules.default
+  ];
+
   options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name}";
+
+    authentik = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+    };
+
+    secretFile = lib.mkOption {
+      type = lib.types.path;
+    };
 
     mounts = {
       nfs = lib.mkOption {
@@ -57,29 +71,57 @@ in
       }) cfg.mounts.nfs)
 
       # WIP!!!
-      /* (lib.mapAttrs' (name: value: {
-        name = "/mnt/filebrowser/${name}";
-        value = {
-          device = value;
-          fsType = "cifs";
-          options = [
-            "x-systemd.automount"
-            "_netdev"
-            "username=guest"
-            "password="
-            "uid=1000"
-            "gid=100"
-            "nofail"
-            "noauto"
-            "x-systemd.idle-timeout=60"
-            "x-systemd.device-timeout=5s"
-            "x-systemd.mount-timeout=5s"
+      /*
+        (lib.mapAttrs' (name: value: {
+          name = "/mnt/filebrowser/${name}";
+          value = {
+            device = value;
+            fsType = "cifs";
+            options = [
+              "x-systemd.automount"
+              "_netdev"
+              "username=guest"
+              "password="
+              "uid=1000"
+              "gid=100"
+              "nofail"
+              "noauto"
+              "x-systemd.idle-timeout=60"
+              "x-systemd.device-timeout=5s"
+              "x-systemd.mount-timeout=5s"
 
-            #,credentials=/etc/nixos/smb-secrets" ];
-          ];
-        };
-      }) cfg.mounts.smb) */
+              #,credentials=/etc/nixos/smb-secrets" ];
+            ];
+          };
+        }) cfg.mounts.smb)
+      */
     ];
+
+    age.secrets.filebrowser-oidc = {
+      file = cfg.secretFile;
+      owner = "root";
+      group = "filebrowser";
+      mode = "0640";
+    };
+
+    systemd.services.filebrowser = {
+      after = [ "agenix.service" ];
+      requires = [ "agenix.service" ];
+
+      serviceConfig = {
+        EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
+
+        Environment = lib.mkIf cfg.authentik [
+          "FB_AUTH_METHOD=oidc"
+          "FB_OIDC_CLIENT_ID=fAQAxLoxnHhyxNd3vZxMz0ynpUtrSM8Z45cWpT8u"
+          "FB_OIDC_AUTH_URL=https://auth.srv.lan/application/o/authorize/"
+          "FB_OIDC_TOKEN_URL=https://auth.srv.lan/application/o/token/"
+          "FB_OIDC_USERINFO_URL=https://auth.srv.lan/application/o/userinfo/"
+          "FB_OIDC_REDIRECT_URL=https://drive.srv.lan/oauth2/callback"
+          "FB_OIDC_SCOPE=openid profile email"
+        ];
+      };
+    };
 
     users.users.filebrowser = {
       uid = 3002;
@@ -103,8 +145,10 @@ in
         database = "${cfg.fbData}/filebrowser.db";
         log = "/var/log/filebrowser/filebrowser.log";
 
-        # Optional
-        auth.method = "json";
+        auth = {
+          method = "proxy";
+          header = "X-authentik-username";
+        };
 
         branding = {
           name = "Home drive";
