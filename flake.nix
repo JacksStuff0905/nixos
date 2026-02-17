@@ -96,6 +96,16 @@
             inputs.nvim-nix.nixosModules.default
           ];
         };
+
+        vm-router = nixpkgs.lib.nixosSystem {
+          specialArgs = {
+            inherit inputs util system;
+          };
+
+          modules = [
+            ./hosts/vm/router/configuration.nix
+          ];
+        };
       })
 
       # LXCs
