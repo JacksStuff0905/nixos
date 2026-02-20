@@ -14,6 +14,7 @@ in
   imports = [
     inputs.authentik-nix.nixosModules.default
     inputs.agenix.nixosModules.default
+    ./settings
   ];
 
   options.srv.server."${name}" = {
@@ -31,10 +32,6 @@ in
     secretsPath = lib.mkOption {
       type = lib.types.path;
     };
-    blueprints = lib.mkOption {
-      type = lib.types.listOf lib.types.path;
-      default = [ ];
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -43,9 +40,12 @@ in
       pkgs.authentik
     ];
 
-    users.groups.authentik = { };
+    users.groups.authentik = {
+      gid = lib.mkForce 3003;
+    };
     users.users.authentik = {
       isSystemUser = true;
+      uid = lib.mkForce 3002;
       group = "authentik";
       extraGroups = [ "wheel" ];
     };
@@ -59,7 +59,14 @@ in
     };
 
     systemd.services.authentik-migrate.serviceConfig.DynamicUser = lib.mkForce false;
-    systemd.services.authentik-worker.serviceConfig.DynamicUser = lib.mkForce false;
+    systemd.services.authentik-worker = {
+      serviceConfig = {
+        User = "authentik";
+        Group = "authentik";
+        DynamicUser = lib.mkForce false;
+      };
+    };
+
     systemd.services.authentik.serviceConfig.DynamicUser = lib.mkForce false;
 
     services.authentik = {
@@ -74,18 +81,6 @@ in
         };
       };
     };
-
-    environment.etc = (
-      builtins.listToAttrs
-        (
-          builtins.map (f: {
-            name = "authentik/blueprints/custom/${builtins.baseNameOf f}";
-            value = {
-              source = "${f}";
-            };
-          }) cfg.blueprints
-        )
-    );
 
     services.postgresql = {
       enable = true;

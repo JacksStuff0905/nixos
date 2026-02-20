@@ -1,9 +1,0 @@
-version: 1
-metadata:
-  name: "Custom Groups"
-entries:
-  - model: authentik_core.group
-    identifiers:
-      name: filebrowser
-    attrs:
-      name: "FileBrowser"
