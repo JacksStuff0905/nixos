@@ -1,3 +1,6 @@
+main:
+	sudo nixos-rebuild switch --flake ./#
+
 macbook:
 	sudo nixos-rebuild switch --flake ./#macbook
 
