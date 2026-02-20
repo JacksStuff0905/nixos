@@ -21,6 +21,7 @@ in
     srv.server = {
       filebrowser = {
         enable = true;
+        openFirewall = false; # IP based firewall below
         secretFile = ./secrets/filebrowser-secret.age;
         mounts = {
           nfs = {
@@ -35,7 +36,19 @@ in
       };
     };
 
-    networking.firewall.enable = true;
+    networking.firewall = {
+      enable = true;
+      extraCommands = ''
+        # Block external access to FileBrowser port
+        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -s 192.168.10.9 -j ACCEPT
+        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -j DROP
+      '';
+
+      extraStopCommands = ''
+        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -s 192.168.10.9 -j ACCEPT 2>/dev/null || true
+        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -j DROP 2>/dev/null || true
+      '';
+    };
 
     # Allow unfree packages
     nixpkgs.config = {

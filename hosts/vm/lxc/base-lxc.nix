@@ -15,7 +15,6 @@
     ../../../modules/nixos/srv
   ];
 
-
   # ENABLE COMMANDS
   # ======================================================
   # export PATH=/run/current-system/sw/bin:$PATH
@@ -66,17 +65,7 @@
       privileged = true;
       manageHostName = true;
     };
-    security.pam.services.sshd.allowNullPassword = true;
     services.fstrim.enable = false; # Let Proxmox host handle fstrim
-    services.openssh = {
-      enable = true;
-      openFirewall = true;
-      settings = {
-        PermitRootLogin = "yes";
-        PasswordAuthentication = true;
-        PermitEmptyPasswords = "yes";
-      };
-    };
 
     # Shell config
     sh.aliases.enable = true;

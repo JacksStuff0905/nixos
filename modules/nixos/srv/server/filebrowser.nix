@@ -47,6 +47,11 @@ in
       type = lib.types.int;
       default = 30051;
     };
+
+    openFirewall = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -57,7 +62,7 @@ in
 
     boot.supportedFilesystems = [ "nfs" ];
 
-    networking.firewall.allowedTCPPorts = [
+    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [
       cfg.port
     ];
 

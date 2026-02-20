@@ -9,17 +9,20 @@ let
 
   cfg = config.srv.server."${name}";
 
+  certDir = "/var/lib/traefik/certs";
+
   mkCert = domain: ''
-    CERT_DIR="/var/lib/traefik/certs"
-    if [ ! -f "$CERT_DIR/${domain}/key" ]; then
+    CERT_DIR="${certDir}/${domain}"
+    mkdir -p "$CERT_DIR"
+    if [ ! -f "$CERT_DIR/key" ]; then
       mkdir -p "$CERT_DIR"
       ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 3650 \
         -newkey rsa:2048 \
-        -keyout "$CERT_DIR/${domain}/key" \
-        -out "$CERT_DIR/${domain}/crt" \
+        -keyout "$CERT_DIR/key" \
+        -out "$CERT_DIR/crt" \
         -subj "/CN=*.${domain}" \
         -addext "subjectAltName=DNS:*.${domain},DNS:${domain}"
-      chmod 600 "$CERT_DIR"/*.key
+      chmod 700 "$CERT_DIR/key"
     fi
   '';
 in
@@ -50,15 +53,23 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    systemd.tmpfiles.rules = [
+      "d ${certDir} 0600 0 0"
+    ];
 
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
-      builtins.map mkCert (if cfg.authentik.enable then (cfg.certificates // [ cfg.authentik.domain ]) else cfg.certificates)
+      builtins.map mkCert (
+        if (cfg.authentik.enable && !(builtins.elem cfg.authentik.domain cfg.certificates)) then
+          (cfg.certificates ++ [ cfg.authentik.domain ])
+        else
+          cfg.certificates
+      )
     );
 
     services.traefik = {
       enable = true;
 
-      staticConfigOptions = {
+      static.settings = {
         entryPoints = {
           web = {
             address = ":80";
@@ -108,60 +119,61 @@ in
         api.insecure = true;
       };
 
-      dynamicConfigOptions = {
-        http = lib.mkMerge [
-          cfg.http
-          {
-            middlewares = {
-              authentik = {
-                forwardAuth = {
-                  tls.insecureSkipVerify = true;
-                  address = "${cfg.authentik.url}/outpost.goauthentik.io/auth/traefik";
-                  trustForwardHeader = true;
-                  authResponseHeaders = [
-                    "X-authentik-username"
-                    "X-authentik-groups"
-                    "X-authentik-email"
-                    "X-authentik-name"
-                    "X-authentik-uid"
-                    "X-authentik-jwt"
-                    "X-authentik-meta-jwks"
-                    "X-authentik-meta-outpost"
-                    "X-authentik-meta-provider"
-                    "X-authentik-meta-app"
-                    "X-authentik-meta-version"
-                  ];
+      dynamic.dir = "/var/lib/traefik/dynamic";
+      dynamic.files."main" = {
+        settings = {
+          http = lib.mkMerge [
+            cfg.http
+            {
+              middlewares = {
+                authentik = {
+                  forwardAuth = {
+                    tls.insecureSkipVerify = true;
+                    address = "${cfg.authentik.url}/outpost.goauthentik.io/auth/traefik";
+                    trustForwardHeader = true;
+                    authResponseHeaders = [
+                      "X-authentik-username"
+                      "X-authentik-groups"
+                      "X-authentik-email"
+                      "X-authentik-name"
+                      "X-authentik-uid"
+                      "X-authentik-jwt"
+                      "X-authentik-meta-jwks"
+                      "X-authentik-meta-outpost"
+                      "X-authentik-meta-provider"
+                      "X-authentik-meta-app"
+                      "X-authentik-meta-version"
+                    ];
+                  };
                 };
               };
-            };
 
-            routers = {
-              auth = {
-                entryPoints = [ "websecure" ];
-                rule = "Host(`auth.${cfg.authentik.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
-                service = "auth";
-                tls = { };
+              routers = {
+                auth-srv = {
+                  entryPoints = [ "websecure" ];
+                  rule = "Host(`auth.${cfg.authentik.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
+                  service = "auth-service";
+                  tls = { };
+                };
               };
 
               services = {
-                auth.loadBalancer.servers = [
+                auth-service.loadBalancer.servers = [
                   {
                     url = "${cfg.authentik.url}";
                   }
                 ];
               };
-            };
-          }
-        ];
-        https = cfg.https;
-
-        tls = {
-          certificates = [
-            {
-              certFile = "/var/lib/traefik/certs/srv.lan/crt";
-              keyFile = "/var/lib/traefik/certs/srv.lan/key";
             }
           ];
+          https = cfg.https;
+
+          tls = {
+            certificates = builtins.map (v: {
+              certFile = "${certDir}/${v}/crt";
+              keyFile = "${certDir}/${v}/key";
+            }) cfg.certificates;
+          };
         };
       };
     };

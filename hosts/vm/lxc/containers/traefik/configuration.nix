@@ -4,6 +4,11 @@
   inputs,
   ...
 }:
+let
+  authentikIP = "192.168.10.7";
+  filebrowserIP = "192.168.10.13";
+  calibreIP = "192.168.10.12";
+in
 {
   imports = [
     ../../base-lxc.nix
@@ -17,7 +22,7 @@
       enable = true;
       authentik = {
         enable = true;
-        url = "https://192.168.10.7:9443";
+        url = "http://${authentikIP}:9000";
         domain = "srv.lan";
       };
 
@@ -28,20 +33,36 @@
 
       http = {
         routers = {
-          browse-srv = {
-            rule = "Host(`browse.srv.lan`) || Host(`drive.srv.lan`)";
+          filebrowser-srv = {
+            rule = "Host(`drive.srv.lan`)";
             entryPoints = [ "websecure" ];
             middlewares = [ "authentik" ];
-            service = "browse-service";
+            service = "filebrowser-service";
+            tls = { };
+          };
+
+          calibre-srv = {
+            rule = "Host(`calibre.srv.lan`)";
+            entryPoints = [ "websecure" ];
+            middlewares = [ "authentik" ];
+            service = "calibre-service";
             tls = { };
           };
         };
 
         services = {
-          browse-service = {
+          filebrowser-service = {
             loadBalancer = {
               servers = [
-                { url = "http://192.168.10.13:30051"; }
+                { url = "http://${filebrowserIP}:30051"; }
+              ];
+            };
+          };
+
+          calibre-service = {
+            loadBalancer = {
+              servers = [
+                { url = "http://${calibreIP}:8083"; }
               ];
             };
           };
