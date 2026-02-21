@@ -251,6 +251,18 @@ in
               "calibre"
             ];
           };
+
+
+          test = {
+            name = "test";
+            groups = [
+            ];
+          };
+        };
+
+        blueprints = {
+          # Prompt passwordless users for password on first login
+          "configure-password-on-login" = import ./blueprints/configure-password-on-login.nix;
         };
       };
     };

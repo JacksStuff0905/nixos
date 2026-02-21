@@ -31,7 +31,7 @@ let
   allGroups = defaultGroups // groups;
 
   enabledApps = filterAttrs (n: v: v.enable && (v.state or "present") != "absent") applications;
-  enabledBlueprints = filterAttrs (n: v: v.enable) blueprints;
+  enabledBlueprints = filterAttrs (n: v: if v ? enable then v.enable else true) blueprints;
   enabledUsers = filterAttrs (n: v: v.enable && (v.state or "created") != "absent") users;
   enabledGroups = (filterAttrs (n: v: v.enable && (v.state or "present") != "absent") allGroups);
   enabledOutposts = filterAttrs (n: v: v.enable) outposts;
