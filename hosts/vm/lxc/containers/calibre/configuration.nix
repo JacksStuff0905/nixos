@@ -21,6 +21,10 @@ in
       calibre = {
         enable = true;
         library = "${library-path}";
+        authentik = {
+          enable = true;
+          mode = "proxy";
+        };
       };
     };
   

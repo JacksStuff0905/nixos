@@ -185,80 +185,82 @@ in
           */
         };
 
-        users = {
-          /*
-            # Normal user - created once, password never overwritten
-            # User can change their password and it persists
-            johndoe = {
-              name = "John Doe";
-              email = "john.doe@example.com";
-              groups = [
-                "employees"
-                "developers"
-              ];
-              # state = "created";  # default
-              # managePassword = false;  # default
-            };
-
-            # Admin with initial password from env var
-            # Password set on first create, then user manages it
-            admin = {
-              name = "Administrator";
-              email = "admin@example.com";
-              isSuperuser = true;
-              groups = [ "admins" ];
-              passwordEnvVar = "AUTHENTIK_BOOTSTRAP_ADMIN_PASSWORD";
-              # state = "created";  # default - password only set once
-            };
-
-            # Service account with managed password
-            # Password WILL be reset on every rebuild
-            servicebot = {
-              name = "Service Bot";
-              email = "bot@example.com";
-              type = "service_account";
-              groups = [ "service-accounts" ];
-              passwordEnvVar = "AUTHENTIK_SERVICEBOT_PASSWORD";
-              managePassword = true; # Password controlled by NixOS
-              state = "present"; # Update on every apply
-            };
-
-            # User that should be fully managed (rare use case)
-            # All attributes including password reset on every rebuild
-            managed-user = {
-              name = "Managed User";
-              email = "managed@example.com";
-              groups = [ "employees" ];
-              passwordEnvVar = "AUTHENTIK_MANAGED_USER_PASSWORD";
-              managePassword = true;
-              state = "present";
-            };
-
-            # User to be deleted
-            olduser = {
-              name = "Old User";
-              email = "old@example.com";
-              state = "absent";
-            };
-          */
-
-          jacek = {
-            name = "Jacek";
-            email = "jacek.sawinski.0905@gmail.com";
-            isSuperuser = true;
-            groups = [
+        users =
+          let
+            defaultGroups = [
               "filebrowser"
               "calibre"
             ];
-          };
+          in
+          {
+            /*
+              # Normal user - created once, password never overwritten
+              # User can change their password and it persists
+              johndoe = {
+                name = "John Doe";
+                email = "john.doe@example.com";
+                groups = [
+                  "employees"
+                  "developers"
+                ];
+                # state = "created";  # default
+                # managePassword = false;  # default
+              };
 
+              # Admin with initial password from env var
+              # Password set on first create, then user manages it
+              admin = {
+                name = "Administrator";
+                email = "admin@example.com";
+                isSuperuser = true;
+                groups = [ "admins" ];
+                passwordEnvVar = "AUTHENTIK_BOOTSTRAP_ADMIN_PASSWORD";
+                # state = "created";  # default - password only set once
+              };
 
-          test = {
-            name = "test";
-            groups = [
-            ];
+              # Service account with managed password
+              # Password WILL be reset on every rebuild
+              servicebot = {
+                name = "Service Bot";
+                email = "bot@example.com";
+                type = "service_account";
+                groups = [ "service-accounts" ];
+                passwordEnvVar = "AUTHENTIK_SERVICEBOT_PASSWORD";
+                managePassword = true; # Password controlled by NixOS
+                state = "present"; # Update on every apply
+              };
+
+              # User that should be fully managed (rare use case)
+              # All attributes including password reset on every rebuild
+              managed-user = {
+                name = "Managed User";
+                email = "managed@example.com";
+                groups = [ "employees" ];
+                passwordEnvVar = "AUTHENTIK_MANAGED_USER_PASSWORD";
+                managePassword = true;
+                state = "present";
+              };
+
+              # User to be deleted
+              olduser = {
+                name = "Old User";
+                email = "old@example.com";
+                state = "absent";
+              };
+            */
+
+            jacek = {
+              name = "Jacek";
+              email = "jacek.sawinski.0905@gmail.com";
+              isSuperuser = true;
+              groups = defaultGroups;
+            };
+
+            julek = {
+              name = "Julek";
+              groups = defaultGroups;
+            };
           };
-        };
 
         blueprints = {
           # Prompt passwordless users for password on first login
