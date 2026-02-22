@@ -29,7 +29,7 @@ in
         default = 9443;
       };
     };
-    secretsPath = lib.mkOption {
+    secretFile = lib.mkOption {
       type = lib.types.path;
     };
   };
@@ -51,8 +51,8 @@ in
     };
 
     # Agenix
-    age.secrets.authentik-secret-key = {
-      file = cfg.secretsPath + "/authentik-secret-key.age";
+    age.secrets.authentik-secret = {
+      file = cfg.secretFile;
       owner = "root";
       group = "authentik";
       mode = "0640";
@@ -71,7 +71,7 @@ in
 
     services.authentik = {
       enable = true;
-      environmentFile = config.age.secrets.authentik-secret-key.path;
+      environmentFile = config.age.secrets.authentik-secret.path;
       settings = {
         disable_startup_analytics = true;
 

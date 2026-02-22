@@ -6,9 +6,47 @@
   ...
 }:
 let
-  name = "filebrowser";
+  name = "filebrowser-quantum";
 
   cfg = config.srv.server."${name}";
+
+  settingsFormat = pkgs.formats.yaml { };
+  configFile = settingsFormat.generate "filebrowser.yaml" ({
+    server = {
+      listen = "0.0.0.0";
+      port = cfg.port;
+      baseURL = "/";
+      database = "/var/lib/filebrowser/filebrowser.db";
+      sources = [
+        {
+          path = "/mnt/filebrowser";
+          name = "drive";
+          config = {
+            createUserDir = true;
+            defaultUserScope = "/";
+          };
+        }
+      ];
+    };
+
+    auth.methods = {
+      proxy = {
+        enabled = true;
+        createUser = true;
+        header = "X-authentik-username";
+      };
+      password.enabled = false;
+    };
+
+    userDefaults.permissions = {
+      admin = false;
+      modify = true;
+      share = true;
+      delete = true;
+      create = true;
+      download = true;
+    };
+  });
 in
 {
   imports = [
@@ -38,6 +76,12 @@ in
       };
     };
 
+    settings = lib.mkOption {
+      type = settingsFormat.type;
+      default = { };
+      description = "Configuration for FileBrowser Quantum";
+    };
+
     fbData = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/filebrowser";
@@ -45,7 +89,7 @@ in
 
     port = lib.mkOption {
       type = lib.types.int;
-      default = 30051;
+      default = 80;
     };
 
     openFirewall = lib.mkOption {
@@ -109,24 +153,6 @@ in
       mode = "0640";
     };
 
-    systemd.services.filebrowser = {
-      serviceConfig = {
-        #EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
-
-        /*
-          Environment = lib.mkIf cfg.authentik [
-            "FB_AUTH_METHOD=oidc"
-            "FB_OIDC_CLIENT_ID=fAQAxLoxnHhyxNd3vZxMz0ynpUtrSM8Z45cWpT8u"
-            "FB_OIDC_AUTH_URL=https://auth.srv.lan/application/o/authorize/"
-            "FB_OIDC_TOKEN_URL=https://auth.srv.lan/application/o/token/"
-            "FB_OIDC_USERINFO_URL=https://auth.srv.lan/application/o/userinfo/"
-            "FB_OIDC_REDIRECT_URL=https://drive.srv.lan/oauth2/callback"
-            "FB_OIDC_SCOPE=openid profile email"
-          ];
-        */
-      };
-    };
-
     users.users.filebrowser = {
       uid = 3002;
       isSystemUser = true;
@@ -138,34 +164,28 @@ in
       gid = 3003;
     };
 
-    services.filebrowser = {
-      enable = true;
-      user = "filebrowser";
-      group = "filebrowser";
-      settings = {
-        port = cfg.port;
-        address = "0.0.0.0";
-        root = "/mnt/filebrowser";
-        database = "${cfg.fbData}/filebrowser.db";
-        log = "/var/log/filebrowser/filebrowser.log";
-
-        auth = {
-          method = "proxy";
-          header = "X-authentik-username";
-        };
-
-        createUserDir = true;
-        scope = "./{username}";
-
-        branding = {
-          name = "Home drive";
-          disableExternal = false;
-        };
-      };
-    };
-
     systemd.tmpfiles.rules = [
       "d ${cfg.fbData} 0755 filebrowser filebrowser -"
     ];
+
+    systemd.services.filebrowser-quantum = {
+      description = "FileBrowser Quantum";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        Type = "simple";
+        User = "root";
+        Group = "filebrowser";
+        #EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
+        ExecStart = "${lib.getExe pkgs.filebrowser-quantum} -c ${configFile}";
+        Restart = "on-failure";
+        #StateDirectory = "filebrowser";
+        ReadWritePaths = [
+          "/mnt/filebrowser"
+          cfg.fbData
+        ];
+      };
+    };
   };
 }

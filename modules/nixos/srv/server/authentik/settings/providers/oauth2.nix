@@ -52,7 +52,12 @@ in
           client_type = providerConfig.clientType;
           client_id = clientId;
           # Make redirect_uris a list
-          redirect_uris = providerConfig.redirectUris;
+          redirect_uris = (
+            builtins.map (v: {
+              url = "${v}";
+              matching_mode = "strict";
+            }) providerConfig.redirectUris
+          );
           access_token_validity = providerConfig.accessTokenValidity;
           refresh_token_validity = providerConfig.refreshTokenValidity;
           sub_mode = providerConfig.subMode;

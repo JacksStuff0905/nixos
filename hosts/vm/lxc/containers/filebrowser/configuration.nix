@@ -16,13 +16,14 @@ in
 
   config = {
     networking.hostName = "ct-filebrowser";
+    networking.enableIPv6 = false;
 
     # Services
     srv.server = {
-      filebrowser = {
+      filebrowser-quantum = {
         enable = true;
         openFirewall = false; # IP based firewall below
-        secretFile = ./secrets/filebrowser-secret.age;
+        secretFile = ../../../../../secrets/filebrowser-secret.age;
         mounts = {
           nfs = {
             "VM-Data/Data" = "${nasIP}:${nfsPath}/VM-Data/Data";
@@ -40,13 +41,13 @@ in
       enable = true;
       extraCommands = ''
         # Block external access to FileBrowser port
-        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -s 192.168.10.9 -j ACCEPT
-        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -j DROP
+        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -s 192.168.10.9 -j ACCEPT
+        iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -j DROP
       '';
 
       extraStopCommands = ''
-        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -s 192.168.10.9 -j ACCEPT 2>/dev/null || true
-        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser.port} -j DROP 2>/dev/null || true
+        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -s 192.168.10.9 -j ACCEPT 2>/dev/null || true
+        iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -j DROP 2>/dev/null || true
       '';
     };
 

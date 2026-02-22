@@ -13,8 +13,7 @@ let
 
   mkCert = domain: ''
     CERT_DIR="${certDir}/${domain}"
-    mkdir -p "$CERT_DIR"
-    if [ ! -f "$CERT_DIR/key" ]; then
+    if [ ! -d "$CERT_DIR" ]; then
       mkdir -p "$CERT_DIR"
       ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 3650 \
         -newkey rsa:2048 \
@@ -22,7 +21,7 @@ let
         -out "$CERT_DIR/crt" \
         -subj "/CN=*.${domain}" \
         -addext "subjectAltName=DNS:*.${domain},DNS:${domain}"
-      chmod 700 "$CERT_DIR/key"
+      chmod -R 750 "$CERT_DIR"
     fi
   '';
 in
@@ -37,7 +36,7 @@ in
       type = lib.types.attrs;
       default = { };
     };
-    certificates = lib.mkOption {
+    certificates.extra = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
     };
@@ -54,18 +53,22 @@ in
 
   config = lib.mkIf cfg.enable {
     systemd.tmpfiles.rules = [
-      "d ${certDir} 0600 0 0"
+      "d ${certDir} 0750 0 0"
     ];
 
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
       builtins.map mkCert (
-        if (cfg.authentik.enable && !(builtins.elem cfg.authentik.domain cfg.certificates)) then
-          (cfg.certificates ++ [ cfg.authentik.domain ])
+        if (cfg.authentik.enable && !(builtins.elem cfg.authentik.domain cfg.certificates.extra)) then
+          (cfg.certificates.extra ++ [ cfg.authentik.domain ])
         else
-          cfg.certificates
+          cfg.certificates.extra
       )
     );
 
+    systemd.services.traefik = {
+      after = [ "generateSSLCerts.service" ];
+      wants = [ "generateSSLCerts.service" ];
+    };
     services.traefik = {
       enable = true;
 
@@ -73,10 +76,10 @@ in
         entryPoints = {
           web = {
             address = ":80";
-            http.redirections.entryPoint = {
+            /*http.redirections.entryPoint = {
               to = "websecure";
               scheme = "https";
-            };
+            };*/
           };
           websecure = {
             address = ":443";
@@ -86,18 +89,6 @@ in
         global = {
           checkNewVersion = false;
           sendAnonymousUsage = false;
-        };
-
-        certificatesResolvers = {
-          letsencrypt = {
-            acme = {
-              email = "admin@example.com";
-              storage = "/var/lib/traefik/acme.json";
-              httpChallenge = {
-                entryPoint = "web";
-              };
-            };
-          };
         };
 
         log = {
@@ -172,7 +163,16 @@ in
             certificates = builtins.map (v: {
               certFile = "${certDir}/${v}/crt";
               keyFile = "${certDir}/${v}/key";
-            }) cfg.certificates;
+            }) cfg.certificates.extra;
+
+            stores.default.defaultCertificate =
+              let
+                cert = cfg.authentik.domain;
+              in
+              {
+                certFile = "${certDir}/${cert}/crt";
+                keyFile = "${certDir}/${cert}/key";
+              };
           };
         };
       };

@@ -26,10 +26,11 @@ in
         domain = "srv.lan";
       };
 
-      certificates = [
-        "srv.lan"
-        "lan"
-      ];
+      certificates = {
+        extra = [
+          "lan"
+        ];
+      };
 
       http = {
         routers = {
@@ -54,7 +55,7 @@ in
           filebrowser-service = {
             loadBalancer = {
               servers = [
-                { url = "http://${filebrowserIP}:30051"; }
+                { url = "http://${filebrowserIP}:80"; }
               ];
             };
           };

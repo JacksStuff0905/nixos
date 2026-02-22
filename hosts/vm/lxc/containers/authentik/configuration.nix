@@ -23,7 +23,7 @@ in
     srv.server = {
       authentik = {
         enable = true;
-        secretsPath = ./secrets;
+        secretFile = ../../../../../secrets/authentik-secret.age;
 
         deploy = {
           enable = true;
@@ -146,18 +146,6 @@ in
 
             accessControl = {
               createGroup = true;
-            };
-          };
-
-          wiki = {
-            name = "Internal Wiki";
-            launchUrl = "https://wiki.example.com";
-
-            provider = {
-              type = "proxy";
-              externalHost = "https://wiki.example.com";
-              internalHost = "http://10.0.0.50:3000";
-              mode = "forward_single";
             };
           };
         };

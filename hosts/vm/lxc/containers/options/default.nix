@@ -31,6 +31,8 @@ let
     user = types.submodule {
       options = with lib.types; {
         name = lib.mkOption { type = str; };
+        email = lib.mkOption { type = str; };
+
         admin = lib.mkOption { type = bool; };
         services = lib.mkOption {
           type = listOf str;
@@ -76,6 +78,7 @@ in
     users = {
       jacek = {
         name = "jacek";
+        email = "jacek.sawinski.0905@gmail.com";
         admin = true;
       };
 
@@ -103,7 +106,7 @@ in
 
       browse = mkHost {
         name = "browse";
-        url = "http://192.168.10.13:30051";
+        url = "http://192.168.10.13:80";
       };
     };
   };
