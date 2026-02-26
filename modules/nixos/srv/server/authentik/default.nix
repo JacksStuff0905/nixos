@@ -32,12 +32,16 @@ in
     secretFile = lib.mkOption {
       type = lib.types.path;
     };
+
+    oauth2SecretFile = lib.mkOption {
+      type = lib.types.path;
+    };
   };
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [
       pkgs.openssl
-      pkgs.authentik
+      cfg.package
     ];
 
     users.groups.authentik = {
@@ -51,11 +55,20 @@ in
     };
 
     # Agenix
-    age.secrets.authentik-secret = {
-      file = cfg.secretFile;
-      owner = "root";
-      group = "authentik";
-      mode = "0640";
+    age.secrets = {
+      authentik-secret = {
+        file = cfg.secretFile;
+        owner = "root";
+        group = "authentik";
+        mode = "0640";
+      };
+
+      oauth2-secret = {
+        file = cfg.oauth2SecretFile;
+        owner = "root";
+        group = "authentik";
+        mode = "0640";
+      };
     };
 
     systemd.services.authentik-migrate.serviceConfig.DynamicUser = lib.mkForce false;

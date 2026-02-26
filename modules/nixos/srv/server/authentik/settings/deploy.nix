@@ -8,22 +8,43 @@
 with lib;
 
 let
-  cfg = config.srv.server.authentik.deploy;
+  cfg = config.srv.server.authentik;
+
+  outpostBinaries = {
+    proxy = "${cfg.package}/bin/ak-outpost-proxy";
+    ldap = "${cfg.package}/bin/ak-outpost-ldap";
+    radius = "${cfg.package}/bin/ak-outpost-radius";
+    rac = "${cfg.package}/bin/ak-outpost-rac";
+  };
 in
 {
   options.srv.server.authentik.deploy = {
     enable = mkEnableOption "automatic blueprint deployment";
   };
 
-  config = mkIf (config.srv.server.authentik.enable && cfg.enable) {
-    systemd.services.authentik-worker.environment = {
-      AUTHENTIK_BLUEPRINTS_DIR = config.srv.server.authentik.generatedPath;
+  config = mkIf (cfg.enable && cfg.deploy.enable) {
+    systemd.services.authentik-worker = {
+      environment = {
+        AUTHENTIK_BLUEPRINTS_DIR = cfg.generatedPath;
+      };
+
+      serviceConfig = {
+        EnvironmentFile = config.age.secrets.oauth2-secret.path;
+      };
     };
 
-    systemd.services.authentik.environment = {
-      AUTHENTIK_BLUEPRINTS_DIR = config.srv.server.authentik.generatedPath;
+    systemd.services.authentik = {
+      environment = lib.mkMerge [
+        {
+          AUTHENTIK_BLUEPRINTS_DIR = cfg.generatedPath;
+        }
+      ];
+
+      serviceConfig = {
+        EnvironmentFile = config.age.secrets.oauth2-secret.path;
+      };
     };
 
-    services.authentik.settings.blueprints_dir = config.srv.server.authentik.generatedPath;
+    services.authentik.settings.blueprints_dir = cfg.generatedPath;
   };
 }

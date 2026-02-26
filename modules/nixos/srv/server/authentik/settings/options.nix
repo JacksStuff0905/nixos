@@ -57,6 +57,11 @@ in
       '';
     };
 
+    package = mkOption {
+      type = types.package;
+      default = pkgs.authentik;
+    };
+
     generatedPath = mkOption {
       type = types.path;
       readOnly = true;

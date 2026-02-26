@@ -47,12 +47,6 @@ types.submodule {
       description = "OAuth2 client ID (auto-generated from slug if null)";
     };
 
-    clientSecretFile = mkOption {
-      type = types.nullOr types.path;
-      default = null;
-      description = "Path to file containing OAuth2 client secret";
-    };
-
     clientType = mkOption {
       type = types.enum [
         "confidential"

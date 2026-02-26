@@ -3,7 +3,7 @@
 with lib;
 
 let
-  inherit (authentikLib) find keyOf;
+  inherit (authentikLib) find keyOf env;
 
   # Only include scopes that exist by default in authentik
   defaultScopes = {
@@ -30,6 +30,8 @@ in
         }
       ) validScopes;
 
+
+
     in
     [
       {
@@ -51,6 +53,7 @@ in
           };
           client_type = providerConfig.clientType;
           client_id = clientId;
+          client_secret = env "OAUTH2_SECRET_${app.slug}" "fallback-default";
           # Make redirect_uris a list
           redirect_uris = (
             builtins.map (v: {

@@ -205,7 +205,7 @@ in
 
     akPath = mkOption {
       type = types.str;
-      default = "${pkgs.authentik}/bin/ak";
+      default = "${cfg.package}/bin/ak";
       description = "Path to ak CLI tool";
     };
 

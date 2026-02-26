@@ -23,7 +23,8 @@ in
     srv.server = {
       authentik = {
         enable = true;
-        secretFile = ../../../../../secrets/authentik-secret.age;
+        secretFile = ./secrets/authentik-secret.age;
+        oauth2SecretFile = ./secrets/oauth2-secrets/env-secrets.age;
 
         deploy = {
           enable = true;
@@ -45,7 +46,7 @@ in
           ldap-outpost = {
             name = "LDAP Outpost";
             type = "ldap";
-            managed = true;
+            managed = false;
             config = {
               authentik_host = "https://auth.srv.lan";
             };
@@ -148,6 +149,24 @@ in
               createGroup = true;
             };
           };
+
+          immich = {
+            name = "Immich";
+            launchUrl = "https://photos.srv.lan";
+
+            provider = {
+              type = "oauth2";
+              clientId = "immich";
+              redirectUris = [
+                "https://photos.srv.lan/apps/oidc_login/oidc"
+              ];
+            };
+
+            accessControl = {
+              createGroup = true;
+            };
+          };
+
         };
 
         groups = {
@@ -178,6 +197,8 @@ in
             defaultGroups = [
               "filebrowser"
               "calibre"
+              "samba"
+              "immich"
             ];
           in
           {
