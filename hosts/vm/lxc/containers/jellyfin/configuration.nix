@@ -15,7 +15,9 @@
 
     # Services
     srv.server = {
-
+      jellyfin = {
+        enable = true;
+      };
     };
   
     networking.firewall.enable = true;

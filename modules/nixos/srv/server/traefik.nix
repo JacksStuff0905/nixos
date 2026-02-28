@@ -40,13 +40,33 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
     };
-    authentik = {
-      enable = lib.mkEnableOption "Enable authentik integration";
-      url = lib.mkOption {
-        type = lib.types.str;
-      };
-      domain = lib.mkOption {
-        type = lib.types.str;
+
+    authelia = {
+      enable = lib.mkEnableOption "Enable authelia integration";
+      url = {
+        ip = lib.mkOption {
+          type = lib.types.str;
+        };
+
+        auth-port = lib.mkOption {
+          type = lib.types.int;
+        };
+
+        lldap-port = lib.mkOption {
+          type = lib.types.int;
+        };
+
+        name = lib.mkOption {
+          type = lib.types.str;
+        };
+
+        lldap-name = lib.mkOption {
+          type = lib.types.str;
+        };
+
+        domain = lib.mkOption {
+          type = lib.types.str;
+        };
       };
     };
   };
@@ -58,8 +78,8 @@ in
 
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
       builtins.map mkCert (
-        if (cfg.authentik.enable && !(builtins.elem cfg.authentik.domain cfg.certificates.extra)) then
-          (cfg.certificates.extra ++ [ cfg.authentik.domain ])
+        if (cfg.authelia.enable && !(builtins.elem cfg.authelia.url.domain cfg.certificates.extra)) then
+          (cfg.certificates.extra ++ [ cfg.authelia.url.domain ])
         else
           cfg.certificates.extra
       )
@@ -76,10 +96,10 @@ in
         entryPoints = {
           web = {
             address = ":80";
-            /*http.redirections.entryPoint = {
+            http.redirections.entryPoint = {
               to = "websecure";
               scheme = "https";
-            };*/
+            };
           };
           websecure = {
             address = ":443";
@@ -117,41 +137,77 @@ in
             cfg.http
             {
               middlewares = {
-                authentik = {
+                authelia = let
+                    autheliaUrl = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.auth-port}";
+                  in {
                   forwardAuth = {
-                    tls.insecureSkipVerify = true;
-                    address = "${cfg.authentik.url}/outpost.goauthentik.io/auth/traefik";
+                    address = "${autheliaUrl}/api/authz/forward-auth";
                     trustForwardHeader = true;
                     authResponseHeaders = [
-                      "X-authentik-username"
-                      "X-authentik-groups"
-                      "X-authentik-email"
-                      "X-authentik-name"
-                      "X-authentik-uid"
-                      "X-authentik-jwt"
-                      "X-authentik-meta-jwks"
-                      "X-authentik-meta-outpost"
-                      "X-authentik-meta-provider"
-                      "X-authentik-meta-app"
-                      "X-authentik-meta-version"
+                      "Remote-User"
+                      "Remote-Groups"
+                      "Remote-Email"
+                      "Remote-Name"
                     ];
                   };
                 };
               };
-
-              routers = {
-                auth-srv = {
-                  entryPoints = [ "websecure" ];
-                  rule = "Host(`auth.${cfg.authentik.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
-                  service = "auth-service";
-                  tls = { };
+              /*
+                middlewares = {
+                  authelia = {
+                    forwardAuth = {
+                      tls.insecureSkipVerify = true;
+                      address = "${cfg.authelia.url}/outpost.goauthentik.io/auth/traefik";
+                      trustForwardHeader = true;
+                      authResponseHeaders = [
+                        "X-authelia-username"
+                        "X-authelia-groups"
+                        "X-authelia-email"
+                        "X-authelia-name"
+                        "X-authelia-uid"
+                        "X-authelia-jwt"
+                        "X-authelia-meta-jwks"
+                        "X-authelia-meta-outpost"
+                        "X-authelia-meta-provider"
+                        "X-authelia-meta-app"
+                        "X-authelia-meta-version"
+                      ];
+                    };
+                  };
                 };
-              };
+              */
+
+              routers =
+                let
+                  authHost = "${cfg.authelia.url.name}.${cfg.authelia.url.domain}";
+                  userHost = "${cfg.authelia.url.lldap-name}.${cfg.authelia.url.domain}";
+                in
+                {
+                  auth-srv = {
+                    #entryPoints = [ "websecure" ];
+                    # rule = "Host(`auth.${cfg.authelia.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
+                    rule = "Host(`${authHost}`)";
+                    service = "auth-service";
+                    tls = { };
+                  };
+
+                  auth-lldap-srv = {
+                    rule = "Host(`${userHost}`)";
+                    service = "auth-lldap-service";
+                    tls = { };
+                  };
+                };
 
               services = {
                 auth-service.loadBalancer.servers = [
                   {
-                    url = "${cfg.authentik.url}";
+                    url = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.auth-port}";
+                  }
+                ];
+
+                auth-lldap-service.loadBalancer.servers = [
+                  {
+                    url = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.lldap-port}";
                   }
                 ];
               };
@@ -167,7 +223,7 @@ in
 
             stores.default.defaultCertificate =
               let
-                cert = cfg.authentik.domain;
+                cert = cfg.authelia.url.domain;
               in
               {
                 certFile = "${certDir}/${cert}/crt";

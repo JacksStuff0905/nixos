@@ -34,12 +34,12 @@ in
       proxy-headers = {
         username = lib.mkOption {
           type = lib.types.str;
-          default = "X-authentik-username";
+          default = "Remote-User";
         };
 
         email = lib.mkOption {
           type = lib.types.str;
-          default = "X-authentik-email";
+          default = "Remote-Email";
         };
       };
     };

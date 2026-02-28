@@ -33,7 +33,7 @@ let
       proxy = {
         enabled = true;
         createUser = true;
-        header = "X-authentik-username";
+        header = "Remote-User";
       };
       password.enabled = false;
     };
@@ -145,13 +145,6 @@ in
         }) cfg.mounts.smb)
       */
     ];
-
-    age.secrets.filebrowser-oidc = {
-      file = cfg.secretFile;
-      owner = "root";
-      group = "filebrowser";
-      mode = "0640";
-    };
 
     users.users.filebrowser = {
       uid = 3002;

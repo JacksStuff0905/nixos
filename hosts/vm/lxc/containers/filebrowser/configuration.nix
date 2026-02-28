@@ -23,7 +23,7 @@ in
       filebrowser-quantum = {
         enable = true;
         openFirewall = false; # IP based firewall below
-        secretFile = ../../../../../secrets/filebrowser-secret.age;
+        secretFile = ./secrets/filebrowser-secret.age;
         mounts = {
           nfs = {
             "VM-Data/Data" = "${nasIP}:${nfsPath}/VM-Data/Data";
@@ -35,6 +35,15 @@ in
           };
         };
       };
+
+      # WIP
+      /*
+        immich = {
+          enable = true;
+          openFirewall = true;
+          secretFile = ../authentik/secrets/oauth2-secrets/env-secrets.age;
+        };
+      */
     };
 
     networking.firewall = {

@@ -151,7 +151,7 @@ in
 
         auth = {
           method = "proxy";
-          header = "X-authentik-username";
+          header = "Remote-User";
         };
 
         createUserDir = true;

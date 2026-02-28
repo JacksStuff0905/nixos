@@ -5,9 +5,10 @@
   ...
 }:
 let
-  authentikIP = "192.168.10.7";
+  autheliaIP = "192.168.10.7";
   filebrowserIP = "192.168.10.13";
   calibreIP = "192.168.10.12";
+  immichIP = "192.168.10.13";
 in
 {
   imports = [
@@ -20,10 +21,16 @@ in
 
     srv.server.traefik = {
       enable = true;
-      authentik = {
+      authelia = {
         enable = true;
-        url = "http://${authentikIP}:9000";
-        domain = "srv.lan";
+        url = {
+          ip = autheliaIP;
+          name = "auth";
+          lldap-name = "users";
+          domain = "srv.lan";
+          auth-port = 9091;
+          lldap-port = 17170;
+        };
       };
 
       certificates = {
@@ -37,7 +44,7 @@ in
           filebrowser-srv = {
             rule = "Host(`drive.srv.lan`)";
             entryPoints = [ "websecure" ];
-            middlewares = [ "authentik" ];
+            middlewares = [ "authelia" ];
             service = "filebrowser-service";
             tls = { };
           };
@@ -45,8 +52,16 @@ in
           calibre-srv = {
             rule = "Host(`calibre.srv.lan`)";
             entryPoints = [ "websecure" ];
-            middlewares = [ "authentik" ];
+            middlewares = [ "authelia" ];
             service = "calibre-service";
+            tls = { };
+          };
+
+          immich-srv = {
+            rule = "Host(`photos.srv.lan`)";
+            entryPoints = [ "websecure" ];
+            middlewares = [ "authelia" ];
+            service = "immich-service";
             tls = { };
           };
         };
@@ -64,6 +79,14 @@ in
             loadBalancer = {
               servers = [
                 { url = "http://${calibreIP}:8083"; }
+              ];
+            };
+          };
+
+          immich-service = {
+            loadBalancer = {
+              servers = [
+                { url = "http://${immichIP}:2283"; }
               ];
             };
           };
