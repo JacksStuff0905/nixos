@@ -9,4 +9,9 @@ in
     workstation
     filebrowser
   ];
+
+  "immich-oidc-client-secret.age".publicKeys = [
+    workstation
+    filebrowser
+  ];
 }

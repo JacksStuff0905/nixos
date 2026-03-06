@@ -9,6 +9,8 @@ let
   filebrowserIP = "192.168.10.13";
   calibreIP = "192.168.10.12";
   immichIP = "192.168.10.13";
+  nasIP = "192.168.10.6";
+  dnsIP = "192.168.10.5";
 in
 {
   imports = [
@@ -41,10 +43,24 @@ in
 
       http = {
         routers = {
+          nas-srv = {
+            rule = "Host(`nas.srv.lan`)";
+            entryPoints = [ "websecure" ];
+            service = "nas-service";
+            tls = { };
+          };
+
+          dns-srv = {
+            rule = "Host(`dns.srv.lan`)";
+            entryPoints = [ "websecure" ];
+            service = "dns-service";
+            tls = { };
+          };
+
           filebrowser-srv = {
             rule = "Host(`drive.srv.lan`)";
             entryPoints = [ "websecure" ];
-            middlewares = [ "authelia" ];
+            middlewares = [ "authelia-proxy" ];
             service = "filebrowser-service";
             tls = { };
           };
@@ -52,7 +68,7 @@ in
           calibre-srv = {
             rule = "Host(`calibre.srv.lan`)";
             entryPoints = [ "websecure" ];
-            middlewares = [ "authelia" ];
+            middlewares = [ "authelia-proxy" ];
             service = "calibre-service";
             tls = { };
           };
@@ -60,13 +76,29 @@ in
           immich-srv = {
             rule = "Host(`photos.srv.lan`)";
             entryPoints = [ "websecure" ];
-            middlewares = [ "authelia" ];
+            middlewares = [ ];
             service = "immich-service";
             tls = { };
           };
         };
 
         services = {
+          nas-service = {
+            loadBalancer = {
+              servers = [
+                { url = "http://${nasIP}:80"; }
+              ];
+            };
+          };
+
+          dns-service = {
+            loadBalancer = {
+              servers = [
+                { url = "http://${dnsIP}:80"; }
+              ];
+            };
+          };
+
           filebrowser-service = {
             loadBalancer = {
               servers = [

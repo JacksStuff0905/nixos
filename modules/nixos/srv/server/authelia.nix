@@ -9,6 +9,43 @@ let
 
   cfg = config.srv.server."${name}";
 
+  types = with lib; {
+    oidc-client = lib.types.submodule {
+      options = with lib.types; {
+        id = mkOption {
+          type = str;
+        };
+        name = mkOption {
+          type = str;
+        };
+        secret = mkOption {
+          type = str;
+        };
+
+        public = mkOption {
+          type = bool;
+          default = false;
+        };
+
+        authorization_policy = mkOption {
+          type = enum [
+            "one_factor"
+            "two_factor"
+          ];
+          default = "one_factor";
+        };
+
+        scopes = mkOption {
+          type = listOf str;
+          default = [
+            "openid"
+            "profile"
+            "email"
+          ];
+        };
+      };
+    };
+  };
 in
 {
   options.srv.server."${name}" = {
@@ -23,14 +60,14 @@ in
       default = true;
     };
 
-    url = {
-      proto = lib.mkOption {
-        type = lib.types.enum [
-          "http"
-          "https"
-        ];
-        default = "https";
+    clients = {
+      oidc = lib.mkOption {
+        type = lib.types.listOf types.oidc-client;
+        default = [ ];
       };
+    };
+
+    url = {
       domain = lib.mkOption {
         type = lib.types.str;
       };
@@ -43,21 +80,30 @@ in
       directory = lib.mkOption {
         type = lib.types.path;
       };
-      authelia = {
-        jwt-secret = lib.mkOption {
-          type = lib.types.str;
-          default = "authelia-jwt-secret.age";
-        };
 
-        storage-key = lib.mkOption {
-          type = lib.types.str;
-          default = "authelia-storage-key.age";
-        };
+      jwt-secret = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia-jwt-secret.age";
+      };
 
-        ldap-password = lib.mkOption {
-          type = lib.types.str;
-          default = "lldap-user-password.age";
-        };
+      storage-key = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia-storage-key.age";
+      };
+
+      ldap-password = lib.mkOption {
+        type = lib.types.str;
+        default = "lldap-user-password.age";
+      };
+
+      oidc-hmac = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia-oidc-hmac.age";
+      };
+
+      oidc-private-key = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia-oidc-private-key.age";
       };
     };
 
@@ -133,12 +179,12 @@ in
 
       age.secrets = {
         authelia-jwt-secret = {
-          file = cfg.secret.directory + ("/" + cfg.secret.authelia.jwt-secret);
+          file = cfg.secret.directory + ("/" + cfg.secret.jwt-secret);
           owner = "authelia-main";
           group = "authelia-main";
         };
         authelia-storage-key = {
-          file = cfg.secret.directory + ("/" + cfg.secret.authelia.storage-key);
+          file = cfg.secret.directory + ("/" + cfg.secret.storage-key);
           owner = "authelia-main";
           group = "authelia-main";
         };
@@ -154,17 +200,17 @@ in
           group = "authelia-main";
         };
 
-        # Optional: only if using OIDC
-        # authelia-oidc-hmac = {
-        #   file = ../secrets/authelia-oidc-hmac.age;
-        #   owner = "authelia";
-        #   group = "authelia";
-        # };
-        # authelia-oidc-private-key = {
-        #   file = ../secrets/authelia-oidc-private-key.age;
-        #   owner = "authelia";
-        #   group = "authelia";
-        # };
+        # New OIDC secrets
+        authelia-oidc-hmac = {
+          file = cfg.secret.directory + ("/" + cfg.secret.oidc-hmac);
+          owner = "authelia-main";
+          group = "authelia-main";
+        };
+        authelia-oidc-private-key = {
+          file = cfg.secret.directory + ("/" + cfg.secret.oidc-private-key);
+          owner = "authelia-main";
+          group = "authelia-main";
+        };
       };
 
       systemd.services.lldap.serviceConfig = {
@@ -208,10 +254,8 @@ in
         secrets = {
           jwtSecretFile = config.age.secrets.authelia-jwt-secret.path;
           storageEncryptionKeyFile = config.age.secrets.authelia-storage-key.path;
-
-          # OIDC secrets for individual clients (optional, only if using OIDC)
-          # oidcIssuerPrivateKeyFile = "/var/lib/authelia/secrets/oidc_private_key";
-          # oidcHmacSecretFile = "/var/lib/authelia/secrets/oidc_hmac_secret";
+          oidcHmacSecretFile = config.age.secrets.authelia-oidc-hmac.path;
+          oidcIssuerPrivateKeyFile = config.age.secrets.authelia-oidc-private-key.path;
         };
 
         settings = {
@@ -260,6 +304,17 @@ in
 
             rules = [
               {
+                domain = "${cfg.url.name}.${cfg.url.domain}";
+                policy = "bypass";
+                resources = [
+                  "^/api/.*$"
+                  "^/jwks.json$"
+                  "^/.well-known/.*$"
+                  "^/[a-zA-Z0-9]+/.well-known/.*$"
+                  "^/static/.*$"
+                ];
+              }
+              {
                 domain = "*.${cfg.url.domain}";
                 policy = "one_factor";
                 #subject = [ "group:users" ];
@@ -271,7 +326,7 @@ in
             cookies = [
               {
                 domain = cfg.url.domain;
-                authelia_url = mkUrl cfg.url.proto cfg.url.name;
+                authelia_url = mkUrl "https" cfg.url.name;
               }
             ];
           };
@@ -285,6 +340,52 @@ in
           notifier = {
             filesystem = {
               filename = "/var/lib/authelia-main/notifications.txt";
+            };
+          };
+
+          # OIDC Configuration
+          identity_providers = {
+            oidc = {
+              # Token lifespans
+              access_token_lifespan = "1h";
+              authorize_code_lifespan = "1m";
+              id_token_lifespan = "1h";
+              refresh_token_lifespan = "90m";
+
+              # OIDC clients
+              clients = builtins.map (c: {
+                client_id = c.id;
+                client_name = c.name;
+                client_secret = c.secret;
+                public = c.public;
+                authorization_policy = c.authorization_policy;
+
+                token_endpoint_auth_method = "client_secret_basic";
+
+                require_pkce = true;
+
+                redirect_uris = [
+                  "https://${c.id}.${cfg.url.domain}/auth/login"
+                  "https://${c.id}.${cfg.url.domain}/user-settings"
+                  "app.${c.id}:/" # Mobile app callback
+                ];
+
+                scopes = [
+                  "openid"
+                  "profile"
+                  "email"
+                ];
+
+                grant_types = [
+                  "authorization_code"
+                ];
+
+                response_types = [
+                  "code"
+                ];
+
+                userinfo_signed_response_alg = "none";
+              }) cfg.clients.oidc;
             };
           };
         };

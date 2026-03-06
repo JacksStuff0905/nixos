@@ -11,6 +11,8 @@ in
 {
   "authelia-jwt-secret.age".publicKeys = all;
   "authelia-storage-key.age".publicKeys = all;
+  "authelia-oidc-hmac.age".publicKeys = all;
+  "authelia-oidc-private-key.age".publicKeys = all;
 
   # LLDAP
   "lldap-jwt-secret.age".publicKeys = all;

@@ -31,8 +31,10 @@
           function write-secret {
             echo -n "$1" | agenix -e "$2"
           }
+          alias encrypt-oidc-secret="nix-shell -p authelia --run \"authelia crypto hash generate pbkdf2 --random.length 72\""
           echo "Use \`gen-secret\` to generate a random secret string"
           echo "Use \`write-secret [secret] [file]\` to write a secret to a file (without newline)"
+          echo "Use \`encrypt-oidc-secret\` to hash/encrypt an oidc secret"
         '';
       };
     };

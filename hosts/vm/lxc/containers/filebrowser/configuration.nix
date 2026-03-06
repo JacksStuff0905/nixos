@@ -18,32 +18,51 @@ in
     networking.hostName = "ct-filebrowser";
     networking.enableIPv6 = false;
 
+    fileSystems = {
+      "/var/lib/immich" = {
+        device = "${nasIP}:${nfsPath}/Files/Media";
+        fsType = "nfs";
+      };
+    };
+
     # Services
     srv.server = {
       filebrowser-quantum = {
         enable = true;
         openFirewall = false; # IP based firewall below
-        secretFile = ./secrets/filebrowser-secret.age;
-        mounts = {
-          nfs = {
-            "VM-Data/Data" = "${nasIP}:${nfsPath}/VM-Data/Data";
-            "VM-Data/Proxmox" = "${nasIP}:${nfsPath}/VM-Data/Proxmox";
-          };
-          smb = {
+        secret.directory = ../../../../../secrets/filebrowser;
+        sources = {
+          userDrives = "${nasIP}:${nfsPath}/Files/UserDrives";
+          extra = [
+            {
+              path = "VM-Data";
+              name = "vm data";
+              defaultEnabled = false;
+              mounts = {
+                "Data" = {
+                  remote = "${nasIP}:${nfsPath}/VM-Data/Data";
+                  type = "nfs";
+                };
+                "Proxmox" = {
+                  remote = "${nasIP}:${nfsPath}/VM-Data/Proxmox";
+                  type = "nfs";
+                };
+              };
+            }
             #"Backups" = "//${nasIP}/Backups";
             #"Files/Games" = "//${nasIP}/Games";
-          };
+          ];
         };
       };
 
-      # WIP
-      /*
-        immich = {
-          enable = true;
-          openFirewall = true;
-          secretFile = ../authentik/secrets/oauth2-secrets/env-secrets.age;
+      immich = {
+        enable = true;
+        openFirewall = true;
+        secret.directory = ../../../../../secrets/filebrowser;
+        group = {
+          name = "filebrowser";
         };
-      */
+      };
     };
 
     networking.firewall = {

@@ -79,7 +79,7 @@
 
     # Developer utilities
     programs.nvim-nix = {
-      enable = true;
+      enable = false;
       profile = "basic";
     };
 
