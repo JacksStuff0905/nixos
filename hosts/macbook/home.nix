@@ -7,8 +7,8 @@
 }:
 
 let
-	username = "jacek";
-	homeDirectory = "/home/${username}";
+  username = "jacek";
+  homeDirectory = "/home/${username}";
 in
 {
   imports = [
@@ -22,6 +22,10 @@ in
   ];
 
   config = {
+    home.packages = [
+      pkgs.steam-run
+    ];
+
     # GUI
     de.hyprland.enable = true;
 

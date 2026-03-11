@@ -2,22 +2,26 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      inputs.home-manager.nixosModules.default
-      ../../modules/nixos/bootloader
-      ../../modules/nixos/dev-utils
-      ../../modules/nixos/virtualization
-      ../../modules/nixos/sh
-      ../../modules/nixos/de
-      ../../modules/nixos/dm
-      ../../modules/nixos/srv
-    ];
-
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    inputs.home-manager.nixosModules.default
+    ../../modules/nixos/bootloader
+    ../../modules/nixos/dev-utils
+    ../../modules/nixos/virtualization
+    ../../modules/nixos/sh
+    ../../modules/nixos/de
+    ../../modules/nixos/dm
+    ../../modules/nixos/srv
+  ];
 
   networking.hostName = "macbook";
   programs.zsh.enable = true;
@@ -30,7 +34,7 @@
 
   # Developer utilities
   dev-utils.gnumake.enable = true;
-  dev-utils.neovim.enable = false;	
+  dev-utils.neovim.enable = false;
 
   # GUI
   de.gnome.enable = true;
@@ -38,18 +42,21 @@
   dm.gdm.enable = true;
 
   # Users
-	users.groups.nixos = {};
+  users.groups.nixos = { };
 
-	users.users.jacek = {
-		isNormalUser = true;
-		extraGroups = [ "wheel" "nixos" ];
-		shell = pkgs.zsh;
-	};
+  users.users.jacek = {
+    isNormalUser = true;
+    extraGroups = [
+      "wheel"
+      "nixos"
+    ];
+    shell = pkgs.zsh;
+  };
 
   # Virtualization
   virtualization.docker = {
-    enable = true;	
-    users = ["jacek"];
+    enable = true;
+    users = [ "jacek" ];
   };
 
   # Shell config
@@ -60,20 +67,28 @@
   srv.ssh.enable = false;
   srv.printing.enable = true;
 
+  srv.lamp-test.enable = false;
+  srv.lamp-test.documentRoot = "/var/www/lamp-test";
+
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Allow unfree packages
   nixpkgs.config = {
-        allowUnfree = true;
+    allowUnfree = true;
   };
 
   # Enable networking
   networking.networkmanager.enable = true;
 
   # Enable flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
+  # Use beta cache
+  nix.settings.substituters = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
 
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
@@ -103,15 +118,15 @@
   console.keyMap = "pl2";
 
   # Garbage collect
-	nix.gc.automatic = true;
+  nix.gc.automatic = true;
 
   # HM integration
-	home-manager = {
-		extraSpecialArgs = {inherit inputs;};
-		users = {
-			"jacek" = import ./home.nix;
-		};
-	};
+  home-manager = {
+    extraSpecialArgs = { inherit inputs; };
+    users = {
+      "jacek" = import ./home.nix;
+    };
+  };
 
   system.stateVersion = "25.11";
 }
