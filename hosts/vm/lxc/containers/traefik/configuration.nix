@@ -8,6 +8,7 @@ let
   selfIP = "192.168.10.9";
   autheliaIP = "192.168.10.7";
   proxmoxIP = "192.168.8.11";
+  routerIP = "192.168.10.1";
   filebrowserIP = "192.168.10.13";
   calibreIP = "192.168.10.12";
   immichIP = "192.168.10.13";
@@ -53,6 +54,10 @@ in
         {
           src = "pve.srv.lan";
           dest = "https://${proxmoxIP}:8006";
+        }
+        {
+          src = "router.srv.lan";
+          dest = "https://${routerIP}:443";
         }
         {
           src = "nas.srv.lan";
