@@ -130,6 +130,11 @@ in
           };
           websecure = {
             address = ":443";
+            transport.respondingTimeouts = {
+              readTimeout = 0; # No timeout
+              writeTimeout = 0; # No timeout
+              idleTimeout = "300s"; # 5 min idle before disconnect
+            };
           };
         };
 

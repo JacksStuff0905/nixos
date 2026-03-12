@@ -9,6 +9,7 @@ let
   autheliaIP = "192.168.10.7";
   proxmoxIP = "192.168.8.11";
   routerIP = "192.168.10.1";
+  webIP = "192.168.10.15";
   filebrowserIP = "192.168.10.13";
   calibreIP = "192.168.10.12";
   immichIP = "192.168.10.13";
@@ -62,6 +63,10 @@ in
         {
           src = "nas.srv.lan";
           dest = "http://${nasIP}:80";
+        }
+        {
+          src = "home.srv.lan";
+          dest = "http://${webIP}:80";
         }
         {
           src = "dns.srv.lan";
