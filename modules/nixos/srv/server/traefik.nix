@@ -24,10 +24,26 @@ let
       chmod -R 750 "$CERT_DIR"
     fi
   '';
+
+  types = {
+    host = lib.types.submodule {
+      options = with lib.types; {
+        src = lib.mkOption { type = str; };
+        dest = lib.mkOption { type = str; };
+
+        authelia = lib.mkEnableOption "authelia middleware";
+      };
+    };
+  };
 in
 {
   options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name}";
+    hosts = lib.mkOption {
+      type = lib.types.listOf types.host;
+      default = { };
+    };
+
     http = lib.mkOption {
       type = lib.types.attrs;
       default = { };
@@ -39,6 +55,16 @@ in
     certificates.extra = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
+    };
+
+    self = {
+      enable = lib.mkEnableOption "self host record";
+      url = lib.mkOption {
+        type = lib.types.str;
+      };
+      ip = lib.mkOption {
+        type = lib.types.str;
+      };
     };
 
     authelia = {
@@ -107,6 +133,8 @@ in
           };
         };
 
+        serversTransport.insecureSkipVerify = true;
+
         global = {
           checkNewVersion = false;
           sendAnonymousUsage = false;
@@ -156,31 +184,6 @@ in
                   };
                 };
             };
-            /*
-              middlewares = {
-                authelia = {
-                  forwardAuth = {
-                    tls.insecureSkipVerify = true;
-                    address = "${cfg.authelia.url}/outpost.goauthentik.io/auth/traefik";
-                    trustForwardHeader = true;
-                    authResponseHeaders = [
-                      "X-authelia-username"
-                      "X-authelia-groups"
-                      "X-authelia-email"
-                      "X-authelia-name"
-                      "X-authelia-uid"
-                      "X-authelia-jwt"
-                      "X-authelia-meta-jwks"
-                      "X-authelia-meta-outpost"
-                      "X-authelia-meta-provider"
-                      "X-authelia-meta-app"
-                      "X-authelia-meta-version"
-                    ];
-                  };
-                };
-              };
-            */
-
             routers =
               let
                 authHost = "${cfg.authelia.url.name}.${cfg.authelia.url.domain}";
@@ -188,8 +191,6 @@ in
               in
               {
                 auth-srv = {
-                  #entryPoints = [ "websecure" ];
-                  # rule = "Host(`auth.${cfg.authelia.domain}`) || HostRegexp(`{subdomain:[a-z0-9]+}.${cfg.authentik.domain}`) && PathPrefix(`/outpost.goauthentik.io/`)";
                   rule = "Host(`${authHost}`)";
                   service = "auth-service";
                   tls = { };
@@ -216,6 +217,48 @@ in
               ];
             };
           }
+          (lib.mkIf cfg.self.enable {
+            routers.self-srv = {
+              rule = "Host(`${cfg.self.url}`)";
+              service = "self-service";
+              tls = { };
+            };
+
+            services.self-service.loadBalancer.servers = [
+              {
+                url = "http://${cfg.self.ip}:8080";
+              }
+            ];
+          })
+          ({
+            routers = builtins.listToAttrs (
+              builtins.map (host: {
+                name = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-srv";
+                value = {
+                  rule = "Host(`${host.src}`)";
+                  service = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-service";
+                  entryPoints = [ "websecure" ];
+                  middlewares = if host.authelia then [ "authelia-proxy" ] else [ ];
+                  tls = { };
+                };
+              }) cfg.hosts
+            );
+
+            services = builtins.listToAttrs (
+              builtins.map (host: {
+                name = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-service";
+                value = {
+                  loadBalancer = {
+                    servers = [
+                      {
+                        url = "${host.dest}";
+                      }
+                    ];
+                  };
+                };
+              }) cfg.hosts
+            );
+          })
         ];
         https = cfg.https;
 
