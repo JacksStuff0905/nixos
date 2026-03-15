@@ -59,6 +59,7 @@ in
 
     self = {
       enable = lib.mkEnableOption "self host record";
+      authelia = lib.mkEnableOption "authelia integration";
       url = lib.mkOption {
         type = lib.types.str;
       };
@@ -226,6 +227,7 @@ in
             routers.self-srv = {
               rule = "Host(`${cfg.self.url}`)";
               service = "self-service";
+              middlewares = if cfg.self.authelia then [ "authelia-proxy" ] else [ ];
               tls = { };
             };
 
