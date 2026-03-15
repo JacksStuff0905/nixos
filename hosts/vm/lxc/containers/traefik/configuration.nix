@@ -29,6 +29,7 @@ in
       enable = true;
       self = {
         enable = true;
+        authelia = true;
         url = "proxy.srv.lan";
         ip = "${selfIP}";
       };

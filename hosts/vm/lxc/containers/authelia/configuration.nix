@@ -37,6 +37,7 @@ in
         access = {
           admins = [
             "dns"
+            "proxy"
           ];
           users = [
             "calibre"
