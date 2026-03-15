@@ -71,6 +71,7 @@ in
         {
           src = "dns.srv.lan";
           dest = "http://${dnsIP}:80";
+          authelia = true;
         }
         {
           src = "drive.srv.lan";

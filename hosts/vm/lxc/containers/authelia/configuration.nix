@@ -34,6 +34,17 @@ in
           url.name = "lldap";
         };
 
+        access = {
+          admins = [
+            "dns"
+          ];
+          users = [
+            "calibre"
+            "drive"
+            "photos"
+          ];
+        };
+
         clients.oidc = [
           {
             id = "photos";

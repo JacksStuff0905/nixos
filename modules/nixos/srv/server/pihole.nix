@@ -40,10 +40,41 @@ in
       enable = true;
       useDnsmasqConfig = true;
       openFirewallDNS = true;
+      openFirewallWebserver = true;
+
+      lists = [
+        {
+          url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
+          type = "block";
+          enabled = true;
+          description = "Steven Black's HOSTS";
+        }
+        {
+          url = "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/light.txt";
+          type = "block";
+          enabled = true;
+        }
+      ];
+
       settings = {
         dns.upstreams = cfg.upstreams;
         dns.listeningMode = "ALL";
+
+        webserver = {
+          api = {
+            password = "2cbd419e404487682a6456daa385f1d247da6dc54237379938ddc48b8f269962";
+          };
+          session = {
+            timeout = 43200; # 12h
+          };
+        };
       };
+
+    };
+
+    services.pihole-web = {
+      enable = true;
+      ports = [ 80 ];
     };
 
     services.dnsmasq =

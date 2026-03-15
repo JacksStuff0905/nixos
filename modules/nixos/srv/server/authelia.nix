@@ -76,6 +76,17 @@ in
       };
     };
 
+    access = {
+      users = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+      };
+      admins = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+      };
+    };
+
     secret = {
       directory = lib.mkOption {
         type = lib.types.path;
@@ -315,9 +326,14 @@ in
                 ];
               }
               {
-                domain = "*.${cfg.url.domain}";
+                domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.admins;
                 policy = "one_factor";
-                #subject = [ "group:users" ];
+                subject = [ "group:admins" ];
+              }
+              {
+                domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.users;
+                policy = "one_factor";
+                subject = [ "group:users" ];
               }
             ];
           };

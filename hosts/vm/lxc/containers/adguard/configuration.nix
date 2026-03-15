@@ -11,20 +11,24 @@
   ];
 
   config = {
-    networking.hostName = "ct-pihole";
+    networking.hostName = "ct-adguard";
 
     # Services
     srv.server = {
-      pihole = {
+      adguardhome = {
         enable = true;
         domain = "lan";
         upstreams = [
-          "192.168.8.1"
+          #"192.168.8.1"
           "8.8.8.8"
         ];
 
         hosts = {
-          "srv" = "192.168.10.9";
+          "*.srv" = "192.168.10.9";
+        };
+
+        lists = {
+          hagezi.level = "pro-plus";
         };
       };
     };
