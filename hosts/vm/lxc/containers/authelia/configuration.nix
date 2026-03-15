@@ -52,6 +52,15 @@ in
             name = "Immich";
             secret = "$pbkdf2-sha512$310000$izJBYqkLgpu9OJVNvUu9sQ$kZ4rt/TkV7F/8dQ6hjb1oPO1b6Ma2f091Dvw61bLcyeKKMJXvtqtlS9YEsgn83l8VdufNoFoTK6xT2xYQyDcww";
           }
+          {
+            id = "vpn";
+            name = "Firezone";
+            secret = "$pbkdf2-sha512$310000$8WIU4tt3mwSLIZfPE5XbNw$RqxIVRQDF2YwrF0G/LaSyfsqkerDnKraPrQFfVMQokwdq6rlmIsVntY7vKm7tY2QvcNV.z6kyQCTFw1ul2ggbg";
+
+            additional_uris = [
+              "auth/oidc/callback"
+            ];
+          }
         ];
         /*
           secretFile = ./secrets/authentik-secret.age;

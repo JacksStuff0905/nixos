@@ -27,6 +27,11 @@ let
           default = false;
         };
 
+        additional_uris = mkOption {
+          type = listOf str;
+          default = [ ];
+        };
+
         authorization_policy = mkOption {
           type = enum [
             "one_factor"
@@ -384,7 +389,8 @@ in
                   "https://${c.id}.${cfg.url.domain}/auth/login"
                   "https://${c.id}.${cfg.url.domain}/user-settings"
                   "app.${c.id}:/" # Mobile app callback
-                ];
+                ]
+                ++ (builtins.map (u: "https://${c.id}.${cfg.url.domain}/${u}") c.additional_uris);
 
                 scopes = [
                   "openid"
