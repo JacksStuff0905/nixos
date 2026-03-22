@@ -4,8 +4,15 @@ let
 
   authelia = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM1ztfwqfrMB4yRnwg0lglDxG24DSC9wA8J8+udQIolo";
 
+  filebrowser = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJdkmeR53wnrKjOZsDK1Uj51LPceVWXqLv0bW9WpH89O";
+
   all = [
-    workstation authelia
+    workstation
+    authelia
+  ];
+
+  ldap-users = [
+    filebrowser
   ];
 in
 {
@@ -13,8 +20,12 @@ in
   "authelia-storage-key.age".publicKeys = all;
   "authelia-oidc-hmac.age".publicKeys = all;
   "authelia-oidc-private-key.age".publicKeys = all;
+  "authelia-smtp-password.age".publicKeys = all;
 
   # LLDAP
   "lldap-jwt-secret.age".publicKeys = all;
-  "lldap-user-password.age".publicKeys = all;
+  "lldap-user-password.age".publicKeys = all ++ ldap-users;
+
+  # OpenLDAP
+  "openldap-secrets.age".publicKeys = all;
 }

@@ -53,6 +53,12 @@ let
   };
 in
 {
+  imports = [
+    ./lldap.nix
+    ./kanidm.nix
+    ./openldap.nix
+  ];
+
   options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name}";
     port = lib.mkOption {
@@ -92,6 +98,21 @@ in
       };
     };
 
+    smtp = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+      };
+
+      address = lib.mkOption {
+        type = lib.types.str;
+      };
+
+      username = lib.mkOption {
+        type = lib.types.str;
+      };
+    };
+
     secret = {
       directory = lib.mkOption {
         type = lib.types.path;
@@ -121,10 +142,36 @@ in
         type = lib.types.str;
         default = "authelia-oidc-private-key.age";
       };
+
+      smtp-password = lib.mkOption {
+        type = lib.types.str;
+        default = "authelia-smtp-password.age";
+      };
     };
 
-    lldap = {
-      enable = lib.mkEnableOption "lldap";
+    ldap = {
+      enable = lib.mkEnableOption "ldap";
+
+      backend = lib.mkOption {
+        type = lib.types.enum [
+          "lldap"
+          "kanidm"
+          "openldap"
+        ];
+        default = "lldap";
+      };
+
+      secret = {
+        authelia-password = lib.mkOption {
+          type = lib.types.str;
+          default = "lldap-user-password.age";
+        };
+
+        jwt-secret = lib.mkOption {
+          type = lib.types.str;
+          default = "lldap-jwt-secret.age";
+        };
+      };
 
       url = {
         proto = lib.mkOption {
@@ -155,16 +202,6 @@ in
         directory = lib.mkOption {
           type = lib.types.path;
         };
-
-        jwt-secret = lib.mkOption {
-          type = lib.types.str;
-          default = "lldap-jwt-secret.age";
-        };
-
-        user-password = lib.mkOption {
-          type = lib.types.str;
-          default = "lldap-user-password.age";
-        };
       };
     };
   };
@@ -176,9 +213,16 @@ in
       basedn = builtins.concatStringsSep "," (
         builtins.map (d: "dc=${d}") (lib.splitString "." cfg.url.domain)
       );
+
+      uid =
+        {
+          "lldap" = "uid";
+          "openldap" = "cn";
+        }
+        ."${cfg.ldap.backend}";
     in
     {
-      srv.server.authelia.lldap.secret.directory = lib.mkDefault cfg.secret.directory;
+      srv.server.authelia.ldap.secret.directory = lib.mkDefault cfg.secret.directory;
 
       users.groups.authelia-main = {
         gid = lib.mkForce 3003;
@@ -190,80 +234,56 @@ in
         group = "authelia-main";
         extraGroups = [
           "lldap"
+          "openldap"
         ];
       };
 
-      age.secrets = {
-        authelia-jwt-secret = {
-          file = cfg.secret.directory + ("/" + cfg.secret.jwt-secret);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
-        authelia-storage-key = {
-          file = cfg.secret.directory + ("/" + cfg.secret.storage-key);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
+      age.secrets = lib.mkMerge [
+        {
+          authelia-jwt-secret = {
+            file = cfg.secret.directory + ("/" + cfg.secret.jwt-secret);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
+          authelia-storage-key = {
+            file = cfg.secret.directory + ("/" + cfg.secret.storage-key);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
 
-        lldap-jwt-secret = {
-          file = cfg.secret.directory + ("/" + cfg.lldap.secret.jwt-secret);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
-        lldap-user-password = {
-          file = cfg.secret.directory + ("/" + cfg.lldap.secret.user-password);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
+          # New OIDC secrets
+          authelia-oidc-hmac = {
+            file = cfg.secret.directory + ("/" + cfg.secret.oidc-hmac);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
 
-        # New OIDC secrets
-        authelia-oidc-hmac = {
-          file = cfg.secret.directory + ("/" + cfg.secret.oidc-hmac);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
-        authelia-oidc-private-key = {
-          file = cfg.secret.directory + ("/" + cfg.secret.oidc-private-key);
-          owner = "authelia-main";
-          group = "authelia-main";
-        };
-      };
+          authelia-oidc-private-key = {
+            file = cfg.secret.directory + ("/" + cfg.secret.oidc-private-key);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
 
-      systemd.services.lldap.serviceConfig = {
-        User = lib.mkForce "authelia-main";
-        Group = lib.mkForce "authelia-main";
-      };
+          authelia-ldap-password = {
+            file = cfg.secret.directory + ("/" + cfg.secret.ldap-password);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
 
-      services.lldap = lib.mkIf cfg.lldap.enable {
-        enable = true;
-
-        settings = {
-          http_host = "0.0.0.0";
-          http_port = cfg.lldap.ports.http;
-
-          force_ldap_user_pass_reset = "always";
-
-          ldap_host = "0.0.0.0";
-          ldap_port = cfg.lldap.ports.ldap;
-
-          ldap_base_dn = basedn;
-          #"dc=example,dc=com";
-
-          # Public URL for LLDAP web UI (users access this to change passwords)
-          http_url = mkUrl cfg.lldap.url.proto cfg.lldap.url.name;
-        };
-
-        environment = {
-          LLDAP_JWT_SECRET_FILE = config.age.secrets.lldap-jwt-secret.path;
-          LLDAP_LDAP_USER_PASS_FILE = config.age.secrets.lldap-user-password.path;
-        };
-      };
+          authelia-smtp-password = {
+            file = cfg.secret.directory + ("/" + cfg.secret.smtp-password);
+            owner = "authelia-main";
+            group = "authelia-main";
+          };
+        }
+      ];
 
       services.authelia.instances.main = {
         enable = true;
 
         environmentVariables = {
-          AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE = config.age.secrets.lldap-user-password.path;
+          AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE = lib.mkIf (cfg.ldap.enable) config.age.secrets.authelia-ldap-password.path;
+          AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE = config.age.secrets.authelia-smtp-password.path;
         };
 
         # Secret files - create these manually or use agenix/sops-nix
@@ -281,21 +301,22 @@ in
 
           authentication_backend.refresh_interval = "5m";
 
-          authentication_backend.file = lib.mkIf (!cfg.lldap.enable) {
+          authentication_backend.file = lib.mkIf (!cfg.ldap.enable) {
             path = "/var/lib/authelia-main/users.yml";
           };
 
-          authentication_backend.ldap = lib.mkIf cfg.lldap.enable {
+          authentication_backend.ldap = lib.mkIf cfg.ldap.enable {
             implementation = "custom";
             # Connect to local LLDAP instance
-            address = "ldap://127.0.0.1:${toString cfg.lldap.ports.ldap}";
+            address = "ldap://127.0.0.1:${toString cfg.ldap.ports.ldap}";
             timeout = "5s";
             start_tls = false;
 
             base_dn = basedn;
 
             # LLDAP admin user
-            user = "uid=admin,ou=people,${basedn}";
+            user = "${uid}=authelia,ou=services,${basedn}";
+            password.algorithm = "plaintext";
             #password = "file://${config.age.secrets.lldap-user-password.path}";
 
             # LLDAP uses 'ou=people' for users
@@ -308,7 +329,7 @@ in
 
             # Attribute mappings
             attributes = {
-              username = "uid";
+              username = "${uid}";
               mail = "mail";
               display_name = "displayName";
               group_name = "cn";
@@ -359,8 +380,12 @@ in
           };
 
           notifier = {
-            filesystem = {
-              filename = "/var/lib/authelia-main/notifications.txt";
+            disable_startup_check = false;
+            smtp = {
+              address = cfg.smtp.address;
+              username = ''${cfg.smtp.username}'';
+              sender = ''${cfg.smtp.username}'';
+              subject = "[Authelia] {title}";
             };
           };
 
@@ -415,9 +440,9 @@ in
 
       networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall (
         lib.mkMerge [
-          (lib.mkIf (cfg.lldap.enable) [
-            cfg.lldap.ports.http
-            cfg.lldap.ports.ldap
+          (lib.mkIf (cfg.ldap.enable) [
+            cfg.ldap.ports.http
+            cfg.ldap.ports.ldap
           ])
           [ cfg.port ]
         ]

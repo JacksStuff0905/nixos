@@ -12,6 +12,11 @@ let
 
   settingsFormat = pkgs.formats.yaml { };
 
+  usersDir = "${cfg.fbRoot}/Users";
+
+  # For the bind password, we'll use a secrets file
+
+
   types = with lib; {
     source = lib.types.submodule {
       options = with lib.types; {
@@ -54,6 +59,7 @@ in
 {
   imports = [
     inputs.agenix.nixosModules.default
+    ./samba.nix
   ];
 
   options.srv.server."${name}" = {
@@ -117,7 +123,7 @@ in
           database = "${cfg.fbData}/filebrowser.db";
           sources = [
             {
-              path = "${cfg.fbRoot}/Users";
+              path = usersDir;
               name = "my drive";
               config = {
                 createUserDir = true;
@@ -182,7 +188,7 @@ in
         ))
 
         ({
-          "${cfg.fbRoot}/Users" = {
+          usersDir = {
             device = cfg.sources.userDrives;
             fsType = "nfs";
           };
