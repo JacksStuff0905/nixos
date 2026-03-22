@@ -29,9 +29,35 @@ in
           domain = "srv.lan";
         };
 
-        lldap = {
+        smtp = {
           enable = true;
-          url.name = "lldap";
+          address = "submissions://smtp.gmail.com:465";
+          username = "jacek.sawinski.0905@gmail.com";
+        };
+
+        ldap = {
+          enable = true;
+          backend = "openldap";
+          url.name = "users";
+
+          openldap = {
+            secretsFile = ../../../../../secrets/authelia/openldap-secrets.age;
+            users = [
+              {
+                name = "jacek";
+                email = "$U_JACEK_EMAIL";
+                password = "$U_JACEK_PASSWORD";
+              }
+              {
+                name = "julek";
+                email = "$U_JULEK_EMAIL";
+              }
+              {
+                name = "magda";
+                email = "$U_MAGDA_EMAIL";
+              }
+            ];
+          };
         };
 
         access = {
