@@ -77,6 +77,26 @@
           ];
         };
 
+        pc = nixpkgs.lib.nixosSystem {
+          specialArgs = {
+            inherit inputs;
+            inherit util;
+            inherit system;
+          };
+
+          modules = [
+            ./hosts/pc/configuration.nix
+            inputs.home-manager.nixosModules.default
+            {
+              home-manager.extraSpecialArgs = {
+                inherit util;
+                inherit system;
+              };
+            }
+            inputs.nvim-nix.nixosModules.default
+          ];
+        };
+
         vm-docker = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
