@@ -46,15 +46,36 @@ in
               {
                 name = "jacek";
                 email = "$U_JACEK_EMAIL";
+                groups = [
+                  "users"
+                  "admins"
+                ];
                 password = "$U_JACEK_PASSWORD";
               }
               {
                 name = "julek";
+                groups = [
+                  "users"
+                ];
                 email = "$U_JULEK_EMAIL";
               }
               {
                 name = "magda";
+                groups = [
+                  "users"
+                ];
                 email = "$U_MAGDA_EMAIL";
+              }
+            ];
+
+            services = [
+              {
+                name = "samba";
+                password = ../../../../../secrets/filebrowser/samba-ldap-password.age;
+                groups = [
+                  "ldap_readers"
+                  "samba_writers"
+                ];
               }
             ];
           };

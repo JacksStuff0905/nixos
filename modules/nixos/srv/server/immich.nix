@@ -55,7 +55,7 @@ in
 
     systemd.tmpfiles.rules = [
       #"d ${cfg.mediaPath} 0775 ${cfg.user.name} ${cfg.group.name} -"
-      #"Z /var/lib/postgresql 0775 - - - -"
+      "Z /var/lib/postgresql 0750 - - - -"
       #"d ${cfg.mediaPath} - - - - -"
       #"d ${cfg.mediaPath}/encoded-video 2775 - ${cfg.group.name} -"
       #"d ${cfg.mediaPath}/library 2775 - ${cfg.group.name} -"

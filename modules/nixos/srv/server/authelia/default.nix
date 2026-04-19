@@ -56,7 +56,7 @@ in
   imports = [
     ./lldap.nix
     ./kanidm.nix
-    ./openldap.nix
+    ./openldap
   ];
 
   options.srv.server."${name}" = {

@@ -31,6 +31,18 @@ in
         enable = true;
         openFirewall = false; # IP based firewall below
         secret.directory = ../../../../../secrets/filebrowser;
+
+        samba = {
+          enable = true;
+          openFirewall = true;
+
+          domain = "srv.lan";
+          ldapHost = "192.168.10.7";
+          
+
+          secret.ldap-password = ../../../../../secrets/filebrowser/samba-ldap-password.age;
+        };
+
         sources = {
           userDrives = "${nasIP}:${nfsPath}/Files/UserDrives";
           extra = [
@@ -56,7 +68,7 @@ in
       };
 
       immich = {
-        enable = true;
+        enable = false;
         openFirewall = true;
         secret.directory = ../../../../../secrets/filebrowser;
         group = {

@@ -23,7 +23,7 @@
     ../../modules/nixos/srv
   ];
 
-  networking.hostName = "macbook";
+  networking.hostName = "jacek-macbook";
   programs.zsh.enable = true;
 
   # Bootloader
@@ -39,6 +39,7 @@
   # GUI
   de.gnome.enable = true;
   de.hyprland.enable = true;
+  de.dwl.enable = false;
   dm.gdm.enable = true;
 
   # Users
@@ -67,8 +68,9 @@
   srv.ssh.enable = false;
   srv.printing.enable = true;
 
-  srv.lamp-test.enable = false;
+  srv.lamp-test.enable = true;
   srv.lamp-test.documentRoot = "/var/www/lamp-test";
+  srv.lamp-test.user = "jacek";
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;

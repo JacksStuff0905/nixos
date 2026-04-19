@@ -41,12 +41,23 @@ in
           type = lib.types.str;
           default = "Remote-Email";
         };
+
+        groups = lib.mkOption {
+          type = lib.types.str;
+          default = "Remote-Groups";
+        };
+
+        admin-groups = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [
+            "admins"
+          ];
+        };
       };
     };
   };
 
   config = lib.mkIf cfg.enable {
-
     nixpkgs.overlays = [
       (final: prev: {
         calibre-web = prev.calibre-web.overrideAttrs (oldAttrs: {
@@ -55,25 +66,43 @@ in
                       /^def load_user_from_reverse_proxy_header\(req\):/ {
                         print "def load_user_from_reverse_proxy_header(req):"
                         print "    import logging"
+                        print "    ROLE_ADMIN = 1  # Bitmask for admin role"
+                        print "    ADMIN_GROUPS = [${
+                          builtins.concatStringsSep ", " (map (g: ''\"${g}\"'') cfg.authentik.proxy-headers.admin-groups)
+                        }]"
                         print "    rp_header_name = config.config_reverse_proxy_login_header_name"
                         print "    logging.warning(\"PROXY AUTH: Looking for header: %s\", rp_header_name)"
                         print "    if rp_header_name:"
                         print "        rp_header_username = req.headers.get(rp_header_name)"
                         print "        rp_header_email = req.headers.get(\"${cfg.authentik.proxy-headers.email}\", \"\")"
-                        print "        logging.warning(\"PROXY AUTH: Got username: %s\", rp_header_username)"
+                        print "        rp_header_groups = req.headers.get(\"${cfg.authentik.proxy-headers.groups}\", \"\")"
+                        print "        logging.warning(\"PROXY AUTH: Got username: %s, groups: %s\", rp_header_username, rp_header_groups)"
+                        print "        groups = set(g.strip() for g in rp_header_groups.split(\",\") if g.strip())"
+                        print "        is_admin = bool(groups & set(ADMIN_GROUPS))"
+                        print "        logging.warning(\"PROXY AUTH: User groups: %s, Admin groups: %s, Is admin: %s\", groups, ADMIN_GROUPS, is_admin)"
                         print "        if rp_header_username:"
                         print "            user = ub.session.query(ub.User).filter(func.lower(ub.User.name) == rp_header_username.lower()).first()"
                         print "            logging.warning(\"PROXY AUTH: Existing user: %s\", user)"
                         print "            if user:"
+                        print "                if is_admin and not (user.role & ROLE_ADMIN):"
+                        print "                    user.role |= ROLE_ADMIN"
+                        print "                    ub.session_commit(\"Granted admin via group\")"
+                        print "                    logging.warning(\"PROXY AUTH: Granted admin to user\")"
+                        print "                elif not is_admin and (user.role & ROLE_ADMIN):"
+                        print "                    user.role &= ~ROLE_ADMIN"
+                        print "                    ub.session_commit(\"Revoked admin via group\")"
+                        print "                    logging.warning(\"PROXY AUTH: Revoked admin from user\")"
                         print "                [limiter.limiter.storage.clear(k.key) for k in limiter.current_limits]"
                         print "                return user"
-                        print "            # Auto-create user with default settings"
                         print "            logging.warning(\"PROXY AUTH: Creating new user: %s\", rp_header_username)"
                         print "            new_user = ub.User()"
                         print "            new_user.name = rp_header_username"
                         print "            new_user.password = \"\""
                         print "            new_user.email = rp_header_email"
                         print "            new_user.role = config.config_default_role"
+                        print "            if is_admin:"
+                        print "                new_user.role |= ROLE_ADMIN"
+                        print "                logging.warning(\"PROXY AUTH: New user will be admin\")"
                         print "            new_user.sidebar_view = config.config_default_show"
                         print "            new_user.locale = config.config_default_locale"
                         print "            new_user.default_language = config.config_default_language"
@@ -104,6 +133,14 @@ in
         });
       })
     ];
+
+    users.groups.calibre-data = {
+      gid = 3003;
+    };
+
+    users.users.calibre-web = {
+      extraGroups = [ "calibre-data" ];
+    };
 
     networking.firewall.allowedTCPPorts = [
       web-port

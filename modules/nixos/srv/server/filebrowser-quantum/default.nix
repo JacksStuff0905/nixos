@@ -14,9 +14,6 @@ let
 
   usersDir = "${cfg.fbRoot}/Users";
 
-  # For the bind password, we'll use a secrets file
-
-
   types = with lib; {
     source = lib.types.submodule {
       options = with lib.types; {
@@ -188,7 +185,7 @@ in
         ))
 
         ({
-          usersDir = {
+          "${cfg.fbRoot}/Users" = {
             device = cfg.sources.userDrives;
             fsType = "nfs";
           };

@@ -23,6 +23,9 @@
   # ======================================================
   # pct set <vmid> -mp0 /mnt/pve/data-slow/container-name,mp=/mount/point
   # ======================================================
+  # REBUILD FROM /etc/nixos
+  # ======================================================
+  # sudo nixos-rebuild switch -I nixpkgs=channel:nixos-24.11 -I nixos-config=/etc/nixos/configuration.nix
 
   config = {
     # LXC specific config

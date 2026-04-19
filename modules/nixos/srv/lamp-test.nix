@@ -13,6 +13,9 @@ in
     documentRoot = lib.mkOption {
       type = lib.types.str;
     };
+    user = lib.mkOption {
+      type = lib.types.str;
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -31,10 +34,15 @@ in
 
     services.mysql.enable = true;
     services.mysql.package = pkgs.mariadb;
+    services.mysql.initialScript = pkgs.writeText "init.sql" ''
+      SET PASSWORD FOR root@localhost="";
+      FLUSH PRIVILAGES;
+    '';
 
     # hacky way to create our directory structure and index page... don't actually use this
     systemd.tmpfiles.rules = [
-      "d ${cfg.documentRoot}"
+      "d ${cfg.documentRoot} - ${cfg.user}"
+      "Z ${cfg.documentRoot} - ${cfg.user}"
       "f ${cfg.documentRoot}/index.php - - - - <?php phpinfo();"
     ];
   };

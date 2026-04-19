@@ -10,10 +10,15 @@ let
 
   cfg = config.srv.server."${name}";
 
+  usersDir = "${cfg.fbRoot}/Users";
+
+  domainName = "HOMESERVER";
+  domainSid = "S-1-5-21-3226911021-3024596977-3362438729";
+
   ldapBaseDn = lib.concatStringsSep "," (
-    builtins.map (s: "dc=${s}") (lib.splitString "." cfg.smb.domain)
+    builtins.map (s: "dc=${s}") (lib.splitString "." cfg.samba.domain)
   );
-  ldapBindDn = "uid=admin,ou=people,${ldapBaseDn}";
+  ldapBindDn = "cn=samba,ou=services,${ldapBaseDn}";
 
   # Script to ensure user directory exists on first connection
   ensureUserDir = pkgs.writeShellScript "ensure-user-dir" ''
@@ -42,75 +47,184 @@ let
 
     exit 0
   '';
+
+  sambaPkg = pkgs.samba.override {
+    enableLDAP = true;
+    # Optional: If you run into issues later, you might need this too,
+    # but try with just enableLDAP first.
+    #enableWinbind = true;
+  };
+
+  ldapURI = "ldap://${cfg.samba.ldapHost}:${toString cfg.samba.ldapPort}";
+
+  ldapUserSuffix = "ou=people";
+  ldapGroupSuffix = "ou=groups";
+  ldapIdmapSuffix = "ou=idmap";
 in
 {
   options.srv.server."${name}" = {
-    smb = {
-      enable = lib.mkEnableOption "per-user smb server";
+    samba = {
+      enable = lib.mkEnableOption "per-user samba server";
 
       domain = lib.mkOption {
         type = lib.types.str;
       };
 
-      # LDAP connection details (consider using sops-nix or agenix for secrets)
+      openFirewall = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+      };
+
       ldapHost = lib.mkOption {
         type = lib.types.str;
       };
+
       ldapPort = lib.mkOption {
         type = lib.types.int;
         default = 3890;
       };
+      secret = {
+        ldap-password = lib.mkOption {
+          type = lib.types.path;
+        };
+      };
     };
-
   };
 
-  config = lib.mkIf (cfg.enable && cfg.smb.enable) {
-    # We need nss-pam-ldapd to resolve LDAP users for Samba
-    services.nslcd = {
-      enable = true;
-      config = ''
-        uid nslcd
-        gid nslcd
-
-        uri ldap://${cfg.smb.ldapHost}:${toString cfg.smb.ldapPort}
-        base ${ldapBaseDn}
-
-        # Bind credentials
-        binddn ${ldapBindDn}
-        bindpw_file /run/secrets/ldap-bind-password
-
-        # User mapping
-        base passwd ou=people,${ldapBaseDn}
-        base group ou=groups,${ldapBaseDn}
-        base shadow ou=people,${ldapBaseDn}
-
-        # Map lldap attributes to POSIX
-        # lldap uses 'uid' for username, 'mail' for email
-        map passwd uid uid
-        map passwd gecos displayName
-        map passwd homeDirectory "${usersDir}/$uid"
-        map passwd loginShell /run/current-system/sw/bin/nologin
-
-        # lldap doesn't have numeric UIDs by default, so we derive from DN
-        # Alternatively, configure lldap to include uidNumber/gidNumber
-        map passwd uidNumber uidNumber
-        map passwd gidNumber gidNumber
-
-        # Fallback GID for users without explicit group
-        # nss_default_gid ${toString config.users.groups.filebrowser.gid}
-
-        # Filter for valid users
-        filter passwd (objectClass=person)
-        filter group (objectClass=groupOfUniqueNames)
-
-        # TLS (enable if lldap has TLS configured)
-        # ssl start_tls
-        # tls_reqcert demand
-        # tls_cacertfile /etc/ssl/certs/ca-certificates.crt
-      '';
+  config = lib.mkIf (cfg.enable && cfg.samba.enable) {
+    age.secrets = {
+      samba-ldap-password = {
+        file = cfg.samba.secret.ldap-password;
+        owner = "root";
+        group = "root";
+        mode = "400";
+      };
     };
 
-    # Add LDAP to NSS lookups
+    nixpkgs.overlays = [
+      (final: pre: {
+        samba = pre.samba.override {
+          # This is the magic flag that tells Nix to compile Samba
+          # with support for the ldapsam backend.
+          enableLDAP = true;
+        };
+      })
+    ];
+
+    environment.systemPackages = [
+      pkgs.samba
+      pkgs.openldap
+    ];
+
+    systemd.services.samba-smbd.preStart = ''
+      ${pkgs.samba}/bin/smbpasswd -w "$(cat ${config.age.secrets.samba-ldap-password.path})"
+      ${pkgs.samba}/bin/net setlocalsid ${domainSid}
+    '';
+
+    services.samba = {
+      enable = true;
+      openFirewall = true;
+      package = pkgs.samba;
+
+      settings = {
+        global = {
+          security = "user";
+
+          "netbios name" = "${domainName}";
+          "workgroup" = "${domainName}";
+
+          "passdb backend" = "ldapsam:${ldapURI}";
+          "ldap suffix" = "${ldapBaseDn}";
+          "ldap user suffix" = "${ldapUserSuffix}";
+          "ldap group suffix" = "${ldapGroupSuffix}";
+          "ldap admin dn" = "${ldapBindDn}";
+          "ldap ssl" = "off";
+          "ldap passwd sync" = "yes";
+          "ldap idmap suffix" = "${ldapIdmapSuffix}";
+          "ldap delete dn" = "yes";
+
+          "unix password sync" = "yes";
+
+          # ID mapping
+          "idmap config * : backend" = "ldap";
+          "idmap config * : range" = "10000-20000";
+          "idmap config * : ldap_url" = "${ldapURI}";
+          "idmap config * : ldap_base_dn" = "${ldapIdmapSuffix},${ldapBaseDn}";
+
+          # Disable DC features
+          "domain logons" = "no";
+          "domain master" = "no";
+          "local master" = "no";
+          "preferred master" = "no";
+
+          # Logging
+          "log file" = "/var/log/samba/log.%m";
+          "max log size" = 1000;
+          "log level" = 2;
+        };
+
+        test = {
+          "path" = "/mnt/filebrowser/test";
+          browseable = "yes";
+          "read only" = "no";
+          "valid users" = "@users";
+          "create mask" = "0664";
+          "directory mask" = "0775";
+          "force group" = "users";
+        };
+
+        # 3. The Dynamic Share
+        "users" =
+          let
+            create-samba-home = pkgs.writeShellScript "create-samba-home" ''
+              # %U is passed as the first argument ($1)
+              USERNAME="$1"
+
+              # Sanity check: prevent empty username
+              if [ -z "$USERNAME" ]; then exit 1; fi
+
+              TARGET_DIR="${usersDir}/$USERNAME"
+
+              if [ ! -d "$TARGET_DIR" ]; then
+                # Log to journald so you can see it happened
+                echo "Auto-creating SMB home for user: $USERNAME" | logger -t smb-mkdir
+
+                mkdir -p "$TARGET_DIR"
+                
+                # Set ownership to the Filebrowser system user
+                # This ensures Filebrowser can read what Samba created
+                chown filebrowser:filebrowser "$TARGET_DIR"
+                
+                # Standard directory permissions
+                chmod 755 "$TARGET_DIR"
+              fi
+            '';
+          in
+          {
+            comment = "User drives";
+            path = "${usersDir}/%S";
+            browseable = false;
+            "read only" = false;
+            "valid users" = "%S";
+            "create mask" = "0600";
+            "directory mask" = "0700";
+          };
+      };
+    };
+
+    users.ldap = {
+      enable = true;
+      server = "${ldapURI}";
+      base = ldapBaseDn;
+      bind = {
+        distinguishedName = ldapBaseDn;
+        passwordFile = config.age.secrets.samba-ldap-password.path;
+      };
+      daemon = {
+        enable = true; # This enables nslcd
+      };
+    };
+
     system.nssDatabases = {
       passwd = [
         "files"
@@ -126,121 +240,35 @@ in
       ];
     };
 
-    services.samba = {
-      enable = true;
+    systemd.tmpfiles.rules = [
+      "d /var/log/samba 0750 root root -"
+      "d ${usersDir} 0755 root root -"
+    ];
 
-      # Open firewall for SMB
-      openFirewall = true;
-
-      # Security settings
-      securityType = "user";
-
-      # Use LDAP as password backend
-      # Note: NixOS doesn't have direct ldapsam passdb option,
-      # we configure it in extraConfig
-
-      extraConfig = ''
-        # Server identification
-        workgroup = WORKGROUP
-        server string = NixOS File Server
-        netbios name = FILESERVER
-
-        # Security
-        security = user
-        map to guest = never
-        guest account = nobody
-
-        # LDAP passdb backend
-        passdb backend = ldapsam:ldap://${ldapHost}:${toString ldapPort}
-        ldap suffix = ${ldapBaseDn}
-        ldap user suffix = ou=people
-        ldap group suffix = ou=groups
-        ldap admin dn = ${ldapBindDn}
-        ldap ssl = off
-        ldap passwd sync = yes
-
-        # If lldap doesn't have Samba schema, use simple bind auth instead:
-        # passdb backend = tdbsam
-        # (and sync users separately - see alternative approach below)
-
-        # Performance
-        socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=131072 SO_SNDBUF=131072
-        read raw = yes
-        write raw = yes
-        use sendfile = yes
-        aio read size = 16384
-        aio write size = 16384
-
-        # macOS compatibility
-        min protocol = SMB2
-        vfs objects = fruit streams_xattr
-        fruit:metadata = stream
-        fruit:model = MacSamba
-        fruit:posix_rename = yes
-        fruit:veto_appledouble = no
-        fruit:wipe_intentionally_left_blank_rfork = yes
-        fruit:delete_empty_adfiles = yes
-
-        # Logging
-        log level = 2
-        log file = /var/log/samba/log.%m
-        max log size = 1000
-
-        # Character encoding
-        unix charset = UTF-8
-        dos charset = CP850
+    security.pam.services.samba = {
+      # Enable LDAP authentication for Samba's PAM
+      text = lib.mkDefault ''
+        auth      required  pam_env.so
+        auth      sufficient ${pkgs.pam_ldap}/lib/security/pam_ldap.so
+        auth      required  pam_unix.so try_first_pass
+        account   sufficient ${pkgs.pam_ldap}/lib/security/pam_ldap.so
+        account   required  pam_unix.so
+        password  sufficient ${pkgs.pam_ldap}/lib/security/pam_ldap.so
+        password  required  pam_unix.so try_first_pass
+        session   required  pam_unix.so
+        session   optional  ${pkgs.pam_ldap}/lib/security/pam_ldap.so
       '';
-
-      shares = {
-        # ────────────────────────────────────────────────────────────
-        # Dynamic per-user home directories
-        # Users connect to \\server\username and get their own folder
-        # ────────────────────────────────────────────────────────────
-        homes = {
-          comment = "User Personal Drive";
-          path = "${userDataPath}/%U";
-          browseable = false;
-          writable = true;
-          "valid users" = "%S";
-          "create mask" = "0640";
-          "directory mask" = "0750";
-          "force group" = "filebrowser";
-
-          # Create user directory on first access
-          "root preexec" = "${ensureUserDir} %U";
-
-          # Ensure files are accessible by filebrowser service too
-          "inherit permissions" = true;
-        };
-
-        # ────────────────────────────────────────────────────────────
-        # Optional: Shared space for all authenticated users
-        # ────────────────────────────────────────────────────────────
-        shared = {
-          comment = "Shared Files";
-          path = "/srv/filebrowser/shared";
-          browseable = true;
-          writable = true;
-          "valid users" = "@filebrowser";
-          "create mask" = "0660";
-          "directory mask" = "2770";
-          "force group" = "filebrowser";
-        };
-      };
     };
 
-    # Ensure Samba service knows the LDAP password
-    systemd.services.samba-smbd = {
-      preStart = ''
-        # Set LDAP admin password for Samba
-        # This reads the password file and configures Samba's secrets.tdb
-        ${pkgs.samba}/bin/smbpasswd -w "$(cat /run/secrets/ldap-bind-password)"
-      '';
-      serviceConfig = {
-        # Ensure we can read the secrets file
-        SupplementaryGroups = [ "secrets" ];
-      };
+    networking.firewall = lib.mkIf cfg.samba.openFirewall {
+      allowedTCPPorts = [
+        139
+        445
+      ];
+      allowedUDPPorts = [
+        137
+        138
+      ];
     };
-
   };
 }
