@@ -21,6 +21,7 @@
     ../../modules/nixos/de
     ../../modules/nixos/dm
     ../../modules/nixos/srv
+    ../../modules/nixos/other
   ];
 
   networking.hostName = "jacek-pc";
@@ -41,6 +42,9 @@
   de.hyprland.enable = true;
   de.dwl.enable = false;
   dm.gdm.enable = true;
+
+  # Other
+  other.apps.steam.enable = true;
 
   # Users
   users.groups.nixos = { };

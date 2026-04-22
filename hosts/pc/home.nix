@@ -43,7 +43,8 @@ in
     apps.launchers = {
       games = {
         lutris.enable = true;
-        steam.enable = true;
+        # Use the system-wide module instead
+        #steam.enable = true;
       };
       bottles.enable = true;
     };

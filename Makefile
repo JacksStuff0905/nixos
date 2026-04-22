@@ -4,6 +4,9 @@ main:
 macbook:
 	sudo nixos-rebuild switch --flake ./#macbook
 
+pc:
+	sudo nixos-rebuild switch --flake ./#pc
+
 vm-docker:
 	sudo nixos-rebuild switch --flake ./#vm-docker
 
