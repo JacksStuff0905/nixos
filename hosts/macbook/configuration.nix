@@ -77,7 +77,8 @@
 
     keySecret = ./secrets/syncthing-key.age;
 
-    cert = ''-----BEGIN CERTIFICATE-----
+    cert = ''
+      -----BEGIN CERTIFICATE-----
       MIIBoDCCAVKgAwIBAgIJAO0fTwymXmnIMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
       dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
       EwlzeW5jdGhpbmcwHhcNMjYwNDI3MDAwMDAwWhcNNDYwNDIyMDAwMDAwWjBKMRIw

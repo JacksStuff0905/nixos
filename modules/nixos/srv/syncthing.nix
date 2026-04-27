@@ -128,7 +128,15 @@ in
         openDefaultPorts = true;
 
         key = config.age.secrets.syncthing-key.path;
-        cert = if cfg.certFile == null then cfg.cert else (builtins.readFile cfg.certFile);
+        cert =
+          if cfg.certFile == null then
+            "${
+              (builtins.toFile "cert.pem" (
+                lib.strings.trim (builtins.replaceStrings [ "\t" "\r" ] [ "" "" ] cfg.cert) + "\n"
+              ))
+            }"
+          else
+            cfg.certFile;
 
         dataDir = cfg.dataDir;
         user = cfg.user;

@@ -85,11 +85,13 @@
 
   srv.syncthing = {
     enable = true;
-    id = "DZ4O5JP-ID2UND3-L57W6V3-FJC4OZC-NYY6PG7-6HTUC3V-274J5CK-YDKVXQS";
+
+    id = "5XL6TVD-YLV522Y-HF3QXXN-X6NVRC7-E7SBMBY-4OAADUC-BHPR6KM-5YWUMQF";
 
     keySecret = ./secrets/syncthing-key.age;
 
-    cert = ''-----BEGIN CERTIFICATE-----
+    cert = ''
+      -----BEGIN CERTIFICATE-----
       MIIBnzCCAVGgAwIBAgIIIceivbfc9O0wBQYDK2VwMEoxEjAQBgNVBAoTCVN5bmN0
       aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0ZWQxEjAQBgNVBAMT
       CXN5bmN0aGluZzAeFw0yNjA0MjYwMDAwMDBaFw00NjA0MjEwMDAwMDBaMEoxEjAQ
