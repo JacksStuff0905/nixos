@@ -8,6 +8,36 @@
 
 let
   cfg = config.srv.syncthing;
+
+  types = {
+    folder =
+      with lib;
+      lib.types.submodule {
+        options = with lib.types; {
+          enable = mkOption {
+            default = false;
+            example = true;
+            description = "Whether to enable this folder";
+            type = bool;
+          };
+
+          path = mkOption {
+            type = str;
+          };
+
+          devices = {
+            includeHosts = mkOption {
+              type = bool;
+              default = true;
+            };
+            extraDevices = mkOption {
+              type = listOf str;
+              default = [ ];
+            };
+          };
+        };
+      };
+  };
 in
 {
   options.srv.syncthing = {
@@ -43,17 +73,11 @@ in
     };
 
     folders = {
-      secret = {
-        enable = lib.mkOption {
-          default = true;
-          example = true;
-          description = "Whether to enable secret folder.";
-          type = lib.types.bool;
-        };
-
-        devices = lib.mkOption {
-          type = lib.types.listOf lib.types.str;
-          default = [ ];
+      secret = lib.mkOption {
+        type = types.folder;
+        default = {
+          enable = true;
+          path = "~/Secret";
         };
       };
     };
@@ -64,6 +88,20 @@ in
       hostDevices = builtins.mapAttrs (n: h: { id = "${h.srv.syncthing.id}"; }) (
         lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) hosts
       );
+
+      folderHosts =
+        f:
+        (builtins.attrNames (
+          lib.filterAttrs (
+            n: h:
+            (
+              h.srv.syncthing.enable
+              && h.srv.syncthing.id != cfg.id
+              && h.srv.syncthing.folders ? "${f}"
+              && h.srv.syncthing.folders."${f}".enable
+            )
+          ) hosts
+        ));
     in
     lib.mkIf cfg.enable {
       age.secrets.syncthing-key.rekeyFile = cfg.keySecret;
@@ -81,12 +119,13 @@ in
             (lib.mkIf cfg.devices.includeHosts hostDevices)
           ];
 
-          folders = {
-            "Secret" = lib.mkIf cfg.folders.secret.enable {
-              path = "~/Secret";
-              devices = cfg.folders.secret.devices;
-            };
-          };
+          folders = builtins.mapAttrs (n: f: {
+            path = f.path;
+            devices = lib.mkMerge [
+              f.devices.extraDevices
+              (lib.mkIf f.devices.includeHosts (folderHosts "${n}"))
+            ];
+          }) cfg.folders;
         };
       };
     };
