@@ -23,7 +23,15 @@
     ../../modules/nixos/srv
   ];
 
-  networking.hostName = "jacek-macbook";
+  host = {
+    username = "jacek";
+    hostName = "jacek-macbook";
+
+    isProduction = true;
+    isDesktop = true;
+  };
+
+  networking.hostName = "${config.host.hostName}";
   programs.zsh.enable = true;
 
   # Bootloader
@@ -45,19 +53,21 @@
   # Users
   users.groups.nixos = { };
 
-  users.users.jacek = {
+  users.users."${config.host.username}" = {
     isNormalUser = true;
     extraGroups = [
       "wheel"
       "nixos"
     ];
+    home = "${config.host.home}";
+    createHome = true;
     shell = pkgs.zsh;
   };
 
   # Virtualization
   virtualization.docker = {
     enable = true;
-    users = [ "jacek" ];
+    users = [ "${config.host.username}" ];
   };
 
   # Shell config
@@ -67,10 +77,19 @@
   # Services
   srv.ssh.enable = false;
   srv.printing.enable = true;
+  srv.syncthing = {
+    enable = true;
+
+    id = "";
+
+    keySecret = ./secrets/syncthing-key.age;
+
+    cert = '''';
+  };
 
   srv.lamp-test.enable = true;
   srv.lamp-test.documentRoot = "/var/www/lamp-test";
-  srv.lamp-test.user = "jacek";
+  srv.lamp-test.user = "${config.host.username}";
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -126,7 +145,7 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "jacek" = import ./home.nix;
+      "${config.host.username}" = import ./home.nix;
     };
   };
 

@@ -11,8 +11,6 @@
   ];
 
   config = {
-    networking.hostName = "ct-jellyfin";
-
     # Services
     srv.server = {
       jellyfin = {

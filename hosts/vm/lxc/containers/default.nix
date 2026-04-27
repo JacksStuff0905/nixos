@@ -4,6 +4,8 @@
   inputs,
   system,
   nixpkgs,
+  agenixModule,
+  hostSpec,
 }:
 
 let
@@ -22,6 +24,9 @@ in
 
         modules = [
           (f + "/configuration.nix")
+          (f + "/host.nix")
+          agenixModule
+          hostSpec
         ];
       }
     );

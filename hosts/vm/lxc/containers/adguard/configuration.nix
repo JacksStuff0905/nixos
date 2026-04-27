@@ -11,8 +11,6 @@
   ];
 
   config = {
-    networking.hostName = "ct-adguard";
-
     # Services
     srv.server = {
       adguardhome = {

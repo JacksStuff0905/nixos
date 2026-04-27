@@ -70,13 +70,13 @@ in
   config = lib.mkIf (cfg.ldap.enable && cfg.ldap.backend == "lldap") {
     age.secrets = {
       lldap-jwt-secret = {
-        file = cfg.secret.directory + ("/" + cfg.ldap.secret.jwt-secret);
+        rekeyFile = cfg.secret.directory + ("/" + cfg.ldap.secret.jwt-secret);
         owner = "authelia-main";
         group = "authelia-main";
       };
 
       lldap-authelia-password = {
-        file = cfg.secret.directory + ("/" + cfg.ldap.secret.authelia-password);
+        rekeyFile = cfg.secret.directory + ("/" + cfg.ldap.secret.authelia-password);
         owner = "authelia-main";
         group = "authelia-main";
       };

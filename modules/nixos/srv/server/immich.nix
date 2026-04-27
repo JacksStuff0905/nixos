@@ -67,7 +67,7 @@ in
     environment.etc."tmpfiles.d/immich.conf".source = "/dev/null";
 
     age.secrets.immich-oidc-secret = {
-      file = cfg.secret.directory + ("/" + cfg.secret.oidc-client);
+      rekeyFile = cfg.secret.directory + ("/" + cfg.secret.oidc-client);
       mode = "0640";
       owner = "root";
     };

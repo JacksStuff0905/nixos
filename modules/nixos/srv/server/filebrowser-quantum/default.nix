@@ -57,7 +57,6 @@ let
 in
 {
   imports = [
-    inputs.agenix.nixosModules.default
     ./samba.nix
   ];
 

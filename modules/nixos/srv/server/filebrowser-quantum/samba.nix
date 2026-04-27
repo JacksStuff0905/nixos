@@ -94,7 +94,7 @@ in
   config = lib.mkIf (cfg.enable && cfg.samba.enable) {
     age.secrets = {
       samba-ldap-password = {
-        file = cfg.samba.secret.ldap-password;
+        rekeyFile = cfg.samba.secret.ldap-password;
         owner = "root";
         group = "root";
         mode = "400";

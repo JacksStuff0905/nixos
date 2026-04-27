@@ -244,7 +244,7 @@ in
           builtins.map (s: {
             name = "openldap-service-${s.name}-password";
             value = {
-              file =
+              rekeyFile =
                 if (builtins.isPath s.password) then s.password else (cfg.secret.directory + ("/" + s.password));
               owner = "openldap";
               group = "openldap";

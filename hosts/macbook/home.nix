@@ -48,9 +48,6 @@ in
       bottles.enable = true;
     };
 
-    # Services
-    srv.syncthing.enable = true;
-
     # Fonts
     fonts.enable = true;
 

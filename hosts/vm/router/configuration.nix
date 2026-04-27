@@ -12,6 +12,7 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./host.nix
     inputs.nvim-nix.nixosModules.default
     ../../../modules/nixos/bootloader
     ../../../modules/nixos/dev-utils
@@ -20,7 +21,7 @@ in
     ../../../modules/nixos/virtualization
   ];
 
-  networking.hostName = "vm-router";
+  networking.hostName = config.host.hostName;
   programs.zsh.enable = true;
 
   # Bootloader

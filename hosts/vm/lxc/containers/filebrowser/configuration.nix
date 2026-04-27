@@ -15,7 +15,6 @@ in
   ];
 
   config = {
-    networking.hostName = "ct-filebrowser";
     networking.enableIPv6 = false;
 
     fileSystems = {

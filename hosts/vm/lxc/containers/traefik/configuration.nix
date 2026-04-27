@@ -23,8 +23,6 @@ in
   ];
 
   config = {
-    networking.hostName = "ct-traefik";
-
     srv.server.traefik = {
       enable = true;
       self = {

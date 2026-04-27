@@ -31,6 +31,8 @@
     # LXC specific config
     boot.isContainer = true;
 
+    networking.hostName = config.host.hostName;
+
     # Enable flakes
     nix.settings.experimental-features = [
       "nix-command"

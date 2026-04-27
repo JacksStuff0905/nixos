@@ -18,9 +18,7 @@ let
       };
 
     ip =
-      lib.types.addCheck lib.types.str (
-        s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}$" s != null
-      )
+      lib.types.addCheck lib.types.str (s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}$" s != null)
       // {
         description = "IP address without mask (e.g., 192.168.1.1)";
       };
@@ -78,16 +76,17 @@ let
     };
   };
 
-  mapInterfaces = builtins.listToAttrs (
+  mapInterfaces =
     func:
-    (builtins.map func (
-      [
-        cfg.interfaces.lan
-        cfg.interfaces.wan
-      ]
-      ++ cfg.interfaces.extra
-    ))
-  );
+    (builtins.listToAttrs (
+      (builtins.map func (
+        [
+          cfg.interfaces.lan
+          cfg.interfaces.wan
+        ]
+        ++ cfg.interfaces.extra
+      ))
+    ));
 in
 {
   options.srv.server.router = {
@@ -187,19 +186,30 @@ in
     environment.etc = mapInterfaces (i: {
       name = "dnsmasq-${i.name}.conf";
       value = {
-        text = ''
-        ''
+        text =
+          ""
 
-        + (if i.dhcp.server.enable then ''
-          interface=${i.name}
-          dhcp-range=${i.dhcp.server.range.start},${i.dhcp.server.range.end},${i.dhcp.server.duration}
-        '' else "")
+          + (
+            if i.dhcp.server.enable then
+              ''
+                interface=${i.name}
+                dhcp-range=${i.dhcp.server.range.start},${i.dhcp.server.range.end},${i.dhcp.server.duration}
+              ''
+            else
+              ""
+          )
 
-        + (if i.dns.enable then ''
-          listen-address=${i.address.cidr}
-          bind-interfaces
-          port=${i.dns.port}
-        '' + (lib.concatMapStringsSep "\n" (s: "server=${s}") cfg.dns.servers) else "");
+          + (
+            if i.dns.enable then
+              ''
+                listen-address=${i.address.cidr}
+                bind-interfaces
+                port=${i.dns.port}
+              ''
+              + (lib.concatMapStringsSep "\n" (s: "server=${s}") cfg.dns.servers)
+            else
+              ""
+          );
       };
     });
 
