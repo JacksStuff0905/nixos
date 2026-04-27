@@ -13,6 +13,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./host.nix
     inputs.home-manager.nixosModules.default
     ../../modules/nixos/bootloader
     ../../modules/nixos/dev-utils
@@ -75,16 +76,26 @@
   sh.zsh.enable = true;
 
   # Services
-  srv.ssh.enable = false;
+  srv.ssh.enable = true;
   srv.printing.enable = true;
   srv.syncthing = {
     enable = true;
 
-    id = "";
+    id = "77NMBWJ-VW6FO7I-BNIVQSG-W3Q6MZ7-O3CCKXC-GUT45PN-TKFHKN2-SWCVKQQ";
 
     keySecret = ./secrets/syncthing-key.age;
 
-    cert = '''';
+    cert = ''-----BEGIN CERTIFICATE-----
+      MIIBoDCCAVKgAwIBAgIJAO0fTwymXmnIMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
+      dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
+      EwlzeW5jdGhpbmcwHhcNMjYwNDI3MDAwMDAwWhcNNDYwNDIyMDAwMDAwWjBKMRIw
+      EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
+      dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQBv3qnHvORREIMw7oXh
+      7qky0qQGHZbFM/SMMQIIXLGsFqNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+      MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
+      CXN5bmN0aGluZzAFBgMrZXADQQAKmTTx3N97XGMh8eVJCNQVSq8Bi8P3EDc/Ku9Z
+      y/xVlZAxEyrwcPrUAVA9hJxf/JB9gCO/36IgpSil6mZO6lYC
+      -----END CERTIFICATE-----'';
   };
 
   srv.lamp-test.enable = true;
