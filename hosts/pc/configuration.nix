@@ -6,6 +6,7 @@
   config,
   pkgs,
   inputs,
+  lib,
   ...
 }:
 
@@ -13,6 +14,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./host.nix
     inputs.home-manager.nixosModules.default
     ../../modules/nixos/bootloader
     ../../modules/nixos/dev-utils
@@ -24,7 +26,7 @@
     ../../modules/nixos/other
   ];
 
-  networking.hostName = "jacek-pc";
+  networking.hostName = config.host.hostName;
   programs.zsh.enable = true;
 
   # Bootloader
@@ -49,19 +51,28 @@
   # Users
   users.groups.nixos = { };
 
-  users.users.jacek = {
+  users.users."${config.host.username}" = {
     isNormalUser = true;
     extraGroups = [
       "wheel"
       "nixos"
     ];
+    home = "${config.host.home}";
+    createHome = true;
     shell = pkgs.zsh;
   };
 
   # Virtualization
-  virtualization.docker = {
-    enable = true;
-    users = [ "jacek" ];
+  virtualization = {
+    virt-manager = {
+      enable = true;
+      users = [ "${config.host.username}" ];
+    };
+
+    docker = {
+      enable = true;
+      users = [ "${config.host.username}" ];
+    };
   };
 
   # Shell config
@@ -69,8 +80,27 @@
   sh.zsh.enable = true;
 
   # Services
-  srv.ssh.enable = false;
+  srv.ssh.enable = true;
   srv.printing.enable = true;
+
+  srv.syncthing = {
+    enable = true;
+    id = "DZ4O5JP-ID2UND3-L57W6V3-FJC4OZC-NYY6PG7-6HTUC3V-274J5CK-YDKVXQS";
+
+    keySecret = ./secrets/syncthing-key.age;
+
+    cert = ''-----BEGIN CERTIFICATE-----
+      MIIBnzCCAVGgAwIBAgIIIceivbfc9O0wBQYDK2VwMEoxEjAQBgNVBAoTCVN5bmN0
+      aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0ZWQxEjAQBgNVBAMT
+      CXN5bmN0aGluZzAeFw0yNjA0MjYwMDAwMDBaFw00NjA0MjEwMDAwMDBaMEoxEjAQ
+      BgNVBAoTCVN5bmN0aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0
+      ZWQxEjAQBgNVBAMTCXN5bmN0aGluZzAqMAUGAytlcAMhAPtq35PFWrxgaMnlQI/i
+      dYrkqAmvV1JXa2a3uJ7J/7kzo1UwUzAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYw
+      FAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwFAYDVR0RBA0wC4IJ
+      c3luY3RoaW5nMAUGAytlcANBAH6gdFW0P9guj1bLWbSC56bKoQDltDHILB9irIAp
+      OSOwN38Q16dQbSSNlHCJkwoaLFc7bmoQuvI0/EtJOgd4QQQ=
+      -----END CERTIFICATE-----'';
+  };
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -126,7 +156,7 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "jacek" = import ./home.nix;
+      "${config.host.username}" = import ./home.nix;
     };
   };
 

@@ -56,7 +56,7 @@ in
           builtins.map (s: {
             name = "kanidm-service-${s.name}-password";
             value = {
-              file =
+              rekeyFile =
                 if (lib.isStorePath s.password) then s.password else cfg.secret.directory + ("/" + s.password);
               owner = "authelia-main";
               group = "authelia-main";

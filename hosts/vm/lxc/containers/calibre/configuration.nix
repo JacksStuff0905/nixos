@@ -14,8 +14,6 @@ in
   ];
 
   config = {
-    networking.hostName = "ct-calibre";
-
     # Services
     srv.server = {
       calibre = {

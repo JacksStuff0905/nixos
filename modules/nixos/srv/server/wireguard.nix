@@ -42,19 +42,19 @@ in
   config = lib.mkIf cfg.enable {
     age.secrets = {
       firezone-admin-password = {
-        file = cfg.secret.directory + ("/" + cfg.secret.firezone-admin-password);
+        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-admin-password);
         owner = "firezone";
         group = "firezone";
       };
 
       firezone-oidc-client-secret = {
-        file = cfg.secret.directory + ("/" + cfg.secret.firezone-oidc-client-secret);
+        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-oidc-client-secret);
         owner = "firezone";
         group = "firezone";
       };
 
       firezone-db-encryption-key = {
-        file = cfg.secret.directory + ("/" + cfg.secret.firezone-db-encryption-key);
+        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-db-encryption-key);
         owner = "firezone";
         group = "firezone";
       };

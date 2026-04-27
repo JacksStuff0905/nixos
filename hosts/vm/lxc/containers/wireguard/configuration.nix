@@ -11,8 +11,6 @@
   ];
 
   config = {
-    networking.hostName = "ct-wireguard";
-
     # Services
     srv.server = {
       wireguard = {

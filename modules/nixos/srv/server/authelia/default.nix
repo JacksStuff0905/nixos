@@ -241,37 +241,37 @@ in
       age.secrets = lib.mkMerge [
         {
           authelia-jwt-secret = {
-            file = cfg.secret.directory + ("/" + cfg.secret.jwt-secret);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.jwt-secret);
             owner = "authelia-main";
             group = "authelia-main";
           };
           authelia-storage-key = {
-            file = cfg.secret.directory + ("/" + cfg.secret.storage-key);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.storage-key);
             owner = "authelia-main";
             group = "authelia-main";
           };
 
           # New OIDC secrets
           authelia-oidc-hmac = {
-            file = cfg.secret.directory + ("/" + cfg.secret.oidc-hmac);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.oidc-hmac);
             owner = "authelia-main";
             group = "authelia-main";
           };
 
           authelia-oidc-private-key = {
-            file = cfg.secret.directory + ("/" + cfg.secret.oidc-private-key);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.oidc-private-key);
             owner = "authelia-main";
             group = "authelia-main";
           };
 
           authelia-ldap-password = {
-            file = cfg.secret.directory + ("/" + cfg.secret.ldap-password);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.ldap-password);
             owner = "authelia-main";
             group = "authelia-main";
           };
 
           authelia-smtp-password = {
-            file = cfg.secret.directory + ("/" + cfg.secret.smtp-password);
+            rekeyFile = cfg.secret.directory + ("/" + cfg.secret.smtp-password);
             owner = "authelia-main";
             group = "authelia-main";
           };

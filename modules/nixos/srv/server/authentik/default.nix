@@ -13,7 +13,6 @@ in
 {
   imports = [
     inputs.authentik-nix.nixosModules.default
-    inputs.agenix.nixosModules.default
     ./settings
   ];
 
@@ -57,14 +56,14 @@ in
     # Agenix
     age.secrets = {
       authentik-secret = {
-        file = cfg.secretFile;
+        rekeyFile = cfg.secretFile;
         owner = "root";
         group = "authentik";
         mode = "0640";
       };
 
       oauth2-secret = {
-        file = cfg.oauth2SecretFile;
+        rekeyFile = cfg.oauth2SecretFile;
         owner = "root";
         group = "authentik";
         mode = "0640";

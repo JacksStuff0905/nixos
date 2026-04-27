@@ -17,8 +17,6 @@ in
   ];
 
   config = {
-    networking.hostName = "ct-authelia";
-
     # Services
     srv.server = {
       authelia = {

@@ -103,7 +103,7 @@ in
     ];
 
     age.secrets.filebrowser-oidc = {
-      file = cfg.secretFile;
+      rekeyFile = cfg.secretFile;
       owner = "root";
       group = "filebrowser";
       mode = "0640";
