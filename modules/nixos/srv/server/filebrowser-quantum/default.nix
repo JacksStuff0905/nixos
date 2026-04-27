@@ -14,6 +14,8 @@ let
 
   usersDir = "${cfg.fbRoot}/Users";
 
+  cacheDir = "/tmp";
+
   types = with lib; {
     source = lib.types.submodule {
       options = with lib.types; {
@@ -170,6 +172,60 @@ in
         cfg.port
       ];
 
+      # Temporary filebrowser-quantum overlay to install v1.3.0
+      # Can be removed once said version gets packaged to nixpkgs
+      nixpkgs.overlays = [
+        (
+          final: prev:
+          let
+            version = "1.3.0-stable";
+
+            src = prev.fetchFromGitHub {
+              owner = "gtsteffaniak";
+              repo = "filebrowser";
+              rev = "v${version}";
+              hash = "sha256-U2J5ilP6fq7vsQ5qjLBvulzatAndlr13NRDF1KLoCWs=";
+            };
+
+            newFrontend = prev.buildNpmPackage {
+              pname = "filebrowser-quantum-frontend";
+              inherit version src;
+
+              sourceRoot = "${src.name}/frontend";
+
+              npmDepsHash = "sha256-926Wey0OyIKSiY0GBbzqh4pooB2Oz6QoRJs/SUUvlRE=";
+
+              buildPhase = ''
+                runHook preBuild
+                npm run build:docker
+                runHook postBuild
+              '';
+
+              installPhase = ''
+                runHook preInstall
+                mkdir -p $out
+                cp -r dist/* $out
+                runHook postInstall
+              '';
+            };
+          in
+          {
+            filebrowser-quantum = prev.filebrowser-quantum.overrideAttrs (oldAttrs: rec {
+              inherit version src;
+
+              sourceRoot = "${src.name}/backend";
+
+              vendorHash = "sha256-+IZ5sr7/nLgjEa2xxTbOdNQzh0DsffaAWWATw/45yyU=";
+
+              preBuild = ''
+                mkdir -p http/embed
+                cp -r ${newFrontend}/* http/embed/
+              '';
+            });
+          }
+        )
+      ];
+
       fileSystems = lib.mkMerge [
         (lib.mergeAttrsList (
           builtins.map (
@@ -233,6 +289,8 @@ in
         "d ${cfg.fbRoot} 0775 filebrowser filebrowser -"
         #"Z ${cfg.fbRoot} 0775 filebrowser filebrowser -"
         "d ${cfg.fbData} 0775 filebrowser filebrowser -"
+        "d ${cacheDir} 0775 filebrowser filebrowser -"
+        "Z ${cacheDir} 0775 filebrowser filebrowser -"
       ];
 
       /*
@@ -263,7 +321,7 @@ in
 
         serviceConfig = {
           Type = "simple";
-          User = "root";
+          User = "filebrowser";
           Group = "filebrowser";
           UMask = "0002";
 
@@ -271,6 +329,8 @@ in
           ProtectHome = lib.mkForce false;
           PrivateTmp = lib.mkForce false;
           NoNewPrivileges = lib.mkForce false;
+          AmbientCapabilities = "CAP_NET_BIND_SERVICE";
+          CapabilityBoundingSet = "CAP_NET_BIND_SERVICE";
 
           #EnvironmentFile = config.age.secrets.filebrowser-oidc.path;
           ExecStart = "${lib.getExe pkgs.filebrowser-quantum} -c ${configFile}";
