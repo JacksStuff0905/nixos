@@ -73,7 +73,7 @@
   srv.syncthing = {
     enable = true;
 
-    id = "77NMBWJ-VW6FO7I-BNIVQSG-W3Q6MZ7-O3CCKXC-GUT45PN-TKFHKN2-SWCVKQQ";
+    id = "AEJQBMR-NQD5637-LBB5Y6M-YUUBFJU-CZTNQPV-NAYWTU7-NBNCH7Z-K42E4A7";
 
     keySecret = ./secrets/syncthing-key.age;
 
