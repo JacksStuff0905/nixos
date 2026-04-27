@@ -47,6 +47,21 @@ in
       type = lib.types.str;
     };
 
+    user = lib.mkOption {
+      type = lib.types.str;
+      default = config.host.username;
+    };
+
+    group = lib.mkOption {
+      type = lib.types.str;
+      default = "syncthing";
+    };
+
+    dataDir = lib.mkOption {
+      type = lib.types.str;
+      default = config.host.home;
+    };
+
     keySecret = lib.mkOption {
       type = lib.types.path;
     };
@@ -106,12 +121,18 @@ in
     lib.mkIf cfg.enable {
       age.secrets.syncthing-key.rekeyFile = cfg.keySecret;
 
+      users.users."${cfg.user}".extraGroups = [ cfg.group ];
+
       services.syncthing = {
         enable = true;
         openDefaultPorts = true;
 
         key = config.age.secrets.syncthing-key.path;
         cert = if cfg.certFile == null then cfg.cert else (builtins.readFile cfg.certFile);
+
+        dataDir = cfg.dataDir;
+        user = cfg.user;
+        group = cfg.group;
 
         settings = {
           devices = lib.mkMerge [

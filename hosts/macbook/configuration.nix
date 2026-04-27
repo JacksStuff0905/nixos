@@ -24,14 +24,6 @@
     ../../modules/nixos/srv
   ];
 
-  host = {
-    username = "jacek";
-    hostName = "jacek-macbook";
-
-    isProduction = true;
-    isDesktop = true;
-  };
-
   networking.hostName = "${config.host.hostName}";
   programs.zsh.enable = true;
 
