@@ -111,9 +111,14 @@
                       else
                         "/Users/${user}";
                   };
-                  sshPubKey = mkOption {
+                  hostPubKey = mkOption {
                     type = nullOr str;
                     description = "The public ssh key of the host";
+                    default = null;
+                  };
+                  userPubKey = mkOption {
+                    type = nullOr str;
+                    description = "The public ssh key of the user";
                     default = null;
                   };
 
@@ -164,12 +169,15 @@
           ];
 
           age.rekey = lib.mkMerge [
-            (lib.mkIf (config.host ? sshPubKey && config.host.sshPubKey != null) {
-              hostPubkey = config.host.sshPubKey;
+            (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
+              hostPubkey = config.host.hostPubKey;
 
-              masterIdentities = lib.mkIf (config ? host && config.host ? home && config.host.isDev) [
-                "${config.host.home}/.ssh/id_ed25519"
-              ];
+              masterIdentities = lib.mapAttrsToList (n: h: h.host.userPubKey) (
+                lib.filterAttrs (
+                  n: h:
+                  (h ? host && h.host ? userPubKey && h.host.userPubKey != null && h.host ? isDev && h.host.isDev)
+                ) hosts
+              );
             })
             {
               storageMode = "local";
