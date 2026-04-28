@@ -118,6 +118,11 @@
                   };
 
                   # Configuration Settings
+                  isDev = mkOption {
+                    type = bool;
+                    default = false;
+                    description = "Used to indicate a developer host (used to write secrets etc.)";
+                  };
                   isMinimal = mkOption {
                     type = bool;
                     default = false;
@@ -162,7 +167,7 @@
             (lib.mkIf (config.host ? sshPubKey && config.host.sshPubKey != null) {
               hostPubkey = config.host.sshPubKey;
 
-              masterIdentities = lib.mkIf (config ? host && config.host ? username) [
+              masterIdentities = lib.mkIf (config ? host && config.host ? home && config.host.isDev) [
                 "${config.host.home}/.ssh/id_ed25519"
               ];
             })
@@ -255,7 +260,7 @@
               inputs
               util
               system
-              hostSpec
+              hosts
               ;
           };
 
@@ -296,6 +301,7 @@
           nixpkgs
           agenixModule
           hostSpec
+          hosts
           ;
       });
     }

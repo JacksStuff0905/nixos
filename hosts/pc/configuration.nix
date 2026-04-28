@@ -90,6 +90,12 @@
 
     keySecret = ./secrets/syncthing-key.age;
 
+    devices.extraDevices = {
+      "jacek S21FE" = {
+        id = "MVRIPLU-SETOKVI-BEDFUGD-RU4BQRE-H3LCJTZ-6VLJSRD-ETOA2U2-JEYHFAS";
+      };
+    };
+
     cert = ''
       -----BEGIN CERTIFICATE-----
       MIIBnzCCAVGgAwIBAgIIIceivbfc9O0wBQYDK2VwMEoxEjAQBgNVBAoTCVN5bmN0

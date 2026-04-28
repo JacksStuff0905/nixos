@@ -24,6 +24,28 @@ in
       };
     };
 
+    srv.syncthing = {
+      enable = true;
+
+      id = "TKC4XOV-KRONILN-ZPSIOTP-EWAPE6Q-VMLSHLW-ERJFCA4-KQL3T7T-QXVMFQF";
+
+      keySecret = ./secrets/syncthing-key.age;
+
+      cert = ''
+        -----BEGIN CERTIFICATE-----
+        MIIBoDCCAVKgAwIBAgIJAKTTaHV1DAAqMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
+        dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
+        EwlzeW5jdGhpbmcwHhcNMjYwNDI4MDAwMDAwWhcNNDYwNDIzMDAwMDAwWjBKMRIw
+        EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
+        dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQDU5/ZpNLWBJGM7IxkN
+        mdaHxbm4rRCYHE/dY39jQLZLhKNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+        MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
+        CXN5bmN0aGluZzAFBgMrZXADQQBc5QtgLVy1V4+UFawwPHipZ8UndDPIhDRgtuSN
+        896ei4FLI20JZfvsouSz8/HHR4AqET5g88iOvJGo+hZ/HcYN
+        -----END CERTIFICATE-----
+      '';
+    };
+
     # Services
     srv.server = {
       filebrowser-quantum = {
@@ -37,7 +59,6 @@ in
 
           domain = "srv.lan";
           ldapHost = "192.168.10.7";
-          
 
           secret.ldap-password = ../../../../../secrets/filebrowser/samba-ldap-password.age;
         };

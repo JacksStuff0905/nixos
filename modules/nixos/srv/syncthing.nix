@@ -3,6 +3,7 @@
   lib,
   pkgs,
   hosts,
+  options,
   ...
 }:
 
@@ -25,14 +26,22 @@ let
             type = str;
           };
 
+          versioning = lib.mkOption {
+            type = attrs;
+            default = {
+              type = "simple";
+              params.keep = "3";
+            };
+          };
+
           devices = {
             includeHosts = mkOption {
               type = bool;
               default = true;
             };
             extraDevices = mkOption {
-              type = listOf str;
-              default = [ ];
+              type = nullOr (listOf str);
+              default = null;
             };
           };
         };
@@ -100,9 +109,9 @@ in
 
   config =
     let
-      hostDevices = builtins.mapAttrs (n: h: { id = "${h.srv.syncthing.id}"; }) (
-        lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) hosts
-      );
+      hostDevices = builtins.mapAttrs (n: h: {
+        id = "${h.srv.syncthing.id}";
+      }) (lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) hosts);
 
       folderHosts =
         f:
@@ -150,8 +159,14 @@ in
 
           folders = builtins.mapAttrs (n: f: {
             path = f.path;
+            versioning = f.versioning;
             devices = lib.mkMerge [
-              f.devices.extraDevices
+              (
+                if f.devices.extraDevices == null then
+                  (builtins.attrNames cfg.devices.extraDevices)
+                else
+                  f.devices.extraDevices
+              )
               (lib.mkIf f.devices.includeHosts (folderHosts "${n}"))
             ];
           }) cfg.folders;
