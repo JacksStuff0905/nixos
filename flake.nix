@@ -171,15 +171,15 @@
           age.rekey = lib.mkMerge [
             (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
               hostPubkey = config.host.hostPubKey;
-
-              masterIdentities = lib.mapAttrsToList (n: h: h.host.userPubKey) (
+            })
+            {
+              masterIdentities = lib.mapAttrsToList (n: h: { identity = "${pkgs.writeText "agenix-user-key-${h.host.hostName}" h.host.userPubKey}"; }) (
                 lib.filterAttrs (
                   n: h:
                   (h ? host && h.host ? userPubKey && h.host.userPubKey != null && h.host ? isDev && h.host.isDev)
                 ) hosts
               );
-            })
-            {
+
               storageMode = "local";
 
               localStorageDir = ./. + "/secrets/rekeyed/${config.host.hostName}";
