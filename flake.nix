@@ -118,7 +118,12 @@
                   };
                   userPubKey = mkOption {
                     type = nullOr str;
-                    description = "The public ssh key of the user";
+                    description = "The public ssh (converted to age - `ssh-to-age`) key of the user";
+                    default = null;
+                  };
+                  userKeyPath = mkOption {
+                    type = nullOr str;
+                    description = "The private ssh key path of the user";
                     default = null;
                   };
 
@@ -155,7 +160,14 @@
                   };
                 };
               };
+          };
 
+          config.host = {
+            userKeyPath =
+              if config.host.userPubKey != null then
+                (lib.mkDefault "${config.host.home}/.ssh/id_ed25519")
+              else
+                null;
           };
         }
       );
@@ -173,12 +185,26 @@
               hostPubkey = config.host.hostPubKey;
             })
             {
-              masterIdentities = lib.mapAttrsToList (n: h: { identity = "${pkgs.writeText "agenix-user-key-${h.host.hostName}" h.host.userPubKey}"; }) (
-                lib.filterAttrs (
-                  n: h:
-                  (h ? host && h.host ? userPubKey && h.host.userPubKey != null && h.host ? isDev && h.host.isDev)
-                ) hosts
-              );
+              masterIdentities =
+                lib.mapAttrsToList
+                  (n: h: {
+                    identity = "${h.host.userKeyPath}";
+                    pubkey = "${h.host.userPubKey}";
+                  })
+                  (
+                    lib.filterAttrs (
+                      n: h:
+                      (
+                        h ? host
+                        && h.host ? userPubKey
+                        && h.host.userPubKey != null
+                        && h.host ? userKeyPath
+                        && h.host.userKeyPath != null
+                        && h.host ? isDev
+                        && h.host.isDev
+                      )
+                    ) hosts
+                  );
 
               storageMode = "local";
 
@@ -319,7 +345,13 @@
         overlays = [ inputs.agenix-rekey.overlays.default ];
       };
       devShells.default = pkgs.mkShell {
-        packages = [ pkgs.agenix-rekey ];
+        packages = [
+          pkgs.agenix-rekey
+          pkgs.ssh-to-age
+          (pkgs.writeShellScriptBin "agenix-batch-encrypt-txt" "
+for file in $(pwd)/*.txt; do agenix edit -i \"$file\" \"\${file%\".txt\"}.age\"; done
+          ")
+        ];
       };
     });
 }
