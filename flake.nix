@@ -181,7 +181,14 @@
           ];
 
           config =
+            let
+              indexed = lib.imap0 (idx: h: { inherit idx h; }) hosts;
+              found = lib.findFirst (x: x.h == config.host) null indexed;
+              primary_id = toString found.idx;
+            in
             {
+              environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = primary_id;
+
               age.rekey = lib.mkMerge [
                 (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
                   hostPubkey = config.host.hostPubKey;
