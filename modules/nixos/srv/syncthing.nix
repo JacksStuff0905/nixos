@@ -11,27 +11,33 @@ let
   cfg = config.srv.syncthing;
 
   types = {
-    folder =
+    mkFolder =
       with lib;
+      {
+        enable ? false,
+        path ? "",
+        versioning ? {
+          type = "simple";
+          params.keep = "3";
+        },
+      }:
       lib.types.submodule {
         options = with lib.types; {
           enable = mkOption {
-            default = false;
             example = true;
             description = "Whether to enable this folder";
             type = bool;
+            default = enable;
           };
 
           path = mkOption {
             type = str;
+            default = path;
           };
 
           versioning = lib.mkOption {
             type = attrs;
-            default = {
-              type = "simple";
-              params.keep = "3";
-            };
+            default = versioning;
           };
 
           devices = {
@@ -40,8 +46,8 @@ let
               default = true;
             };
             extraDevices = mkOption {
-              type = nullOr (listOf str);
-              default = null;
+              type = listOf str;
+              default = [ ];
             };
           };
         };
@@ -98,31 +104,45 @@ in
 
     folders = {
       secret = lib.mkOption {
-        type = types.folder;
-        default = {
+        type = types.mkFolder {
           enable = true;
           path = "~/Secret";
         };
+        default = { };
+      };
+
+      projects = lib.mkOption {
+        type = types.mkFolder {
+          enable = false;
+        };
+        default = { };
       };
     };
   };
 
   config =
     let
-      hostDevices = builtins.mapAttrs (n: h: {
-        id = "${h.srv.syncthing.id}";
+      hostDevices = lib.mapAttrs' (n: h: {
+        name = "${h.host.hostName or n}";
+        value = {
+          id = "${h.srv.syncthing.id}";
+        };
       }) (lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) hosts);
 
       folderHosts =
         f:
-        (builtins.attrNames (
+        (lib.mapAttrsToList (n: h: h.host.hostName) (
           lib.filterAttrs (
             n: h:
             (
+              let
+                folders = h.srv.syncthing.folders;
+              in
               h.srv.syncthing.enable
               && h.srv.syncthing.id != cfg.id
-              && h.srv.syncthing.folders ? "${f}"
-              && h.srv.syncthing.folders."${f}".enable
+              && folders ? "${f}"
+              && folders."${f}" ? enable
+              && folders."${f}".enable
             )
           ) hosts
         ));
@@ -161,12 +181,7 @@ in
             path = f.path;
             versioning = f.versioning;
             devices = lib.mkMerge [
-              (
-                if f.devices.extraDevices == null then
-                  (builtins.attrNames cfg.devices.extraDevices)
-                else
-                  f.devices.extraDevices
-              )
+              f.devices.extraDevices
               (lib.mkIf f.devices.includeHosts (folderHosts "${n}"))
             ];
           }) cfg.folders;
