@@ -180,37 +180,40 @@
             inputs.agenix-rekey.nixosModules.default
           ];
 
-          age.rekey = lib.mkMerge [
-            (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
-              hostPubkey = config.host.hostPubKey;
-            })
+          config =
             {
-              masterIdentities =
-                lib.mapAttrsToList
-                  (n: h: {
-                    identity = "${h.host.userKeyPath}";
-                    pubkey = "${h.host.userPubKey}";
-                  })
-                  (
-                    lib.filterAttrs (
-                      n: h:
+              age.rekey = lib.mkMerge [
+                (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
+                  hostPubkey = config.host.hostPubKey;
+                })
+                {
+                  masterIdentities =
+                    lib.mapAttrsToList
+                      (n: h: {
+                        identity = "${h.host.userKeyPath}";
+                        pubkey = "${h.host.userPubKey}";
+                      })
                       (
-                        h ? host
-                        && h.host ? userPubKey
-                        && h.host.userPubKey != null
-                        && h.host ? userKeyPath
-                        && h.host.userKeyPath != null
-                        && h.host ? isDev
-                        && h.host.isDev
-                      )
-                    ) hosts
-                  );
+                        lib.filterAttrs (
+                          n: h:
+                          (
+                            h ? host
+                            && h.host ? userPubKey
+                            && h.host.userPubKey != null
+                            && h.host ? userKeyPath
+                            && h.host.userKeyPath != null
+                            && h.host ? isDev
+                            && h.host.isDev
+                          )
+                        ) hosts
+                      );
 
-              storageMode = "local";
+                  storageMode = "local";
 
-              localStorageDir = ./. + "/secrets/rekeyed/${config.host.hostName}";
-            }
-          ];
+                  localStorageDir = ./. + "/secrets/rekeyed/${config.host.hostName}";
+                }
+              ];
+            };
         }
       );
 
