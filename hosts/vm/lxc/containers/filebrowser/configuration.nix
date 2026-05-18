@@ -29,6 +29,15 @@ in
 
       id = "SZK7J52-D7XBZ5P-HI2DVH2-RAHCOYF-SQOWB3Z-BOGKG3U-DMQIVTS-H4IARQK";
 
+      folders = {
+        projects = {
+          enable = true;
+          path = "${config.srv.server.filebrowser-quantum.fbRoot}/Users/jacek/Projects";
+        };
+
+        secret.enable = false;
+      };
+
       keySecret = ./secrets/syncthing-key.age;
 
       cert = ''
