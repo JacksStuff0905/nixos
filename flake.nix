@@ -182,8 +182,8 @@
 
           config =
             let
-              indexed = lib.imap0 (idx: h: { inherit idx h; }) hosts;
-              found = lib.findFirst (x: x.h == config.host) null indexed;
+              indexed = lib.imap0 (idx: h: { inherit idx; key = h.host.hostPubKey; }) (builtins.attrValues hosts);
+              found = lib.findFirst (x: x.key == config.host.hostPubKey) null indexed;
               primary_id = toString found.idx;
             in
             {
