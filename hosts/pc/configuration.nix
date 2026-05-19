@@ -62,6 +62,10 @@
     shell = pkgs.zsh;
   };
 
+  srv.lamp-test.enable = true;
+  srv.lamp-test.documentRoot = "/var/www/lamp-test";
+  srv.lamp-test.user = "${config.host.username}";
+
   # Virtualization
   virtualization = {
     virt-manager = {
@@ -94,6 +98,15 @@
       "jacek S21FE" = {
         id = "MVRIPLU-SETOKVI-BEDFUGD-RU4BQRE-H3LCJTZ-6VLJSRD-ETOA2U2-JEYHFAS";
       };
+    };
+
+    folders = {
+      projects = {
+        enable = true;
+        path = "~/Projects";
+      };
+
+      secret.devices.extraDevices = [ "jacek S21FE" ];
     };
 
     cert = ''
