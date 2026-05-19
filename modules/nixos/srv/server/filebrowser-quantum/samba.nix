@@ -95,8 +95,8 @@ in
     age.secrets = {
       samba-ldap-password = {
         rekeyFile = cfg.samba.secret.ldap-password;
-        owner = "root";
-        group = "root";
+        owner = "nslcd"; # samba can still access, it runs as root
+        group = "nslcd";
         mode = "400";
       };
     };
@@ -111,6 +111,14 @@ in
       })
     ];
 
+    users.groups.nslcd = {
+    };
+
+    users.users.nslcd = {
+      isSystemUser = true;
+      group = "nslcd";
+    };
+
     environment.systemPackages = [
       pkgs.samba
       pkgs.openldap
@@ -120,6 +128,16 @@ in
       ${pkgs.samba}/bin/smbpasswd -w "$(cat ${config.age.secrets.samba-ldap-password.path})"
       ${pkgs.samba}/bin/net setlocalsid ${domainSid}
     '';
+
+    systemd.services.samba-smbd.serviceConfig = {
+      User = "root";
+      Group = "root";
+    };
+
+    systemd.services.samba-nmbd.serviceConfig = {
+      User = "root";
+      Group = "root";
+    };
 
     services.samba = {
       enable = true;
@@ -167,10 +185,10 @@ in
           "path" = "/mnt/filebrowser/test";
           browseable = "yes";
           "read only" = "no";
-          "valid users" = "@users";
+          "valid users" = "@netusers";
           "create mask" = "0664";
           "directory mask" = "0775";
-          "force group" = "users";
+          "force group" = "netusers";
         };
 
         # 3. The Dynamic Share
@@ -217,9 +235,10 @@ in
       server = "${ldapURI}";
       base = ldapBaseDn;
       bind = {
-        distinguishedName = ldapBaseDn;
+        distinguishedName = "${ldapBindDn}";
         passwordFile = config.age.secrets.samba-ldap-password.path;
       };
+      nsswitch = true;
       daemon = {
         enable = true; # This enables nslcd
       };

@@ -45,22 +45,22 @@ in
                 name = "jacek";
                 email = "$U_JACEK_EMAIL";
                 groups = [
-                  "users"
-                  "admins"
+                  "netusers"
+                  "netadmins"
                 ];
                 password = "$U_JACEK_PASSWORD";
               }
               {
                 name = "julek";
                 groups = [
-                  "users"
+                  "netusers"
                 ];
                 email = "$U_JULEK_EMAIL";
               }
               {
                 name = "magda";
                 groups = [
-                  "users"
+                  "netusers"
                 ];
                 email = "$U_MAGDA_EMAIL";
               }
