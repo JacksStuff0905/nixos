@@ -36,7 +36,7 @@ in
     services.mysql.package = pkgs.mariadb;
     services.mysql.initialScript = pkgs.writeText "init.sql" ''
       SET PASSWORD FOR root@localhost="";
-      FLUSH PRIVILAGES;
+      FLUSH PRIVILEGES;
     '';
 
     # hacky way to create our directory structure and index page... don't actually use this
