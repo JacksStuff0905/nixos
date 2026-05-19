@@ -191,41 +191,18 @@ in
           "force group" = "netusers";
         };
 
-        # 3. The Dynamic Share
-        "users" =
-          let
-            create-samba-home = pkgs.writeShellScript "create-samba-home" ''
-              # %U is passed as the first argument ($1)
-              USERNAME="$1"
-
-              # Sanity check: prevent empty username
-              if [ -z "$USERNAME" ]; then exit 1; fi
-
-              TARGET_DIR="${usersDir}/$USERNAME"
-
-              if [ ! -d "$TARGET_DIR" ]; then
-                # Log to journald so you can see it happened
-                echo "Auto-creating SMB home for user: $USERNAME" | logger -t smb-mkdir
-
-                mkdir -p "$TARGET_DIR"
-                
-                # Set ownership to the Filebrowser system user
-                # This ensures Filebrowser can read what Samba created
-                chown filebrowser:filebrowser "$TARGET_DIR"
-                
-                # Standard directory permissions
-                chmod 755 "$TARGET_DIR"
-              fi
-            '';
-          in
+        # Per user 'drive' access
+        "my drive" =
           {
             comment = "User drives";
-            path = "${usersDir}/%S";
-            browseable = false;
-            "read only" = false;
-            "valid users" = "%S";
-            "create mask" = "0600";
+            path = "${usersDir}/%U";
+            browseable = "no";
+            "read only" = "no";
+            "valid users" = "%U";
+            "create mask" = "0700";
             "directory mask" = "0700";
+            "root preexec" =
+              "mkdir -p ${usersDir}/%U && chown %U:%G ${usersDir}/%U && chmod 700 ${usersDir}/%U";
           };
       };
     };
