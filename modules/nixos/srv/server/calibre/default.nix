@@ -50,7 +50,7 @@ in
         admin-groups = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [
-            "admins"
+            "netadmins"
           ];
         };
       };

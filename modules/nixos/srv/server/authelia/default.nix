@@ -354,12 +354,12 @@ in
               {
                 domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.admins;
                 policy = "one_factor";
-                subject = [ "group:admins" ];
+                subject = [ "group:netadmins" ];
               }
               {
                 domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.users;
                 policy = "one_factor";
-                subject = [ "group:users" ];
+                subject = [ "group:netusers" ];
               }
             ];
           };
