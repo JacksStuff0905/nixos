@@ -198,7 +198,7 @@
                     lib.mapAttrsToList
                       (n: h: {
                         identity = "${h.host.userKeyPath}";
-                        pubkey = builtins.trace "${h.host.userPubKey}" "${h.host.userPubKey}";
+                        pubkey = "${h.host.userPubKey}";
                       })
                       (
                         lib.filterAttrs (
