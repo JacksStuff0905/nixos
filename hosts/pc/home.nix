@@ -48,6 +48,7 @@ in
       };
       bottles.enable = true;
     };
+    apps.office.onlyoffice.enable = true;
 
     # Fonts
     fonts.enable = true;
