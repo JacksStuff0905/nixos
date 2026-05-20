@@ -64,7 +64,7 @@ in
 
     user = lib.mkOption {
       type = lib.types.str;
-      default = config.host.username;
+      default = config.host.user.name;
     };
 
     group = lib.mkOption {
@@ -74,7 +74,7 @@ in
 
     dataDir = lib.mkOption {
       type = lib.types.str;
-      default = config.host.home;
+      default = config.host.user.home;
     };
 
     keySecret = lib.mkOption {
@@ -184,7 +184,7 @@ in
               f.devices.extraDevices
               (lib.mkIf f.devices.includeHosts (folderHosts "${n}"))
             ];
-          }) cfg.folders;
+          }) (lib.filterAttrs (n: f: f.enable) cfg.folders);
         };
       };
     };

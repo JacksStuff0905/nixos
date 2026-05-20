@@ -73,58 +73,99 @@
               with lib;
               types.submodule {
                 options = with lib.types; {
-                  username = mkOption {
-                    type = str;
-                    description = "The username of the host";
-                    default = "root";
-                  };
                   hostName = mkOption {
                     type = str;
                     description = "The hostname of the host";
                   };
-                  email = mkOption {
-                    type = attrsOf str;
-                    description = "The email of the user";
-                  };
-                  networking = mkOption {
-                    default = { };
-                    type = attrsOf anything;
-                    description = "An attribute set of networking information";
+                  networking = {
+                    vpn = {
+                      mesh = {
+                        enable = mkEnableOption "mesh vpn";
+                        pubKey = mkOption {
+                          type = str;
+                          description = "The mesh vpn public key";
+                        };
+                        keyPath = mkOption {
+                          type = path;
+                          description = "The path to the age encrypted private key file";
+                        };
+                        ip = mkOption {
+                          type = str;
+                          description = "The mesh vpn ip address of this host";
+                        };
+                        endpoint = mkOption {
+                          type = nullOr str;
+                          description = "The mesh vpn endpoint of this host (or null)";
+                          default = null;
+                        };
+                        listenPort = mkOption {
+                          type = int;
+                          default = 51820;
+                        };
+                        persistentKeepalive = mkOption {
+                          type = int;
+                          default = 25;
+                        };
+                        extraAllowedIPs = mkOption {
+                          type = listOf str;
+                          default = [ ];
+                        };
+                      };
+                    };
+
+                    extraConfig = mkOption {
+                      default = { };
+                      type = attrsOf anything;
+                      description = "An attribute set of networking information";
+                    };
                   };
                   domain = mkOption {
-                    type = str;
+                    type = nullOr str;
                     description = "The domain of the host";
-                  };
-                  userFullName = mkOption {
-                    type = str;
-                    description = "The full name of the user";
-                  };
-                  home = mkOption {
-                    type = str;
-                    description = "The home directory of the user";
-                    default =
-                      let
-                        user = config.host.username;
-                      in
-                      if pkgs.stdenv.isLinux then
-                        (if user == "root" then "/root" else "/home/${user}")
-                      else
-                        "/Users/${user}";
+                    default = null;
                   };
                   hostPubKey = mkOption {
                     type = nullOr str;
                     description = "The public ssh key of the host";
                     default = null;
                   };
-                  userPubKey = mkOption {
-                    type = nullOr str;
-                    description = "The public ssh (converted to age - `ssh-to-age`) key of the user";
-                    default = null;
-                  };
-                  userKeyPath = mkOption {
-                    type = nullOr str;
-                    description = "The private ssh key path of the user";
-                    default = null;
+
+                  user = {
+                    name = mkOption {
+                      type = str;
+                      description = "The username of the host";
+                      default = "root";
+                    };
+                    pubKey = mkOption {
+                      type = nullOr str;
+                      description = "The public ssh (converted to age - `ssh-to-age`) key of the user";
+                      default = null;
+                    };
+                    keyPath = mkOption {
+                      type = nullOr str;
+                      description = "The private ssh key path of the user";
+                      default = null;
+                    };
+                    fullName = mkOption {
+                      type = str;
+                      description = "The full name of the user";
+                    };
+                    home = mkOption {
+                      type = str;
+                      description = "The home directory of the user";
+                      default =
+                        let
+                          user = config.host.user.name;
+                        in
+                        if pkgs.stdenv.isLinux then
+                          (if user == "root" then "/root" else "/home/${user}")
+                        else
+                          "/Users/${user}";
+                    };
+                    email = mkOption {
+                      type = attrsOf str;
+                      description = "The email of the user";
+                    };
                   };
 
                   # Configuration Settings
@@ -163,9 +204,9 @@
           };
 
           config.host = {
-            userKeyPath =
-              if config.host.userPubKey != null then
-                (lib.mkDefault "${config.host.home}/.ssh/id_ed25519")
+            user.keyPath =
+              if config.host.user.pubKey != null then
+                (lib.mkDefault "${config.host.user.home}/.ssh/id_ed25519")
               else
                 null;
           };
@@ -182,12 +223,16 @@
 
           config =
             let
-              indexed = lib.imap0 (idx: h: { inherit idx; key = h.host.hostPubKey; }) (builtins.attrValues hosts);
+              indexed = lib.imap0 (idx: h: {
+                inherit idx;
+                key = h.host.hostPubKey;
+              }) (builtins.attrValues hosts);
               found = lib.findFirst (x: x.key == config.host.hostPubKey) null indexed;
               primary_id = toString found.idx;
             in
             {
               environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = primary_id;
+              environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY_ONLY = true;
 
               age.rekey = lib.mkMerge [
                 (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
@@ -197,18 +242,19 @@
                   masterIdentities =
                     lib.mapAttrsToList
                       (n: h: {
-                        identity = "${h.host.userKeyPath}";
-                        pubkey = "${h.host.userPubKey}";
+                        identity = "${h.host.user.keyPath}";
+                        pubkey = "${h.host.user.pubKey}";
                       })
                       (
                         lib.filterAttrs (
                           n: h:
                           (
                             h ? host
-                            && h.host ? userPubKey
-                            && h.host.userPubKey != null
-                            && h.host ? userKeyPath
-                            && h.host.userKeyPath != null
+                            && h.host ? user
+                            && h.host.user ? pubKey
+                            && h.host.user.pubKey != null
+                            && h.host.user ? keyPath
+                            && h.host.user.keyPath != null
                             && h.host ? isDev
                             && h.host.isDev
                           )

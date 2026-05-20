@@ -51,31 +51,31 @@
   # Users
   users.groups.nixos = { };
 
-  users.users."${config.host.username}" = {
+  users.users."${config.host.user.name}" = {
     isNormalUser = true;
     extraGroups = [
       "wheel"
       "nixos"
     ];
-    home = "${config.host.home}";
+    home = "${config.host.user.home}";
     createHome = true;
     shell = pkgs.zsh;
   };
 
   srv.lamp-test.enable = true;
   srv.lamp-test.documentRoot = "/var/www/lamp-test";
-  srv.lamp-test.user = "${config.host.username}";
+  srv.lamp-test.user = "${config.host.user.name}";
 
   # Virtualization
   virtualization = {
     virt-manager = {
       enable = true;
-      users = [ "${config.host.username}" ];
+      users = [ "${config.host.user.name}" ];
     };
 
     docker = {
       enable = true;
-      users = [ "${config.host.username}" ];
+      users = [ "${config.host.user.name}" ];
     };
   };
 
@@ -177,7 +177,7 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "${config.host.username}" = import ./home.nix;
+      "${config.host.user.name}" = import ./home.nix;
     };
   };
 
