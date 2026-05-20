@@ -5,7 +5,7 @@
 
     user = {
       name = "jacek";
-      pubKey = "age1jhxld58nuudn0cj6k62plh7szzt8nj0zah5fsjmq265m6l88tudsahwsf8";
+      pubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFS1jwKvufBe2kP+ZuSZhXrYA29H9XdAsklrxTw6hw3B";
     };
 
     hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEJtaLUPMHMbSu/b7F1FrHbyqq2B0SfFCrBLo1pTxXFq";

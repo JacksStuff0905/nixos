@@ -232,7 +232,7 @@
             in
             {
               environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = primary_id;
-              environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY_ONLY = true;
+              #environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY_ONLY = true;
 
               age.rekey = lib.mkMerge [
                 (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {
