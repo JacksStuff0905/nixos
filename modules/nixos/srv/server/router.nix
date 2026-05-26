@@ -108,6 +108,7 @@ in
     };
   };
 
+  /*
   config = lib.mkIf cfg.enable {
     networking = {
       networkmanager.enable = false;
@@ -137,7 +138,6 @@ in
       });
 
       # NAT for internet sharing
-      /*
         nat = {
           enable = true;
           externalInterface = cfg.interfaces.wan.name; # WAN
@@ -146,10 +146,8 @@ in
           ]
           ++ (builtins.map (f: f.name) cfg.interfaces.extra); # LAN
         };
-      */
 
       # Simple firewall rules
-      /*
         firewall = {
           enable = true;
 
@@ -158,7 +156,6 @@ in
             iptables -A nixos-fw -p tcp --dport 22 -s 192.168.1.0/24 -j ACCEPT
           '';
         };
-      */
     };
 
     # DHCP and DNS server (dnsmasq provides both)
@@ -213,7 +210,6 @@ in
       };
     });
 
-    /*
       services.dnsmasq = {
         enable = true;
         settings = {
@@ -237,6 +233,6 @@ in
           ];
         };
       };
-    */
   };
+  */
 }

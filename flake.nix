@@ -29,6 +29,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    jellarr.url = "github:venkyr77/jellarr";
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -88,19 +90,31 @@
                         keyPath = mkOption {
                           type = path;
                           description = "The path to the age encrypted private key file";
+                          default = ./secrets/vpn-mesh/vpn-mesh-key.age;
                         };
                         ip = mkOption {
                           type = str;
                           description = "The mesh vpn ip address of this host";
+                        };
+                        name = mkOption {
+                          type = str;
+                          description = "The mesh vpn dns name of this host (hostname by default)";
+                          default = "${config.host.hostName}";
                         };
                         endpoint = mkOption {
                           type = nullOr str;
                           description = "The mesh vpn endpoint of this host (or null)";
                           default = null;
                         };
-                        listenPort = mkOption {
-                          type = int;
-                          default = 51820;
+                        ports = {
+                          wireguard = mkOption {
+                            type = int;
+                            default = 51820;
+                          };
+                          gossip = mkOption {
+                            type = int;
+                            default = 7946;
+                          };
                         };
                         persistentKeepalive = mkOption {
                           type = int;
@@ -223,12 +237,25 @@
 
           config =
             let
+              masterHosts = lib.filterAttrs (
+                n: h:
+                (
+                  h ? host
+                  && h.host ? user
+                  && h.host.user ? pubKey
+                  && h.host.user.pubKey != null
+                  && h.host.user ? keyPath
+                  && h.host.user.keyPath != null
+                  && h.host ? isDev
+                  && h.host.isDev
+                )
+              ) hosts;
               indexed = lib.imap0 (idx: h: {
                 inherit idx;
                 key = h.host.hostPubKey;
-              }) (builtins.attrValues hosts);
+              }) (builtins.attrValues masterHosts);
               found = lib.findFirst (x: x.key == config.host.hostPubKey) null indexed;
-              primary_id = toString found.idx;
+              primary_id = if (found == null || !(found ? idx)) then null else (toString found.idx);
             in
             {
               environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = primary_id;
@@ -239,27 +266,10 @@
                   hostPubkey = config.host.hostPubKey;
                 })
                 {
-                  masterIdentities =
-                    lib.mapAttrsToList
-                      (n: h: {
-                        identity = "${h.host.user.keyPath}";
-                        pubkey = "${h.host.user.pubKey}";
-                      })
-                      (
-                        lib.filterAttrs (
-                          n: h:
-                          (
-                            h ? host
-                            && h.host ? user
-                            && h.host.user ? pubKey
-                            && h.host.user.pubKey != null
-                            && h.host.user ? keyPath
-                            && h.host.user.keyPath != null
-                            && h.host ? isDev
-                            && h.host.isDev
-                          )
-                        ) hosts
-                      );
+                  masterIdentities = lib.mapAttrsToList (n: h: {
+                    identity = "${h.host.user.keyPath}";
+                    pubkey = "${h.host.user.pubKey}";
+                  }) masterHosts;
 
                   storageMode = "local";
 

@@ -117,6 +117,13 @@ in
         };
         default = { };
       };
+
+      calibreLibrary = lib.mkOption {
+        type = types.mkFolder {
+          enable = false;
+        };
+        default = { };
+      };
     };
   };
 

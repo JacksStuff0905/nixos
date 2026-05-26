@@ -69,7 +69,15 @@ in
             services = [
               {
                 name = "samba";
-                password = ../../../../../secrets/filebrowser/samba-ldap-password.age;
+                password = ../../../../../secrets/ldap-users/samba-service-password.age;
+                groups = [
+                  "ldap_readers"
+                  "samba_writers"
+                ];
+              }
+              {
+                name = "calibre";
+                password = ../../../../../secrets/ldap-users/calibre-service-password.age;
                 groups = [
                   "ldap_readers"
                   "samba_writers"

@@ -57,7 +57,7 @@ let
 in
 {
   imports = [
-    ./samba.nix
+    #./samba.nix
   ];
 
   options.srv.server."${name}" = {
@@ -108,6 +108,17 @@ in
     openFirewall = lib.mkOption {
       type = lib.types.bool;
       default = true;
+    };
+
+    sambaShares = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+      };
+      userDrives = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+      };
     };
   };
 
@@ -225,6 +236,22 @@ in
         )
       ];
 
+      srv.server.samba = lib.mkIf cfg.sambaShares.enable {
+        shares = {
+          "my drive" = lib.mkIf cfg.sambaShares.userDrives {
+            comment = "User drives";
+            path = "${usersDir}/%U";
+            browseable = "no";
+            "read only" = "no";
+            "valid users" = "%U";
+            "create mask" = "0700";
+            "directory mask" = "0700";
+            "root preexec" =
+              "mkdir -p ${usersDir}/%U && chown %U:%G ${usersDir}/%U && chmod 700 ${usersDir}/%U";
+          };
+        };
+      };
+
       fileSystems = lib.mkMerge [
         (lib.mergeAttrsList (
           builtins.map (
@@ -287,6 +314,7 @@ in
       systemd.tmpfiles.rules = [
         "d ${cfg.fbRoot} 0775 filebrowser filebrowser -"
         #"Z ${cfg.fbRoot} 0775 filebrowser filebrowser -"
+        "d ${usersDir} 0755 root root -"
         "d ${cfg.fbData} 0775 filebrowser filebrowser -"
         "d ${cacheDir} 0775 filebrowser filebrowser -"
         "Z ${cacheDir} 0775 filebrowser filebrowser -"

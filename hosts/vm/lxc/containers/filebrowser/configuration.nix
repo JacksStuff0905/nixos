@@ -57,21 +57,22 @@ in
 
     # Services
     srv.server = {
+      samba = {
+        enable = true;
+        openFirewall = true;
+
+        ldapUser = "samba";
+
+        domain = "srv.lan";
+        ldapHost = "192.168.10.7";
+
+        secret.ldap-password = ../../../../../secrets/ldap-users/samba-service-password.age;
+      };
+
       filebrowser-quantum = {
         enable = true;
         openFirewall = false; # IP based firewall below
         secret.directory = ../../../../../secrets/filebrowser;
-
-        samba = {
-          enable = true;
-          openFirewall = true;
-
-          domain = "srv.lan";
-          ldapHost = "192.168.10.7";
-
-          secret.ldap-password = ../../../../../secrets/filebrowser/samba-ldap-password.age;
-        };
-
         sources = {
           userDrives = "${nasIP}:${nfsPath}/Files/UserDrives";
           extra = [

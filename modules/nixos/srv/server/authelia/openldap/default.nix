@@ -317,18 +317,21 @@ in
                   # 1. Root/Localhost can manage everything (via ldapi)
                   "{0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break"
 
-                  "{1}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
+                  # Admins have full access
+                  "{1}to * by group.exact=\"cn=netadmins,ou=groups,${basedn}\" manage by * break"
+
+                  "{2}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
                   by group.exact=\"cn=ldap_managers,ou=groups,${basedn}\" manage 
                   by self write
                   by anonymous auth 
                   by * none"
 
-                  "{2}to attrs=userPassword,sambaNTPassword
+                  "{3}to attrs=userPassword,sambaNTPassword
                   by group.exact=\"cn=samba_writers,ou=groups,${basedn}\" write
                   by self write
                   by * none"
 
-                  "{3}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
+                  "{4}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
                   by group.exact=\"cn=ldap_writers,ou=groups,${basedn}\" write 
                   by anonymous auth 
                   by group.exact=\"cn=ldap_readers,ou=groups,${basedn}\" read 
@@ -336,7 +339,7 @@ in
                   by * none"
 
                   # 3. Standard Read Access for everything else
-                  "{4}to * by self read by dn.base=\"${basedn}\" write by * read"
+                  "{5}to * by self read by dn.base=\"${basedn}\" write by * read"
                 ];
               };
 
@@ -402,54 +405,54 @@ in
             sambaSID: ${sambaSID}
             sambaNextRid: 1000
             ${lib.concatMapStrings (
-                g:
-                let
-                  membersServices = lib.filter (u: lib.elem g.name u.groups) (services);
-                  membersUsers = lib.filter (u: lib.elem g.name u.groups) (users);
+              g:
+              let
+                membersServices = lib.filter (u: lib.elem g.name u.groups) (services);
+                membersUsers = lib.filter (u: lib.elem g.name u.groups) (users);
 
-                  memberNames =
-                    (map (s: "cn=${s.name},ou=services,${basedn}") membersServices)
-                    ++ (map (u: "uid=${u.name},ou=people,${basedn}") membersUsers);
+                memberNames =
+                  (map (s: "cn=${s.name},ou=services,${basedn}") membersServices)
+                  ++ (map (u: "uid=${u.name},ou=people,${basedn}") membersUsers);
 
-                  manageMembers = lib.concatMapStrings (
-                    t:
-                    let
-                      member = "${
-                        {
-                          "posix" = "memberUid";
-                          "names" = "member";
-                          "uniqueNames" = "member";
-                        }
-                        ."${t}"
-                      }";
-                    in
-                    (
-                      "\n${member}: cn=${g.name},ou=groups,${basedn}${
-                        lib.concatMapStrings (m: "\n${member}: ${m}") memberNames
-                      }"
-                    )
-                  ) g.type;
-
-                  class = lib.concatMapStrings (
-                    t:
-                    "\nobjectClass: ${
+                manageMembers = lib.concatMapStrings (
+                  t:
+                  let
+                    member = "${
                       {
-                        "posix" = "posixGroup";
-                        "names" = "groupOfNames";
-                        "uniqueNames" = "groupOfUniqueNames";
+                        "posix" = "memberUid";
+                        "names" = "member";
+                        "uniqueNames" = "member";
                       }
                       ."${t}"
+                    }";
+                  in
+                  (
+                    "\n${member}: cn=${g.name},ou=groups,${basedn}${
+                      lib.concatMapStrings (m: "\n${member}: ${m}") memberNames
                     }"
-                  ) g.type;
-                in
-                ''
+                  )
+                ) g.type;
 
-                  dn: cn=${g.name},ou=groups,${basedn}${class}
-                  cn: ${g.name}${
-                    if builtins.elem "posix" g.type then "\ngidNumber: ${toString g.gid}" else ""
-                  }${manageMembers}
-                ''
-              ) groups}'';
+                class = lib.concatMapStrings (
+                  t:
+                  "\nobjectClass: ${
+                    {
+                      "posix" = "posixGroup";
+                      "names" = "groupOfNames";
+                      "uniqueNames" = "groupOfUniqueNames";
+                    }
+                    ."${t}"
+                  }"
+                ) g.type;
+              in
+              ''
+
+                dn: cn=${g.name},ou=groups,${basedn}${class}
+                cn: ${g.name}${
+                  if builtins.elem "posix" g.type then "\ngidNumber: ${toString g.gid}" else ""
+                }${manageMembers}
+              ''
+            ) groups}'';
         };
       };
 

@@ -49,11 +49,13 @@ homeDirectory: /home/${user.name}
 mail: ${user.email}
 loginShell: /bin/bash
 sambaSID: ${sambaSID}-${toString user.uid}
-userPassword: $HASH
+userPassword:
 sambaNTPassword: 
 EOF
-  fi
 
+    # Set initial password
+    ${pkgs.openldap}/bin/ldappasswd -Y EXTERNAL -H ldapi:/// -s "${user.name}" "uid=${user.name},ou=people,${basedn}"
+  fi
   '';
 in
 script
