@@ -30,6 +30,7 @@
     };
 
     jellarr.url = "github:venkyr77/jellarr";
+    nixarr.url = "github:nix-media-server/nixarr";
 
     flake-utils.url = "github:numtide/flake-utils";
   };

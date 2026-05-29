@@ -14,6 +14,12 @@ let
   basedn = builtins.concatStringsSep "," (
     builtins.map (d: "dc=${d}") (lib.splitString "." cfg.auth.ldap.domain)
   );
+
+  cwa_default_settings = {
+    "auto_metadata_fetch_enabled" = 0;
+    "auto_metadata_smart_application" = 0;
+    "auto_convert_retained_formats" = "epub,mobi";
+  };
 in
 {
   options.srv.server."${name}" = {
@@ -31,7 +37,7 @@ in
     frontends = {
       configPath = lib.mkOption {
         type = lib.types.str;
-        default = "/var/lib/calibre-web";
+        default = "/var/lib/calibre/calibre-web-config";
       };
 
       calibre-web = {
@@ -53,6 +59,10 @@ in
         plugins = lib.mkOption {
           type = lib.types.str;
           default = "/var/lib/calibre/plugins";
+        };
+        settings = lib.mkOption {
+          type = lib.types.attrs;
+          default = cwa_default_settings;
         };
       };
     };
@@ -294,7 +304,7 @@ in
       virtualisation.oci-containers.backend = "podman";
 
       virtualisation.oci-containers.containers."calibre-web-automated" = {
-        image = "crocodilestick/calibre-web-automated:latest";
+        image = "ghcr.io/new-usemame/calibre-web-nextgen:latest";
         environment = {
           #"HARDCOVER_TOKEN" = "your_hardcover_api_key_here";
           "NETWORK_SHARE_MODE" = "true";
@@ -316,6 +326,9 @@ in
         extraOptions = [
           "--network-alias=calibre-web-automated"
           "--network=calibre-web-automated_default"
+          "--cpus=0"
+          "--memory=0"
+          "--ulimit=nofile=65535:65535"
         ];
       };
 
@@ -326,6 +339,10 @@ in
 
       systemd.services."podman-calibre-web-automated" =
         let
+          mkSettings =
+            set:
+            lib.concatStringsSep ", " (lib.flatten (lib.mapAttrsToList (n: v: "${n} = '${toString v}'") set));
+
           settings = lib.concatStringsSep ", " (
             lib.flatten (
               [
@@ -342,6 +359,8 @@ in
               ]
             )
           );
+
+          cwa_settings = mkSettings (cwa_default_settings // cfg.frontends.calibre-web-automated.settings);
         in
         {
           # Apply settings
@@ -361,6 +380,8 @@ in
             fi
 
             ${pkgs.sqlite}/bin/sqlite3 ${cfg.frontends.configPath}/app.db "update settings set ${settings};"
+
+            ${pkgs.sqlite}/bin/sqlite3 ${cfg.frontends.configPath}/cwa.db "update cwa_settings set ${cwa_settings};"
           '';
 
           postStart = "";
