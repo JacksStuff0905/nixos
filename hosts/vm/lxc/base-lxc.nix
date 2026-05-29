@@ -118,6 +118,9 @@
     # Garbage collect
     nix.gc.automatic = true;
 
+    # Prevent 100% disk usage (leave 0.5GB empty)
+    nix.settings.min-free = 500000000;
+
     nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
     system.stateVersion = "25.11";
