@@ -15,6 +15,7 @@
     srv.server = {
       jellyfin = {
         enable = true;
+        secretsDir = ./secrets;
       };
     };
   

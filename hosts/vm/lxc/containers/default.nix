@@ -5,7 +5,7 @@
   system,
   nixpkgs,
   agenixModule,
-  hosts,
+  common,
   hostSpec,
 }:
 
@@ -20,7 +20,7 @@ in
     value = (
       nixpkgs.lib.nixosSystem {
         specialArgs = {
-          inherit inputs util system hosts;
+          inherit inputs util system common;
         };
 
         modules = [

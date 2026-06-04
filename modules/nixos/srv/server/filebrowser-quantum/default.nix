@@ -56,10 +56,6 @@ let
   };
 in
 {
-  imports = [
-    #./samba.nix
-  ];
-
   options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name}";
 

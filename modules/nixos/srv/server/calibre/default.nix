@@ -221,11 +221,9 @@ in
         group = "calibre-data";
       };
 
-      /*
-        networking.firewall.allowedTCPPorts = [
-                web-port
-              ];
-      */
+      networking.firewall.allowedTCPPorts = [
+        web-port
+      ];
 
       systemd.tmpfiles.rules = [
         "d /var/empty/.config/calibre 0775 calibre calibre-data -"

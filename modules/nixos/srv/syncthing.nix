@@ -2,8 +2,7 @@
   config,
   lib,
   pkgs,
-  hosts,
-  options,
+  common,
   ...
 }:
 
@@ -134,7 +133,7 @@ in
         value = {
           id = "${h.srv.syncthing.id}";
         };
-      }) (lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) hosts);
+      }) (lib.filterAttrs (n: h: (h.srv.syncthing.enable && h.srv.syncthing.id != cfg.id)) common.nixosHosts);
 
       folderHosts =
         f:
@@ -151,7 +150,7 @@ in
               && folders."${f}" ? enable
               && folders."${f}".enable
             )
-          ) hosts
+          ) common.nixosHosts
         ));
     in
     lib.mkIf cfg.enable {
