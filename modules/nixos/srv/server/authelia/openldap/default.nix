@@ -14,8 +14,6 @@ let
     builtins.map (d: "dc=${d}") (lib.splitString "." cfg.url.domain)
   );
 
-  openldapPackage = import ./openldap-smbk5pwd.nix { inherit pkgs; };
-
   # Samba schema for OpenLDAP (LDIF format for cn=confiopenldap)
   sambaSchemaLdif = import ./samba-ldif.nix { inherit pkgs; };
   rfc2307bisSchemaLdif = import ./rfc2307bis-ldif.nix { inherit pkgs; };
@@ -214,247 +212,251 @@ in
         }
       ];
 
-      services.openldap = {
-        enable = true;
+      services.openldap =
+        let
+          openldapPackage = import ./openldap-smbk5pwd.nix { inherit pkgs; };
+        in
+        {
+          enable = true;
 
-        package = openldapPackage;
+          package = openldapPackage;
 
-        urlList = [
-          "ldap://0.0.0.0:3890/"
-          "ldaps:///"
-          "ldapi:///"
-        ];
+          urlList = [
+            "ldap://0.0.0.0:3890/"
+            "ldaps:///"
+            "ldapi:///"
+          ];
 
-        settings = {
-          # 1. Enable POSIX and Standard Schemas
-          attrs = {
-            olcLogLevel = "stats";
-          };
-
-          children = {
-            "cn=module{0}" = {
-              attrs = {
-                objectClass = [ "olcModuleList" ];
-                cn = "module{0}";
-                olcModulePath = [
-                  "${openldapPackage}/lib/modules"
-                ];
-                olcModuleLoad = [
-                  "smbk5pwd"
-                ];
-              };
+          settings = {
+            # 1. Enable POSIX and Standard Schemas
+            attrs = {
+              olcLogLevel = "stats";
             };
 
-            "cn=schema" = {
-              attrs = {
-                cn = "schema";
-                objectClass = "olcSchemaConfig";
+            children = {
+              "cn=module{0}" = {
+                attrs = {
+                  objectClass = [ "olcModuleList" ];
+                  cn = "module{0}";
+                  olcModulePath = [
+                    "${openldapPackage}/lib/modules"
+                  ];
+                  olcModuleLoad = [
+                    "smbk5pwd"
+                  ];
+                };
               };
-              # Include standard schemas
-              includes = [
-                "${pkgs.openldap}/etc/schema/core.ldif"
-                "${pkgs.openldap}/etc/schema/cosine.ldif"
-                "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
-                #"${pkgs.openldap}/etc/schema/nis.ldif"
-                rfc2307bisSchemaLdif
-                sambaSchemaLdif
-              ];
-            };
 
-            # ── Frontend config ──
-            "olcDatabase={-1}frontend" = {
-              attrs = {
-                objectClass = "olcDatabaseConfig";
-                olcDatabase = "{-1}frontend";
-                olcAccess = [
-                  ''
-                    {0}to *
-                                    by dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
-                                    by * break''
-                ];
-              };
-            };
-
-            # ── Config database (cn=config) ──
-            "olcDatabase={0}config" = {
-              attrs = {
-                objectClass = "olcDatabaseConfig";
-                olcDatabase = "{0}config";
-                olcAccess = [
-                  ''
-                    {0}to *
-                                    by dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
-                                    by * none''
+              "cn=schema" = {
+                attrs = {
+                  cn = "schema";
+                  objectClass = "olcSchemaConfig";
+                };
+                # Include standard schemas
+                includes = [
+                  "${pkgs.openldap}/etc/schema/core.ldif"
+                  "${pkgs.openldap}/etc/schema/cosine.ldif"
+                  "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
+                  #"${pkgs.openldap}/etc/schema/nis.ldif"
+                  rfc2307bisSchemaLdif
+                  sambaSchemaLdif
                 ];
               };
-            };
 
-            "olcDatabase={1}mdb" = {
-              attrs = {
-                # REQUIRED: Define the object classes for the database type
-                objectClass = [
-                  "olcDatabaseConfig"
-                  "olcMdbConfig"
-                ];
-                olcDatabase = "{1}mdb";
+              # ── Frontend config ──
+              "olcDatabase={-1}frontend" = {
+                attrs = {
+                  objectClass = "olcDatabaseConfig";
+                  olcDatabase = "{-1}frontend";
+                  olcAccess = [
+                    ''
+                      {0}to *
+                                      by dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
+                                      by * break''
+                  ];
+                };
+              };
 
-                olcDbDirectory = "/var/lib/openldap/data";
-                olcSuffix = basedn;
-                olcRootDN = "cn=admin,${basedn}";
-                olcRootPW = "{SSHA}gQ3YWHKmqglR/6t5eA/tpGcJOy+nINoA";
+              # ── Config database (cn=config) ──
+              "olcDatabase={0}config" = {
+                attrs = {
+                  objectClass = "olcDatabaseConfig";
+                  olcDatabase = "{0}config";
+                  olcAccess = [
+                    ''
+                      {0}to *
+                                      by dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
+                                      by * none''
+                  ];
+                };
+              };
 
-                olcDbIndex = [
-                  "objectClass eq"
-                  "uid eq"
-                  "cn eq,sub"
-                  "sambaSID eq"
-                ];
+              "olcDatabase={1}mdb" = {
+                attrs = {
+                  # REQUIRED: Define the object classes for the database type
+                  objectClass = [
+                    "olcDatabaseConfig"
+                    "olcMdbConfig"
+                  ];
+                  olcDatabase = "{1}mdb";
 
-                # 1GB
-                olcDbMaxSize = "1073741824";
+                  olcDbDirectory = "/var/lib/openldap/data";
+                  olcSuffix = basedn;
+                  olcRootDN = "cn=admin,${basedn}";
+                  olcRootPW = "{SSHA}gQ3YWHKmqglR/6t5eA/tpGcJOy+nINoA";
 
-                olcAccess = [
-                  # 1. Root/Localhost can manage everything (via ldapi)
-                  "{0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break"
+                  olcDbIndex = [
+                    "objectClass eq"
+                    "uid eq"
+                    "cn eq,sub"
+                    "sambaSID eq"
+                  ];
 
-                  # Admins have full access
-                  "{1}to * by group.exact=\"cn=netadmins,ou=groups,${basedn}\" manage by * break"
+                  # 1GB
+                  olcDbMaxSize = "1073741824";
 
-                  "{2}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
+                  olcAccess = [
+                    # 1. Root/Localhost can manage everything (via ldapi)
+                    "{0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break"
+
+                    # Admins have full access
+                    "{1}to * by group.exact=\"cn=netadmins,ou=groups,${basedn}\" manage by * break"
+
+                    "{2}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
                   by group.exact=\"cn=ldap_managers,ou=groups,${basedn}\" manage 
                   by self write
                   by anonymous auth 
                   by * none"
 
-                  "{3}to attrs=userPassword,sambaNTPassword
+                    "{3}to attrs=userPassword,sambaNTPassword
                   by group.exact=\"cn=samba_writers,ou=groups,${basedn}\" write
                   by self write
                   by * none"
 
-                  "{4}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
+                    "{4}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
                   by group.exact=\"cn=ldap_writers,ou=groups,${basedn}\" write 
                   by anonymous auth 
                   by group.exact=\"cn=ldap_readers,ou=groups,${basedn}\" read 
                   by anonymous auth 
                   by * none"
 
-                  # 3. Standard Read Access for everything else
-                  "{5}to * by self read by dn.base=\"${basedn}\" write by * read"
-                ];
-              };
-
-              children = {
-                "olcOverlay={0}smbk5pwd".attrs = {
-                  objectClass = [
-                    "olcOverlayConfig"
-                    "olcSmbK5PwdConfig"
+                    # 3. Standard Read Access for everything else
+                    "{5}to * by self read by dn.base=\"${basedn}\" write by * read"
                   ];
-                  olcOverlay = "{0}smbk5pwd";
+                };
 
-                  # NixOS will automatically convert this list into multiple
-                  # olcSmbK5PwdEnable lines in the resulting LDIF
-                  olcSmbK5PwdEnable = [
-                    #"krb5"
-                    "samba"
-                  ];
+                children = {
+                  "olcOverlay={0}smbk5pwd".attrs = {
+                    objectClass = [
+                      "olcOverlayConfig"
+                      "olcSmbK5PwdConfig"
+                    ];
+                    olcOverlay = "{0}smbk5pwd";
+
+                    # NixOS will automatically convert this list into multiple
+                    # olcSmbK5PwdEnable lines in the resulting LDIF
+                    olcSmbK5PwdEnable = [
+                      #"krb5"
+                      "samba"
+                    ];
+                  };
                 };
               };
             };
           };
-        };
 
-        declarativeContents = {
-          "${basedn}" = ''
-            dn: ${basedn}
-            objectClass: top
-            objectClass: dcObject
-            objectClass: organization
-            dc: ${dcHead}
-            o: ${dcHead}
+          declarativeContents = {
+            "${basedn}" = ''
+              dn: ${basedn}
+              objectClass: top
+              objectClass: dcObject
+              objectClass: organization
+              dc: ${dcHead}
+              o: ${dcHead}
 
-            ${
-              lib.concatMapStrings
-                (ou: ''
-                  dn: ou=${ou},${basedn}
-                  objectClass: organizationalUnit
-                  ou: ${ou}
+              ${
+                lib.concatMapStrings
+                  (ou: ''
+                    dn: ou=${ou},${basedn}
+                    objectClass: organizationalUnit
+                    ou: ${ou}
 
-                '')
-                [
-                  "people"
-                  "services"
-                  "groups"
-                  "policies"
-                  "idmap"
-                ]
-            }dn: cn=default,ou=policies,${basedn}
-            objectClass: pwdPolicy
-            objectClass: person
-            objectClass: top
-            cn: default
-            sn: default
-            pwdAttribute: userPassword
-            pwdMaxAge: 0
-            pwdSafeModify: FALSE
-            pwdMustChange: FALSE
-            pwdAllowUserChange: TRUE
+                  '')
+                  [
+                    "people"
+                    "services"
+                    "groups"
+                    "policies"
+                    "idmap"
+                  ]
+              }dn: cn=default,ou=policies,${basedn}
+              objectClass: pwdPolicy
+              objectClass: person
+              objectClass: top
+              cn: default
+              sn: default
+              pwdAttribute: userPassword
+              pwdMaxAge: 0
+              pwdSafeModify: FALSE
+              pwdMustChange: FALSE
+              pwdAllowUserChange: TRUE
 
-            dn: sambaDomainName=${sambaDomainName},${basedn}
-            objectClass: sambaDomain
-            sambaDomainName: ${sambaDomainName}
-            sambaSID: ${sambaSID}
-            sambaNextRid: 1000
-            ${lib.concatMapStrings (
-              g:
-              let
-                membersServices = lib.filter (u: lib.elem g.name u.groups) (services);
-                membersUsers = lib.filter (u: lib.elem g.name u.groups) (users);
+              dn: sambaDomainName=${sambaDomainName},${basedn}
+              objectClass: sambaDomain
+              sambaDomainName: ${sambaDomainName}
+              sambaSID: ${sambaSID}
+              sambaNextRid: 1000
+              ${lib.concatMapStrings (
+                g:
+                let
+                  membersServices = lib.filter (u: lib.elem g.name u.groups) (services);
+                  membersUsers = lib.filter (u: lib.elem g.name u.groups) (users);
 
-                memberNames =
-                  (map (s: "cn=${s.name},ou=services,${basedn}") membersServices)
-                  ++ (map (u: "uid=${u.name},ou=people,${basedn}") membersUsers);
+                  memberNames =
+                    (map (s: "cn=${s.name},ou=services,${basedn}") membersServices)
+                    ++ (map (u: "uid=${u.name},ou=people,${basedn}") membersUsers);
 
-                manageMembers = lib.concatMapStrings (
-                  t:
-                  let
-                    member = "${
+                  manageMembers = lib.concatMapStrings (
+                    t:
+                    let
+                      member = "${
+                        {
+                          "posix" = "memberUid";
+                          "names" = "member";
+                          "uniqueNames" = "member";
+                        }
+                        ."${t}"
+                      }";
+                    in
+                    (
+                      "\n${member}: cn=${g.name},ou=groups,${basedn}${
+                        lib.concatMapStrings (m: "\n${member}: ${m}") memberNames
+                      }"
+                    )
+                  ) g.type;
+
+                  class = lib.concatMapStrings (
+                    t:
+                    "\nobjectClass: ${
                       {
-                        "posix" = "memberUid";
-                        "names" = "member";
-                        "uniqueNames" = "member";
+                        "posix" = "posixGroup";
+                        "names" = "groupOfNames";
+                        "uniqueNames" = "groupOfUniqueNames";
                       }
                       ."${t}"
-                    }";
-                  in
-                  (
-                    "\n${member}: cn=${g.name},ou=groups,${basedn}${
-                      lib.concatMapStrings (m: "\n${member}: ${m}") memberNames
                     }"
-                  )
-                ) g.type;
+                  ) g.type;
+                in
+                ''
 
-                class = lib.concatMapStrings (
-                  t:
-                  "\nobjectClass: ${
-                    {
-                      "posix" = "posixGroup";
-                      "names" = "groupOfNames";
-                      "uniqueNames" = "groupOfUniqueNames";
-                    }
-                    ."${t}"
-                  }"
-                ) g.type;
-              in
-              ''
-
-                dn: cn=${g.name},ou=groups,${basedn}${class}
-                cn: ${g.name}${
-                  if builtins.elem "posix" g.type then "\ngidNumber: ${toString g.gid}" else ""
-                }${manageMembers}
-              ''
-            ) groups}'';
+                  dn: cn=${g.name},ou=groups,${basedn}${class}
+                  cn: ${g.name}${
+                    if builtins.elem "posix" g.type then "\ngidNumber: ${toString g.gid}" else ""
+                  }${manageMembers}
+                ''
+              ) groups}'';
+          };
         };
-      };
 
       systemd.tmpfiles.rules = [
         "d /var/lib/openldap 0750 openldap openldap"

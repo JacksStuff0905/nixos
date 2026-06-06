@@ -41,6 +41,7 @@ in
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;
+    apps.browsers.chromium.enable = true;
     apps.launchers = {
       games = {
         lutris.enable = true;
@@ -51,6 +52,11 @@ in
       bottles.enable = true;
     };
     apps.office.onlyoffice.enable = true;
+
+    xdg.portal = {
+      enable = true;
+      extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+    };
 
     # Fonts
     fonts.enable = true;

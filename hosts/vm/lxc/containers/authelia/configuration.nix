@@ -87,18 +87,6 @@ in
           };
         };
 
-        access = {
-          admins = [
-            "dns"
-            "proxy"
-          ];
-          users = [
-            "calibre"
-            "drive"
-            "photos"
-          ];
-        };
-
         clients.oidc = [
           {
             id = "photos";

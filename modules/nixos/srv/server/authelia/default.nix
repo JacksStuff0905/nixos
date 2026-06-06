@@ -2,6 +2,8 @@
   config,
   lib,
   pkgs,
+  util,
+  common,
   ...
 }:
 let
@@ -84,17 +86,6 @@ in
       };
       name = lib.mkOption {
         type = lib.types.str;
-      };
-    };
-
-    access = {
-      users = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [ ];
-      };
-      admins = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [ ];
       };
     };
 
@@ -339,28 +330,50 @@ in
           access_control = {
             default_policy = "deny";
 
-            rules = [
-              {
-                domain = "${cfg.url.name}.${cfg.url.domain}";
-                policy = "bypass";
-                resources = [
-                  "^/api/.*$"
-                  "^/jwks.json$"
-                  "^/.well-known/.*$"
-                  "^/[a-zA-Z0-9]+/.well-known/.*$"
-                  "^/static/.*$"
-                ];
-              }
-              {
-                domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.admins;
-                policy = "one_factor";
-                subject = [ "group:netadmins" ];
-              }
-              {
-                domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.users;
-                policy = "one_factor";
-                subject = [ "group:netusers" ];
-              }
+            rules = lib.mkMerge [
+              [
+                {
+                  domain = "${cfg.url.name}.${cfg.url.domain}";
+                  policy = "bypass";
+                  resources = [
+                    "^/api/.*$"
+                    "^/jwks.json$"
+                    "^/.well-known/.*$"
+                    "^/[a-zA-Z0-9]+/.well-known/.*$"
+                    "^/static/.*$"
+                  ];
+                }
+              ]
+              (lib.flatten (
+                lib.mapAttrsToList (
+                  n: s:
+                  (builtins.map (
+                    r:
+                    {
+                      domain = "${n}.${s.domain}";
+                      policy = r.policy;
+                    }
+                    // (
+                      if r.subject == null then
+                        { }
+                      else
+                        { subject = (if (builtins.isString r.subject) then [ r.subject ] else r.subject); }
+                    )
+                  ) s.access)
+                ) (util.tools.getHostServices common.hosts)
+              ))
+              /*
+                {
+                  domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.admins;
+                  policy = "one_factor";
+                  subject = [ "group:netadmins" ];
+                }
+                {
+                  domain = builtins.map (d: "${d}.${cfg.url.domain}") cfg.access.users;
+                  policy = "one_factor";
+                  subject = [ "group:netusers" ];
+                }
+              */
             ];
           };
 
@@ -383,8 +396,8 @@ in
             disable_startup_check = false;
             smtp = {
               address = cfg.smtp.address;
-              username = ''${cfg.smtp.username}'';
-              sender = ''${cfg.smtp.username}'';
+              username = "${cfg.smtp.username}";
+              sender = "${cfg.smtp.username}";
               subject = "[Authelia] {title}";
             };
           };

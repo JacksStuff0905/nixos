@@ -29,7 +29,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    jellarr.url = "github:venkyr77/jellarr";
+    nixflix = {
+      url = "github:kiriwalawren/nixflix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -64,6 +67,8 @@
             ignore = ignore;
             self = import ./util/get-files-dir.nix;
           };
+        types = import ./util/types.nix { inherit pkgs; };
+        tools = import ./util/tools.nix { inherit pkgs; };
       };
 
       hostSpec = (
@@ -71,150 +76,7 @@
         {
           options.host = lib.mkOption {
             description = "This host's specification";
-            type =
-              with lib;
-              types.submodule {
-                options = with lib.types; {
-                  hostName = mkOption {
-                    type = str;
-                    description = "The hostname of the host";
-                  };
-                  networking = {
-                    vpn = {
-                      mesh = {
-                        enable = mkEnableOption "mesh vpn";
-                        pubKey = mkOption {
-                          type = str;
-                          description = "The mesh vpn public key";
-                        };
-                        keyPath = mkOption {
-                          type = path;
-                          description = "The path to the age encrypted private key file";
-                          default = ./secrets/vpn-mesh/vpn-mesh-key.age;
-                        };
-                        ip = mkOption {
-                          type = str;
-                          description = "The mesh vpn ip address of this host";
-                        };
-                        name = mkOption {
-                          type = str;
-                          description = "The mesh vpn dns name of this host (hostname by default)";
-                          default = "${config.host.hostName}";
-                        };
-                        endpoint = mkOption {
-                          type = nullOr str;
-                          description = "The mesh vpn endpoint of this host (or null)";
-                          default = null;
-                        };
-                        ports = {
-                          wireguard = mkOption {
-                            type = int;
-                            default = 51820;
-                          };
-                          gossip = mkOption {
-                            type = int;
-                            default = 7946;
-                          };
-                        };
-                        persistentKeepalive = mkOption {
-                          type = int;
-                          default = 25;
-                        };
-                        extraAllowedIPs = mkOption {
-                          type = listOf str;
-                          default = [ ];
-                        };
-                      };
-                    };
-
-                    extraConfig = mkOption {
-                      default = { };
-                      type = attrsOf anything;
-                      description = "An attribute set of networking information";
-                    };
-                  };
-                  domain = mkOption {
-                    type = nullOr str;
-                    description = "The domain of the host";
-                    default = null;
-                  };
-                  hostPubKey = mkOption {
-                    type = nullOr str;
-                    description = "The public ssh key of the host";
-                    default = null;
-                  };
-
-                  user = {
-                    name = mkOption {
-                      type = str;
-                      description = "The username of the host";
-                      default = "root";
-                    };
-                    pubKey = mkOption {
-                      type = nullOr str;
-                      description = "The public ssh (converted to age - `ssh-to-age`) key of the user";
-                      default = null;
-                    };
-                    keyPath = mkOption {
-                      type = nullOr str;
-                      description = "The private ssh key path of the user";
-                      default = null;
-                    };
-                    fullName = mkOption {
-                      type = str;
-                      description = "The full name of the user";
-                    };
-                    home = mkOption {
-                      type = str;
-                      description = "The home directory of the user";
-                      default =
-                        let
-                          user = config.host.user.name;
-                        in
-                        if pkgs.stdenv.isLinux then
-                          (if user == "root" then "/root" else "/home/${user}")
-                        else
-                          "/Users/${user}";
-                    };
-                    email = mkOption {
-                      type = attrsOf str;
-                      description = "The email of the user";
-                    };
-                  };
-
-                  # Configuration Settings
-                  isDev = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a developer host (used to write secrets etc.)";
-                  };
-                  isMinimal = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a minimal host";
-                  };
-                  isProduction = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a production host";
-                  };
-                  isTesting = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a testing host";
-                  };
-                  isServer = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a server host";
-                  };
-                  isDesktop = mkOption {
-                    type = bool;
-                    default = false;
-                    description = "Used to indicate a desktop host";
-                  };
-                };
-              };
+            type = util.types.host config;
           };
 
           config.host = {
@@ -249,7 +111,7 @@
                   && h.host ? isDev
                   && h.host.isDev
                 )
-              ) hosts;
+              ) common.hosts;
               indexed = lib.imap0 (idx: h: {
                 inherit idx;
                 key = h.host.hostPubKey;
@@ -258,7 +120,7 @@
               primary_id = if (found == null || !(found ? idx)) then null else (toString found.idx);
             in
             {
-              environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = primary_id;
+              environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = config.host.user.pubKey;
               #environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY_ONLY = true;
 
               age.rekey = lib.mkMerge [
@@ -280,7 +142,21 @@
         }
       );
 
-      hosts = lib.mapAttrs (name: cfg: cfg.config) self.nixosConfigurations;
+      nixosHosts = lib.mapAttrs (name: cfg: cfg.config) self.nixosConfigurations;
+
+      externalHosts = lib.mapAttrs (name: h: {
+        host = (lib.evalModules {
+          modules = [
+            { config.host = h; }
+            hostSpec
+          ];
+        }).config.host;
+      }) (import ./hosts/external.nix { inherit pkgs; });
+
+      common = {
+        inherit nixosHosts externalHosts;
+        hosts = nixosHosts // externalHosts;
+      };
     in
     {
       agenix-rekey = inputs.agenix-rekey.configure {
@@ -298,7 +174,7 @@
               inputs
               util
               system
-              hosts
+              common
               ;
           };
 
@@ -312,7 +188,7 @@
                   inherit
                     util
                     system
-                    hosts
+                    common
                     ;
                 };
                 sharedModules = [ hostSpec ];
@@ -329,7 +205,7 @@
               inputs
               util
               system
-              hosts
+              common
               ;
           };
 
@@ -343,7 +219,7 @@
                   inherit
                     util
                     system
-                    hosts
+                    common
                     ;
                 };
                 sharedModules = [ hostSpec ];
@@ -360,7 +236,7 @@
               inputs
               util
               system
-              hosts
+              common
               ;
           };
 
@@ -401,7 +277,7 @@
           nixpkgs
           agenixModule
           hostSpec
-          hosts
+          common
           ;
       });
     }

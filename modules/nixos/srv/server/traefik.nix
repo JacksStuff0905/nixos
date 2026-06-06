@@ -2,6 +2,8 @@
   config,
   lib,
   pkgs,
+  common,
+  util,
   ...
 }:
 let
@@ -25,24 +27,26 @@ let
     fi
   '';
 
-  types = {
-    host = lib.types.submodule {
-      options = with lib.types; {
-        src = lib.mkOption { type = str; };
-        dest = lib.mkOption { type = str; };
+  publicServices =
+    lib.mapAttrsToList
+      (n: s: {
+        src = "${n}.${s.domain or config.host.networking.domain}";
+        dest = "${s.proto}://${s.ip or config.host.networking.ip}:${toString s.port}";
+        middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
+        middlewares = s.middlewares;
+      })
+      (
+        (util.tools.getHostServices common.hosts)
+        // cfg.extraServices
+      );
 
-        authelia = lib.mkEnableOption "authelia middleware";
-      };
-    };
-  };
+  mkServiceName = s: (lib.replaceStrings [ "." ] [ "-" ] s);
+
+  certificates = cfg.certificates.extra ++ [ cfg.certificates.default ];
 in
 {
   options.srv.server."${name}" = {
     enable = lib.mkEnableOption "Enable ${name}";
-    hosts = lib.mkOption {
-      type = lib.types.listOf types.host;
-      default = { };
-    };
 
     http = lib.mkOption {
       type = lib.types.attrs;
@@ -52,50 +56,24 @@ in
       type = lib.types.attrs;
       default = { };
     };
-    certificates.extra = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-    };
-
-    self = {
-      enable = lib.mkEnableOption "self host record";
-      authelia = lib.mkEnableOption "authelia integration";
-      url = lib.mkOption {
+    certificates = {
+      default = lib.mkOption {
         type = lib.types.str;
+        default = "lan";
       };
-      ip = lib.mkOption {
-        type = lib.types.str;
-      };
-    };
-
-    authelia = {
-      enable = lib.mkEnableOption "Enable authelia integration";
-      url = {
-        ip = lib.mkOption {
-          type = lib.types.str;
-        };
-
-        auth-port = lib.mkOption {
-          type = lib.types.int;
-        };
-
-        lldap-port = lib.mkOption {
-          type = lib.types.int;
-        };
-
-        name = lib.mkOption {
-          type = lib.types.str;
-        };
-
-        lldap-name = lib.mkOption {
-          type = lib.types.str;
-        };
-
-        domain = lib.mkOption {
-          type = lib.types.str;
-        };
+      extra = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
       };
     };
+
+    extraServices =
+      with lib;
+      with types;
+      mkOption {
+        type = attrsOf util.types.publicService;
+        default = { };
+      };
   };
 
   config = lib.mkIf cfg.enable {
@@ -104,12 +82,7 @@ in
     ];
 
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
-      builtins.map mkCert (
-        if (cfg.authelia.enable && !(builtins.elem cfg.authelia.url.domain cfg.certificates.extra)) then
-          (cfg.certificates.extra ++ [ cfg.authelia.url.domain ])
-        else
-          cfg.certificates.extra
-      )
+      builtins.map mkCert certificates
     );
 
     systemd.services.traefik = {
@@ -172,98 +145,40 @@ in
         http = lib.mkMerge [
           cfg.http
           {
-            middlewares = {
-              authelia-proxy =
-                let
-                  autheliaUrl = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.auth-port}";
-                in
-                {
-                  forwardAuth = {
-                    address = "${autheliaUrl}/api/authz/forward-auth";
-                    trustForwardHeader = true;
-                    authResponseHeaders = [
-                      "Remote-User"
-                      "Remote-Groups"
-                      "Remote-Email"
-                      "Remote-Name"
-                    ];
-                  };
-                };
-            };
-            routers =
-              let
-                authHost = "${cfg.authelia.url.name}.${cfg.authelia.url.domain}";
-                userHost = "${cfg.authelia.url.lldap-name}.${cfg.authelia.url.domain}";
-              in
-              {
-                auth-srv = {
-                  rule = "Host(`${authHost}`)";
-                  service = "auth-service";
-                  tls = { };
-                };
-
-                auth-lldap-srv = {
-                  rule = "Host(`${userHost}`)";
-                  service = "auth-lldap-service";
-                  tls = { };
-                };
-              };
-
-            services = {
-              auth-service.loadBalancer.servers = [
-                {
-                  url = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.auth-port}";
-                }
-              ];
-
-              auth-lldap-service.loadBalancer.servers = [
-                {
-                  url = "http://${cfg.authelia.url.ip}:${toString cfg.authelia.url.lldap-port}";
-                }
-              ];
-            };
+            middlewares = builtins.listToAttrs (
+              builtins.map (s: {
+                name = "${mkServiceName s.src}";
+                value = s.middleware;
+              }) (builtins.filter (s: s.middleware != null) publicServices)
+            );
           }
-          (lib.mkIf cfg.self.enable {
-            routers.self-srv = {
-              rule = "Host(`${cfg.self.url}`)";
-              service = "self-service";
-              middlewares = if cfg.self.authelia then [ "authelia-proxy" ] else [ ];
-              tls = { };
-            };
-
-            services.self-service.loadBalancer.servers = [
-              {
-                url = "http://${cfg.self.ip}:8080";
-              }
-            ];
-          })
           ({
             routers = builtins.listToAttrs (
-              builtins.map (host: {
-                name = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-srv";
+              builtins.map (s: {
+                name = (mkServiceName s.src) + "-srv";
                 value = {
-                  rule = "Host(`${host.src}`)";
-                  service = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-service";
+                  rule = "Host(`${s.src}`)";
+                  service = (mkServiceName s.src) + "-service";
                   entryPoints = [ "websecure" ];
-                  middlewares = if host.authelia then [ "authelia-proxy" ] else [ ];
+                  middlewares = builtins.map (m: mkServiceName m) s.middlewares;
                   tls = { };
                 };
-              }) cfg.hosts
+              }) publicServices
             );
 
             services = builtins.listToAttrs (
-              builtins.map (host: {
-                name = (lib.replaceStrings [ "." ] [ "-" ] host.src) + "-service";
+              builtins.map (s: {
+                name = (mkServiceName s.src) + "-service";
                 value = {
                   loadBalancer = {
                     servers = [
                       {
-                        url = "${host.dest}";
+                        url = "${s.dest}";
                       }
                     ];
                   };
                 };
-              }) cfg.hosts
+              }) publicServices
             );
           })
         ];
@@ -273,11 +188,11 @@ in
           certificates = builtins.map (v: {
             certFile = "${certDir}/${v}/crt";
             keyFile = "${certDir}/${v}/key";
-          }) cfg.certificates.extra;
+          }) certificates;
 
           stores.default.defaultCertificate =
             let
-              cert = cfg.authelia.url.domain;
+              cert = cfg.certificates.default;
             in
             {
               certFile = "${certDir}/${cert}/crt";
