@@ -37,6 +37,7 @@ in
     # Desktop apps
     apps.game-engines.godot.enable = false; # Godot will be enabled in project shells
     apps.media.music.spotify.enable = true;
+    apps.media.calibre.enable = true;
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;

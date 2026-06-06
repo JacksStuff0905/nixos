@@ -96,7 +96,8 @@
   srv.lamp-test.user = "${config.host.user.name}";
 
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # 6.6 for webcam
+  boot.kernelPackages = pkgs.linuxPackages_6_6; #pkgs.linuxPackages_latest;
 
   # Allow unfree packages
   nixpkgs.config = {

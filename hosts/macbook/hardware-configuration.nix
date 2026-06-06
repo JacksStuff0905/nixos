@@ -25,17 +25,23 @@
   boot.kernelModules = [
     "kvm-intel"
     "wl"
+    "facetimehd"
   ];
   hardware.enableAllFirmware = true;
   boot.extraModulePackages = with config.boot.kernelPackages; [
     broadcom_sta
+    facetimehd
   ];
   boot.blacklistedKernelModules = [
     "b43"
     "bcma"
     "brcmsmac"
     "ssb"
+    "bdc_pci"
   ];
+
+  # Webcam
+  hardware.facetimehd.enable = true;
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/5441f20c-0121-4781-af9f-779965251bfd";
@@ -58,7 +64,7 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   nixpkgs.config = {
     permittedInsecurePackages = [
-      "broadcom-sta-6.30.223.271-59-6.19.11"
+      "broadcom-sta-6.30.223.271-59-6.6.141"
     ];
   };
 

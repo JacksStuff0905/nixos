@@ -1,10 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  util,
-  ...
-}:
+  {config, lib, pkgs, util, ...}:
 
 let
   file_to_not_import = [
