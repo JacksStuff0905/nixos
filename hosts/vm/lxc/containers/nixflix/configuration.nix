@@ -13,7 +13,7 @@
   config = {
     # Services
     srv.server = {
-      jellyfin = {
+      nixflix = {
         enable = true;
         secretsDir = ./secrets;
       };

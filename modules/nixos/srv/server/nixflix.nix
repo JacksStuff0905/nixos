@@ -6,16 +6,21 @@
   ...
 }:
 let
-  name = "jellyfin";
+  name = "nixflix";
 
   cfg = config.srv.server."${name}";
 
-  moviesDir = "/mnt/media/movies";
-
-  apiKeyPath = "/var/lib/jellyfin-api-key";
-
-  secrets = [
+  generatedSecrets = [
     "jellyfin-api-key"
+    "sonarr-api-key"
+    "radarr-api-key"
+    "prowlarr-api-key"
+  ];
+
+  manualSecrets = [
+    "sonarr-password"
+    "radarr-password"
+    "prowlarr-password"
   ];
 in
 {
@@ -57,7 +62,13 @@ in
           rekeyFile = cfg.secretsDir + "/${s}.age";
           generator.script = "hex";
         };
-      }) secrets
+      }) generatedSecrets
+      ++ builtins.map (s: {
+        name = "${s}";
+        value = {
+          rekeyFile = cfg.secretsDir + "/${s}.age";
+        };
+      }) manualSecrets
     );
 
     nixflix = {
@@ -77,58 +88,42 @@ in
 
       postgres.enable = true;
 
-      /*
-        sonarr = {
-          enable = true;
-          config = {
-            apiKey = {
-              _secret = config.sops.secrets."sonarr/api_key".path;
-            };
-            hostConfig.password = {
-              _secret = config.sops.secrets."sonarr/password".path;
-            };
+      sonarr = {
+        enable = true;
+        config = {
+          apiKey._secret = config.age.secrets.sonarr-api-key.path;
+          hostConfig = {
+            username = "admin";
+            password._secret = config.age.secrets.sonarr-password.path;
           };
         };
-      */
+      };
 
-      /*
-        radarr = {
-          enable = true;
-          config = {
-            apiKey = {
-              _secret = config.sops.secrets."radarr/api_key".path;
-            };
-            hostConfig.password = {
-              _secret = config.sops.secrets."radarr/password".path;
-            };
+      radarr = {
+        enable = true;
+        config = {
+          apiKey = {
+            _secret = config.age.secrets.radarr-api-key.path;
+          };
+          hostConfig = {
+            username = "admin";
+            password._secret = config.age.secrets.radarr-password.path;
           };
         };
-      */
+      };
 
-      /*
-        prowlarr = {
-          enable = true;
-          config = {
-            apiKey = {
-              _secret = config.sops.secrets."prowlarr/api_key".path;
-            };
-            hostConfig.password = {
-              _secret = config.sops.secrets."prowlarr/password".path;
-            };
+      prowlarr = {
+        enable = true;
+        config = {
+          apiKey = {
+            _secret = config.age.secrets.prowlarr-api-key.path;
+          };
+          hostConfig = {
+            username = "admin";
+            password._secret = config.age.secrets.prowlarr-password.path;
           };
         };
-      */
-
-      /*
-        sabnzbd = {
-          enable = true;
-          settings = {
-            misc.api_key = {
-              _secret = config.sops.secrets."sabnzbd/api_key".path;
-            };
-          };
-        };
-      */
+      };
 
       jellyfin = {
         enable = true;
@@ -142,5 +137,8 @@ in
         openFirewall = true;
       };
     };
+
+    services.nginx.defaultListenAddresses = [ "0.0.0.0" ];
+    networking.firewall.allowedTCPPorts = [ 80 ];
   };
 }

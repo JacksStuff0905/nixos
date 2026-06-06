@@ -30,7 +30,7 @@ let
   publicServices =
     lib.mapAttrsToList
       (n: s: {
-        src = "${n}.${s.domain or config.host.networking.domain}";
+        src = "${n}\\.${builtins.replaceStrings ["."] ["\\."] (s.domain or config.host.networking.domain)}";
         dest = "${s.proto}://${s.ip or config.host.networking.ip}:${toString s.port}";
         middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
         middlewares = s.middlewares;
@@ -40,7 +40,7 @@ let
         // cfg.extraServices
       );
 
-  mkServiceName = s: (lib.replaceStrings [ "." ] [ "-" ] s);
+  mkServiceName = s: (lib.replaceStrings [ "\\." "." ] [ "-" "-" ] s);
 
   certificates = cfg.certificates.extra ++ [ cfg.certificates.default ];
 in
@@ -157,7 +157,7 @@ in
               builtins.map (s: {
                 name = (mkServiceName s.src) + "-srv";
                 value = {
-                  rule = "Host(`${s.src}`)";
+                  rule = "HostRegexp(`${s.src}`)";
                   service = (mkServiceName s.src) + "-service";
                   entryPoints = [ "websecure" ];
                   middlewares = builtins.map (m: mkServiceName m) s.middlewares;
