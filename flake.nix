@@ -34,6 +34,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    musnix = {
+      url = "github:musnix/musnix";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -145,12 +149,13 @@
       nixosHosts = lib.mapAttrs (name: cfg: cfg.config) self.nixosConfigurations;
 
       externalHosts = lib.mapAttrs (name: h: {
-        host = (lib.evalModules {
-          modules = [
-            { config.host = h; }
-            hostSpec
-          ];
-        }).config.host;
+        host =
+          (lib.evalModules {
+            modules = [
+              { config.host = h; }
+              hostSpec
+            ];
+          }).config.host;
       }) (import ./hosts/external.nix { inherit pkgs; });
 
       common = {

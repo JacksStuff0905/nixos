@@ -17,9 +17,24 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    hardware.pulseaudio.enable = false; # Use Pipewire, the modern sound subsystem
+    services.pulseaudio.enable = false; # Use Pipewire, the modern sound subsystem
 
     security.rtkit.enable = true; # Enable RealtimeKit for audio purposes
+
+    security.pam.loginLimits = [
+      {
+        domain = "*";
+        type = "soft";
+        item = "nofile";
+        value = "524288";
+      }
+      {
+        domain = "*";
+        type = "hard";
+        item = "nofile";
+        value = "524288";
+      }
+    ];
 
     services.pipewire = {
       enable = true;
@@ -28,35 +43,6 @@ in
       pulse.enable = true;
       jack.enable = true;
     };
-
-    security.pam.loginLimits = [
-      {
-        domain = "@audio";
-        item = "memlock";
-        type = "-";
-        value = "unlimited";
-      }
-      {
-        domain = "@audio";
-        item = "rtprio";
-        type = "-";
-        value = "99";
-      }
-      {
-        domain = "@audio";
-        item = "nofile";
-        type = "soft";
-        value = "99999";
-      }
-      {
-        domain = "@audio";
-        item = "nofile";
-        type = "hard";
-        value = "99999";
-      }
-    ];
-
-    users.users."${config.host.user.name}".extraGroups = [ "audio" ];
 
     #
     # Bluetooth

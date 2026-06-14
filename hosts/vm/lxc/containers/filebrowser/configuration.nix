@@ -95,6 +95,12 @@ in
             #"Files/Games" = "//${nasIP}/Games";
           ];
         };
+        sambaShares = {
+          userDrives = {
+            enable = true;
+            nfs4 = true;
+          };
+        };
       };
 
       immich = {
