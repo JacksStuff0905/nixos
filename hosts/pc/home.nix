@@ -7,11 +7,12 @@
 }:
 
 let
-  username = "jacek";
-  homeDirectory = "/home/${username}";
+  username = "${config.host.user.name}";
+  homeDirectory = "${config.host.user.home}";
 in
 {
   imports = [
+    ./host.nix
     ../../modules/home-manager/apps
     ../../modules/home-manager/fonts
     ../../modules/home-manager/themes
@@ -73,6 +74,7 @@ in
     tools.cli.zoxide.enable = true;
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
+    tools.cli.dev-flake-init.enable = true;
 
     # Virtualization
     tools.virtualization.docker.enable = true;

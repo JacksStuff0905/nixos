@@ -48,6 +48,9 @@
   # Other
   other.apps.steam.enable = true;
 
+  # Music production
+  other.audio.musnix.enable = true;
+
   # Users
   users.groups.nixos = { };
 

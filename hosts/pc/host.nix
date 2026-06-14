@@ -1,4 +1,4 @@
-{ config, ... }:
+{ corfig, ... }:
 {
   host = {
     hostName = "jacek-pc";

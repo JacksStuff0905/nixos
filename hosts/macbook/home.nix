@@ -7,11 +7,12 @@
 }:
 
 let
-  username = "jacek";
-  homeDirectory = "/home/${username}";
+  username = "${config.host.user.name}";
+  homeDirectory = "${config.host.user.home}";
 in
 {
   imports = [
+    ./host.nix
     ../../modules/home-manager/apps
     ../../modules/home-manager/fonts
     ../../modules/home-manager/themes

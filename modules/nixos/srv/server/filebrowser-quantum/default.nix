@@ -54,6 +54,60 @@ let
       };
     };
   };
+
+  nfs4-acl-tools = pkgs.stdenv.mkDerivation rec {
+    pname = "nfs4-acl-tools";
+    version = "0.4.2";
+
+    src = pkgs.fetchurl {
+      url = "http://linux-nfs.org/~steved/nfs4-acl-tools/nfs4-acl-tools-${version}.tar.gz";
+      hash = "sha256-6t8PfHcFrgghDpO/pUPWtVs/SoHnvRu9+jGbUs11d10=";
+    };
+
+    nativeBuildInputs = with pkgs; [
+      pkg-config
+      libtool
+      autoconf
+      automake
+    ];
+
+    preConfigure = ''
+      export MAKE=$(command -v make)
+      export LIBTOOL=$(command -v libtool)
+    '';
+
+    buildInputs = with pkgs; [
+      attr
+    ];
+
+    configureFlags = [
+      "--prefix=${placeholder "out"}"
+    ];
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p $out/bin $out/share/man/man1 $out/share/man/man5
+
+      # Binaries are built in subdirectories
+      cp -v nfs4_getfacl/nfs4_getfacl $out/bin/ 2>/dev/null || cp -v nfs4_getfacl $out/bin/nfs4_getfacl
+      cp -v nfs4_setfacl/nfs4_setfacl $out/bin/ 2>/dev/null || cp -v nfs4_setfacl $out/bin/nfs4_setfacl
+
+      chmod +x $out/bin/nfs4_*
+
+      # Install man pages if they exist
+      cp -r man/* $out/share/man/ 2>/dev/null || true
+
+      runHook postInstall
+    '';
+
+    meta = with pkgs.lib; {
+      description = "Commandline ACL utilities for the Linux NFSv4 client";
+      homepage = "http://linux-nfs.org/wiki/index.php/Main_Page";
+      license = licenses.bsd3;
+      platforms = platforms.linux;
+    };
+  };
 in
 {
   options.srv.server."${name}" = {
@@ -111,9 +165,15 @@ in
         type = lib.types.bool;
         default = true;
       };
-      userDrives = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
+      userDrives = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+        };
+        nfs4 = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+        };
       };
     };
   };
@@ -170,6 +230,7 @@ in
       environment.systemPackages = [
         pkgs.nfs-utils
         pkgs.cifs-utils
+        (lib.mkIf (builtins.any (s: s.nfs4 or false) (builtins.attrValues cfg.sambaShares)) nfs4-acl-tools)
       ];
 
       boot.supportedFilesystems = [ "nfs" ];
@@ -233,19 +294,40 @@ in
       ];
 
       srv.server.samba = lib.mkIf cfg.sambaShares.enable {
-        shares = {
-          "my drive" = lib.mkIf cfg.sambaShares.userDrives {
-            comment = "User drives";
-            path = "${usersDir}/%U";
-            browseable = "no";
-            "read only" = "no";
-            "valid users" = "%U";
-            "create mask" = "0700";
-            "directory mask" = "0700";
-            "root preexec" =
-              "mkdir -p ${usersDir}/%U && chown %U:%G ${usersDir}/%U && chmod 700 ${usersDir}/%U";
+        shares =
+          let
+            set-nfs-acl = pkgs.writeShellScriptBin "samba-set-nfs-acl" ''
+              USER_NAME="$1"
+              SHARE_PATH="$2"
+
+              # Use the absolute path provided by Nix for id
+              USER_UID=$(${pkgs.coreutils}/bin/id -u "$USER_NAME")
+
+              # Log the attempt for debugging
+              echo "Applying ACL for $USER_NAME ($USER_UID) on $SHARE_PATH" >> /tmp/samba_debug.log
+
+              mkdir -p "$SHARE_PATH"
+              # Run nfs4-acl-tools
+              ${nfs4-acl-tools}/bin/nfs4_setfacl -R -a "A:fd:$USER_UID:rwaDxtTnNcCoy" "$SHARE_PATH" 2>> /tmp/samba_debug.log
+            '';
+          in
+          {
+            "my drive" = lib.mkIf cfg.sambaShares.userDrives.enable {
+              comment = "User drives";
+              path = "${usersDir}/%U";
+              browseable = "no";
+              "read only" = "no";
+              "valid users" = "%U";
+              "create mask" = "0700";
+              "directory mask" = "0700";
+              "root preexec" = (
+                if cfg.sambaShares.userDrives.nfs4 then
+                  "${lib.getExe set-nfs-acl} %U %P"
+                else
+                  "mkdir -p ${usersDir}/%U && chown %U:%G ${usersDir}/%U && chmod 700 ${usersDir}/%U"
+              );
+            };
           };
-        };
       };
 
       fileSystems = lib.mkMerge [
