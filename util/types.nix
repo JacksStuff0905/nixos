@@ -10,10 +10,13 @@ let
         port = mkOption {
           type = int;
         };
+
         proto = mkOption {
           type = enum [
             "http"
             "https"
+            "tcp"
+            "tcp/udp"
           ];
         };
 

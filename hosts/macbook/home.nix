@@ -50,6 +50,10 @@ in
       bottles.enable = true;
     };
     apps.daw.reaper.enable = true;
+    apps.social.discord = {
+      enable = true;
+      clients.vesktop.enable = true;
+    };
 
     # Fonts
     fonts.enable = true;

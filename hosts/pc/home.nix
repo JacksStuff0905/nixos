@@ -53,6 +53,10 @@ in
       bottles.enable = true;
     };
     apps.office.onlyoffice.enable = true;
+    apps.social.discord = {
+      enable = true;
+      clients.vesktop.enable = true;
+    };
 
     xdg.portal = {
       enable = true;

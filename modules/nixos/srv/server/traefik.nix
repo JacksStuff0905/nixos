@@ -27,17 +27,44 @@ let
     fi
   '';
 
-  publicServices =
+  httpServices =
     lib.mapAttrsToList
       (n: s: {
-        src = "${n}\\.${builtins.replaceStrings ["."] ["\\."] (s.domain or config.host.networking.domain)}";
+        src = "${n}\\.${
+          builtins.replaceStrings [ "." ] [ "\\." ] (s.domain or config.host.networking.domain)
+        }";
         dest = "${s.proto}://${s.ip or config.host.networking.ip}:${toString s.port}";
         middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
         middlewares = s.middlewares;
       })
       (
-        (util.tools.getHostServices common.hosts)
-        // cfg.extraServices
+        lib.filterAttrs (
+          n: s:
+          builtins.elem s.proto [
+            "http"
+            "https"
+          ]
+        ) ((util.tools.getHostServices common.hosts) // cfg.extraServices)
+      );
+
+  tcpServices =
+    lib.mapAttrsToList
+      (n: s: {
+        src = "${n}\\.${
+          builtins.replaceStrings [ "." ] [ "\\." ] (s.domain or config.host.networking.domain)
+        }";
+        dest = "${s.ip or config.host.networking.ip}:${toString s.port}";
+        middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
+        middlewares = s.middlewares;
+      })
+      (
+        lib.filterAttrs (
+          n: s:
+          builtins.elem s.proto [
+            "tcp"
+            "tcp/udp"
+          ]
+        ) ((util.tools.getHostServices common.hosts) // cfg.extraServices)
       );
 
   mkServiceName = s: (lib.replaceStrings [ "\\." "." ] [ "-" "-" ] s);
@@ -141,18 +168,16 @@ in
       #dynamic.dir = "/var/lib/traefik/dynamic";
       #dynamic.files."main" = {
       #settings = {
-      dynamicConfigOptions = {
-        http = lib.mkMerge [
-          cfg.http
-          {
+      dynamicConfigOptions =
+        let
+          mkServices = services: {
             middlewares = builtins.listToAttrs (
               builtins.map (s: {
                 name = "${mkServiceName s.src}";
                 value = s.middleware;
-              }) (builtins.filter (s: s.middleware != null) publicServices)
+              }) (builtins.filter (s: s.middleware != null) services)
             );
-          }
-          ({
+
             routers = builtins.listToAttrs (
               builtins.map (s: {
                 name = (mkServiceName s.src) + "-srv";
@@ -163,7 +188,7 @@ in
                   middlewares = builtins.map (m: mkServiceName m) s.middlewares;
                   tls = { };
                 };
-              }) publicServices
+              }) services
             );
 
             services = builtins.listToAttrs (
@@ -173,33 +198,40 @@ in
                   loadBalancer = {
                     servers = [
                       {
-                        url = "${s.dest}";
+                        address = "${s.dest}";
                       }
                     ];
                   };
                 };
-              }) publicServices
+              }) services
             );
-          })
-        ];
-        https = cfg.https;
+          };
+        in
+        {
+          http = lib.mkMerge [
+            cfg.http
+            (mkServices httpServices)
+          ];
+          https = cfg.https;
 
-        tls = {
-          certificates = builtins.map (v: {
-            certFile = "${certDir}/${v}/crt";
-            keyFile = "${certDir}/${v}/key";
-          }) certificates;
+          tcp = mkServices tcpServices;
 
-          stores.default.defaultCertificate =
-            let
-              cert = cfg.certificates.default;
-            in
-            {
-              certFile = "${certDir}/${cert}/crt";
-              keyFile = "${certDir}/${cert}/key";
-            };
+          tls = {
+            certificates = builtins.map (v: {
+              certFile = "${certDir}/${v}/crt";
+              keyFile = "${certDir}/${v}/key";
+            }) certificates;
+
+            stores.default.defaultCertificate =
+              let
+                cert = cfg.certificates.default;
+              in
+              {
+                certFile = "${certDir}/${cert}/crt";
+                keyFile = "${certDir}/${cert}/key";
+              };
+          };
         };
-      };
       #};
     };
 
