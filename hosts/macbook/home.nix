@@ -20,6 +20,7 @@ in
     ../../modules/home-manager/sh
     ../../modules/home-manager/srv
     ../../modules/home-manager/de
+    ../../modules/home-manager/other
   ];
 
   config = {
@@ -49,7 +50,8 @@ in
       };
       bottles.enable = true;
     };
-    apps.daw.reaper.enable = true;
+
+    other.xdg-portal.enable = true;
 
     # Fonts
     fonts.enable = true;

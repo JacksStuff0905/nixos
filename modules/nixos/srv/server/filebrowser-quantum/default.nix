@@ -306,9 +306,10 @@ in
               # Log the attempt for debugging
               echo "Applying ACL for $USER_NAME ($USER_UID) on $SHARE_PATH" >> /tmp/samba_debug.log
 
-              mkdir -p "$SHARE_PATH"
               # Run nfs4-acl-tools
-              ${nfs4-acl-tools}/bin/nfs4_setfacl -R -a "A:fd:$USER_UID:rwaDxtTnNcCoy" "$SHARE_PATH" 2>> /tmp/samba_debug.log
+              ${nfs4-acl-tools}/bin/nfs4_setfacl -R -a "A:fd:$USER_UID:rwaDxtTnNcCoy" "$SHARE_PATH" 2>> /tmp/samba_debug.log || echo "ACL set failed, continuing anyway" >> /tmp/samba_debug.log
+
+              exit 0  # Always exit successfully
             '';
           in
           {
@@ -318,14 +319,25 @@ in
               browseable = "no";
               "read only" = "no";
               "valid users" = "%U";
+              "create mask" = "0777";
+              "directory mask" = "0777";
+              "force create mode" = "0777";
+              "force directory mode" = "0777";
+              "preexec" = "${lib.getExe pkgs.bash} -c '${pkgs.coreutils}/bin/mkdir -p ${usersDir}/%U; ${
+                if cfg.sambaShares.userDrives.nfs4 then
+                  "" # "${lib.getExe set-nfs-acl} %U %P"
+                else
+                  "${pkgs.coreutils}/bin/chown -R %U:%G ${usersDir}/%U;"
+              } ${pkgs.coreutils}/bin/chmod -R 777 ${usersDir}/%U &'";
+            };
+
+            "test" = {
+              path = "/mnt/test1";
+              browseable = "no";
+              "read only" = "no";
+              "valid users" = "jacek";
               "create mask" = "0700";
               "directory mask" = "0700";
-              "root preexec" = (
-                if cfg.sambaShares.userDrives.nfs4 then
-                  "${lib.getExe set-nfs-acl} %U %P"
-                else
-                  "mkdir -p ${usersDir}/%U && chown %U:%G ${usersDir}/%U && chmod 700 ${usersDir}/%U"
-              );
             };
           };
       };
