@@ -20,6 +20,7 @@ in
     ../../modules/home-manager/sh
     ../../modules/home-manager/srv
     ../../modules/home-manager/de
+    ../../modules/home-manager/other
   ];
 
   config = {
@@ -57,11 +58,8 @@ in
       enable = true;
       clients.vesktop.enable = true;
     };
-
-    xdg.portal = {
-      enable = true;
-      extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
-    };
+    
+    other.xdg-portal.enable = true;
 
     # Fonts
     fonts.enable = true;

@@ -1,4 +1,10 @@
-{pkgs, config, lib, inputs, ...}:
+{
+  pkgs,
+  config,
+  lib,
+  inputs,
+  ...
+}:
 let
   cfg = config.apps.browsers.firefox;
 in
@@ -8,6 +14,7 @@ in
   };
 
   config.programs.firefox = lib.mkIf cfg.enable {
-		enable = true;
-	};
+    enable = true;
+    configPath = "${config.xdg.configHome}/mozilla/firefox";
+  };
 }

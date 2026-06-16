@@ -22,6 +22,7 @@
     ../../modules/nixos/de
     ../../modules/nixos/dm
     ../../modules/nixos/srv
+    ../../modules/nixos/other
   ];
 
   networking.hostName = "${config.host.hostName}";

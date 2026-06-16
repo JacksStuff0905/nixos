@@ -128,7 +128,7 @@ in
 
           # ID mapping
           "idmap config * : backend" = "ldap";
-          "idmap config * : range" = "10000-20000";
+          "idmap config * : range" = "100000-199999"; # Cant overlap LDAP
           "idmap config * : ldap_url" = "${ldapURI}";
           "idmap config * : ldap_base_dn" = "${ldapIdmapSuffix},${ldapBaseDn}";
 
@@ -141,7 +141,7 @@ in
           # Logging
           "log file" = "/var/log/samba/log.%m";
           "max log size" = 1000;
-          "log level" = 2;
+          "log level" = 10;
         };
       }
       // cfg.shares;
