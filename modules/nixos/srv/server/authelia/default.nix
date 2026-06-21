@@ -187,6 +187,11 @@ in
           type = lib.types.int;
           default = 3890;
         };
+
+        ldaps = lib.mkOption {
+          type = lib.types.int;
+          default = 6360;
+        };
       };
 
       secret = {
@@ -456,6 +461,7 @@ in
           (lib.mkIf (cfg.ldap.enable) [
             cfg.ldap.ports.http
             cfg.ldap.ports.ldap
+            cfg.ldap.ports.ldaps
           ])
           [ cfg.port ]
         ]
