@@ -1,0 +1,42 @@
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  cfg = config.srv.ldap;
+  serverUrl = "ldap://192.168.10.7:3890";
+
+  base = "dc=srv,dc=lan";
+  bindDN = "cn=readonly,ou=services,dc=srv,dc=lan";
+in
+{
+  options.srv.ssh = {
+    enable = lib.mkEnableOption "Enable ldap auth module";
+  };
+
+  config = lib.mkIf cfg.enable {
+    age.secrets.bind-password = {
+      rekeyFile = ../../../secrets/ldap-users/readonly-password.age;
+      mode = "0600";
+      owner = "root";
+    };
+
+    users.ldap = {
+      enable = true;
+      nsswitch = true;
+      loginPam = true;
+
+      server = serverUrl;
+
+      daemon.enable = true;
+
+      base = base;
+      bind = {
+        distinguishedName = bindDN;
+        passwordFile = config.age.secrets.bind-password;
+      };
+    };
+  };
+}
