@@ -13,31 +13,38 @@
       in
       {
         inherit ip;
-        publicServices.auth = {
-          inherit port proto;
+        publicServices = {
+          ldap = {
+            proto = "tcp";
+            port = 3890;
+          };
 
-          middleware = {
-            enable = true;
-            extraConfig = {
-              forwardAuth = {
-                address = "${proto}://${ip}:${toString port}/api/authz/forward-auth";
-                trustForwardHeader = true;
-                authResponseHeaders = [
-                  "Remote-User"
-                  "Remote-Groups"
-                  "Remote-Email"
-                  "Remote-Name"
-                ];
+          auth = {
+            inherit port proto;
+
+            middleware = {
+              enable = true;
+              extraConfig = {
+                forwardAuth = {
+                  address = "${proto}://${ip}:${toString port}/api/authz/forward-auth";
+                  trustForwardHeader = true;
+                  authResponseHeaders = [
+                    "Remote-User"
+                    "Remote-Groups"
+                    "Remote-Email"
+                    "Remote-Name"
+                  ];
+                };
               };
             };
           };
+
         };
 
         vpn.mesh = {
           enable = true;
           pubKey = "aJlonheVw4Ocd72iVo/wvKlNdKMwQ973fUNVNASi5wE=";
           ip = "10.10.0.50";
-          endpoint = " 95.175.23.220";
         };
       };
 
