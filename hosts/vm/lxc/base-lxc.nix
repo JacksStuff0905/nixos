@@ -120,6 +120,7 @@
 
     # Prevent 100% disk usage (leave 0.5GB empty)
     nix.settings.min-free = 500000000;
+    nix.settings.auto-optimise-store = true;
 
     nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
