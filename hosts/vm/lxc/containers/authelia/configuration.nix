@@ -68,6 +68,14 @@ in
 
             services = [
               {
+                name = "readonly";
+                password = ../../../../../secrets/ldap-users/readonly-password.age;
+                groups = [
+                  "ldap_readers"
+                ];
+              }
+
+              {
                 name = "samba";
                 password = ../../../../../secrets/ldap-users/samba-service-password.age;
                 groups = [
@@ -81,6 +89,20 @@ in
                 groups = [
                   "ldap_readers"
                   "samba_writers"
+                ];
+              }
+              {
+                name = "truenas";
+                password = ../../../../../secrets/ldap-users/truenas-service-password.age;
+                groups = [
+                  "ldap_readers"
+                ];
+              }
+              {
+                name = "filebrowser";
+                password = ../../../../../secrets/ldap-users/filebrowser-service-password.age;
+                groups = [
+                  "ldap_readers"
                 ];
               }
             ];
