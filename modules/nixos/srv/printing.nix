@@ -10,19 +10,14 @@ in
 {
   options.srv.printing = {
     enable = lib.mkEnableOption "Enable printing module";
+    users = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ "${config.host.user.name}" ];
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    services.printing = {
-      enable = true;
-      drivers = [
-        #(lib.mkIf cfg.drivers.hp pkgs.hplip)
-        #pkgs.gutenprint
-        pkgs.cups-filters
-        pkgs.cups-browsed
-      ];
-      browsing = true;
-    };
+    services.printing.enable = true;
 
     services.avahi = {
       enable = true;
@@ -30,10 +25,16 @@ in
       openFirewall = true;
     };
 
-    #hardware.sane.enable = true;
-
-    hardware.printers = {
-      ensurePrinters = [ ];
-    };
+    users.users = builtins.listToAttrs (
+      builtins.map (u: {
+        name = u;
+        value = {
+          extraGroups = [
+            "scanner"
+            "lp"
+          ];
+        };
+      }) cfg.users
+    );
   };
 }
