@@ -24,6 +24,8 @@ in
       };
     };
 
+    srv.ldap.enable = true;
+
     srv.syncthing = {
       enable = true;
 
