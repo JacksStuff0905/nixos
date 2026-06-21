@@ -57,11 +57,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # LDAP auth must be enabled
+    srv.ldap.enable = lib.mkForce true;
+
     age.secrets = {
       samba-ldap-password = {
         rekeyFile = cfg.secret.ldap-password;
-        owner = "nslcd"; # samba can still access, it runs as root
-        group = "nslcd";
+        owner = "root";
+        group = "root";
         mode = "400";
       };
     };
@@ -73,14 +76,6 @@ in
         };
       })
     ];
-
-    users.groups.nslcd = {
-    };
-
-    users.users.nslcd = {
-      isSystemUser = true;
-      group = "nslcd";
-    };
 
     environment.systemPackages = [
       pkgs.samba
@@ -145,35 +140,6 @@ in
         };
       }
       // cfg.shares;
-    };
-
-    users.ldap = {
-      enable = true;
-      server = "${ldapURI}";
-      base = ldapBaseDn;
-      bind = {
-        distinguishedName = "${ldapBindDn}";
-        passwordFile = config.age.secrets.samba-ldap-password.path;
-      };
-      nsswitch = true;
-      daemon = {
-        enable = true; # This enables nslcd
-      };
-    };
-
-    system.nssDatabases = {
-      passwd = [
-        "files"
-        "ldap"
-      ];
-      group = [
-        "files"
-        "ldap"
-      ];
-      shadow = [
-        "files"
-        "ldap"
-      ];
     };
 
     systemd.tmpfiles.rules = [
