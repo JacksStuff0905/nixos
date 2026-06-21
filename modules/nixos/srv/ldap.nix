@@ -12,7 +12,7 @@ let
   bindDN = "cn=readonly,ou=services,dc=srv,dc=lan";
 in
 {
-  options.srv.ssh = {
+  options.srv.ldap = {
     enable = lib.mkEnableOption "Enable ldap auth module";
   };
 
@@ -20,7 +20,8 @@ in
     age.secrets.bind-password = {
       rekeyFile = ../../../secrets/ldap-users/readonly-password.age;
       mode = "0600";
-      owner = "root";
+      owner = "nslcd";
+      group = "nslcd";
     };
 
     users.ldap = {
@@ -35,8 +36,31 @@ in
       base = base;
       bind = {
         distinguishedName = bindDN;
-        passwordFile = config.age.secrets.bind-password;
+        passwordFile = config.age.secrets.bind-password.path;
       };
+    };
+
+    users.groups.nslcd = {
+    };
+
+    users.users.nslcd = {
+      isSystemUser = true;
+      group = "nslcd";
+    };
+
+    system.nssDatabases = {
+      passwd = [
+        "files"
+        "ldap"
+      ];
+      group = [
+        "files"
+        "ldap"
+      ];
+      shadow = [
+        "files"
+        "ldap"
+      ];
     };
   };
 }
