@@ -319,25 +319,11 @@ in
               browseable = "no";
               "read only" = "no";
               "valid users" = "%U";
-              "create mask" = "0777";
-              "directory mask" = "0777";
-              "force create mode" = "0777";
-              "force directory mode" = "0777";
-              "preexec" = "${lib.getExe pkgs.bash} -c '${pkgs.coreutils}/bin/mkdir -p ${usersDir}/%U; ${
-                if cfg.sambaShares.userDrives.nfs4 then
-                  "" # "${lib.getExe set-nfs-acl} %U %P"
-                else
-                  "${pkgs.coreutils}/bin/chown -R %U:%G ${usersDir}/%U;"
-              } ${pkgs.coreutils}/bin/chmod -R 777 ${usersDir}/%U &'";
-            };
-
-            "test" = {
-              path = "/mnt/test1";
-              browseable = "no";
-              "read only" = "no";
-              "valid users" = "jacek";
+              "force user" = "%U";
               "create mask" = "0700";
               "directory mask" = "0700";
+              "preexec" =
+                "${lib.getExe pkgs.bash} -c '${pkgs.coreutils}/bin/mkdir -p ${usersDir}/%U; ${pkgs.coreutils}/bin/chown -R %U ${usersDir}/%U &; ${pkgs.coreutils}/bin/chmod -R 700 ${usersDir}/%U &'";
             };
           };
       };
@@ -389,17 +375,6 @@ in
           }) cfg.mounts.smb)
         */
       ];
-
-      users.users.filebrowser = {
-        uid = 3002;
-        isSystemUser = true;
-        group = "filebrowser";
-        home = cfg.fbData;
-      };
-
-      users.groups.filebrowser = {
-        gid = 3003;
-      };
 
       systemd.tmpfiles.rules = [
         "d ${cfg.fbRoot} 0775 filebrowser filebrowser -"
