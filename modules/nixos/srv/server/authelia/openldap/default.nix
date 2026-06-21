@@ -124,61 +124,73 @@ in
 
   config =
     let
-      services = [
-        {
-          name = "authelia";
-          groups = [
-            "ldap_readers"
-            "ldap_writers"
-            "ldap_managers"
-          ];
-          password = cfg.ldap.secret.authelia-password;
-        }
-      ]
-      ++ cfg.ldap.openldap.services;
+      services = assignIds (
+        [
+          {
+            name = "authelia";
+            groups = [
+              "ldap_readers"
+              "ldap_writers"
+              "ldap_managers"
+              "samba_writers"
+            ];
+            password = cfg.ldap.secret.authelia-password;
+          }
+        ]
+        ++ cfg.ldap.openldap.services
+      ) 18000 "uid";
 
       users = (assignIds (cfg.ldap.openldap.users) 15000 "uid");
 
-      groups = assignIds (
-        [
-          {
-            name = "ldap_readers";
-            type = [ "names" ];
-          }
-          {
-            name = "ldap_writers";
-            type = [ "names" ];
-          }
-          {
-            name = "ldap_managers";
-            type = [ "names" ];
-          }
+      groups =
+        (assignIds (
+          [
+            {
+              name = "ldap_readers";
+              type = [ "names" ];
+            }
+            {
+              name = "ldap_writers";
+              type = [ "names" ];
+            }
+            {
+              name = "ldap_managers";
+              type = [ "names" ];
+            }
 
-          {
-            name = "samba_writers";
-            type = [ "names" ];
-          }
+            {
+              name = "samba_writers";
+              type = [ "names" ];
+            }
 
-          {
-            name = "netusers";
-            type = [
-              "names"
-              "posix"
-            ];
-            gid = 10000;
-          }
+            {
+              name = "netusers";
+              type = [
+                "names"
+                "posix"
+              ];
+              gid = 10000;
+            }
 
-          {
-            name = "netadmins";
-            type = [
-              "names"
-              "posix"
-            ];
-            gid = 10005;
-          }
-        ]
-        ++ cfg.ldap.openldap.groups
-      ) 2000 "gid";
+            {
+              name = "netadmins";
+              type = [
+                "names"
+                "posix"
+              ];
+              gid = 10005;
+            }
+          ]
+          ++ cfg.ldap.openldap.groups
+        ) 2000 "gid")
+        ++ (builtins.map (u: {
+          name = u.name;
+          gid = u.uid;
+          type = [
+            "names"
+            "posix"
+          ];
+        }) (users ++ services));
 
       dcHead = builtins.head (lib.splitString "." cfg.url.domain);
     in
@@ -222,8 +234,8 @@ in
           package = openldapPackage;
 
           urlList = [
-            "ldap://0.0.0.0:3890/"
-            "ldaps:///"
+            "ldap://0.0.0.0:${toString cfg.ldap.ports.ldap}/"
+            "ldaps://0.0.0.0:${toString cfg.ldap.ports.ldaps}/"
             "ldapi:///"
           ];
 
@@ -273,6 +285,9 @@ in
                       {0}to *
                                       by dn.exact="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
                                       by * break''
+
+                    "{1}to dn.base=\"\" by * read"
+                    "{2}to dn.base=\"cn=Subschema\" by * read"
                   ];
                 };
               };
@@ -318,22 +333,21 @@ in
                   olcAccess = [
                     # 1. Root/Localhost can manage everything (via ldapi)
                     "{0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break"
-
                     # Admins have full access
-                    "{1}to * by group.exact=\"cn=netadmins,ou=groups,${basedn}\" manage by * break"
+                    "{3}to * by group.exact=\"cn=netadmins,ou=groups,${basedn}\" manage by * break"
 
-                    "{2}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
+                    "{4}to attrs=userPassword,shadowLastChange,pwdReset,pwdAccountLockedTime,pwdPolicySubentry
                   by group.exact=\"cn=ldap_managers,ou=groups,${basedn}\" manage 
                   by self write
                   by anonymous auth 
                   by * none"
 
-                    "{3}to attrs=userPassword,sambaNTPassword
+                    "{5}to attrs=userPassword,sambaNTPassword,sambaLMPassword,sambaPwdLastSet
                   by group.exact=\"cn=samba_writers,ou=groups,${basedn}\" write
                   by self write
                   by * none"
 
-                    "{4}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
+                    "{6}to attrs=userPassword,pwdReset,pwdAccountLockedTime,pwdPolicySubentry,shadowLastChange 
                   by group.exact=\"cn=ldap_writers,ou=groups,${basedn}\" write 
                   by anonymous auth 
                   by group.exact=\"cn=ldap_readers,ou=groups,${basedn}\" read 
@@ -341,7 +355,7 @@ in
                   by * none"
 
                     # 3. Standard Read Access for everything else
-                    "{5}to * by self read by dn.base=\"${basedn}\" write by * read"
+                    "{7}to * by self read by dn.base=\"${basedn}\" write by * read"
                   ];
                 };
 
@@ -550,20 +564,29 @@ in
           # PART C: Service Users (Create + Enforce Agenix Password)
           # ---------------------------------------------------------
           ${lib.concatMapStrings (s: ''
-            # A. Create the User (Idempotent)
+            # Delete the user to ensure proper config
+            ${pkgs.openldap}/bin/ldapdelete -Y EXTERNAL -H ldapi:/// "cn=${s.name},ou=services,${basedn}" || EXIT_CODE=$?
+
+            # Create the User
             PASS="$(cat ${config.age.secrets."openldap-service-${s.name}-password".path})"
 
             HASH="$(${pkgs.openldap}/bin/slappasswd -s "$PASS")"
 
             apply_ldif "dn: cn=${s.name},ou=services,${basedn}
+            objectClass: top
             objectClass: simpleSecurityObject
+            objectClass: posixAccount
             objectClass: organizationalRole
             cn: ${s.name}
+            uid: ${s.name}
+            homeDirectory: /var/empty
+            loginShell: /bin/false
+            uidNumber: ${toString s.uid}
+            gidNumber: ${toString s.uid}
             userPassword: $HASH"
 
 
-            # 2. ALWAYS enforce the password from Agenix
-            # ldappasswd updates the password safely (hashing it)
+            # Enforce the password from Agenix
             ${pkgs.openldap}/bin/ldappasswd -Y EXTERNAL -H ldapi:/// -s "$PASS" "cn=${s.name},ou=services,${basedn}"
           '') services}
         '';
