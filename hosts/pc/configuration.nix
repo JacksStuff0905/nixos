@@ -76,6 +76,11 @@
       users = [ "${config.host.user.name}" ];
     };
 
+    gnome-boxes = {
+      enable = true;
+      users = [ "${config.host.user.name}" ];
+    };
+
     docker = {
       enable = true;
       users = [ "${config.host.user.name}" ];
