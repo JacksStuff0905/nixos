@@ -33,7 +33,17 @@ let
         src = "${n}\\.${
           builtins.replaceStrings [ "." ] [ "\\." ] (s.domain or config.host.networking.domain)
         }";
-        dest = "${s.proto}://${s.ip or config.host.networking.ip}:${toString s.port}";
+        dest = "${
+          if
+            (builtins.elem s.proto [
+              "http"
+              "https"
+            ])
+          then
+            "${s.proto}://"
+          else
+            ""
+        }${s.ip or config.host.networking.ip}:${toString s.port}";
         middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
         middlewares = s.middlewares;
       })
@@ -137,6 +147,9 @@ in
               idleTimeout = "300s"; # 5 min idle before disconnect
             };
           };
+          ldaps = {
+            address = ":636";
+          };
         };
 
         serversTransport.insecureSkipVerify = true;
@@ -147,7 +160,7 @@ in
         };
 
         log = {
-          level = "INFO";
+          level = "DEBUG";
           filePath = "${config.services.traefik.dataDir}/traefik.log";
           format = "json";
         };
@@ -170,51 +183,76 @@ in
       #settings = {
       dynamicConfigOptions =
         let
-          mkServices = services: {
-            middlewares = builtins.listToAttrs (
-              builtins.map (s: {
-                name = "${mkServiceName s.src}";
-                value = s.middleware;
-              }) (builtins.filter (s: s.middleware != null) services)
-            );
+          mkServices =
+            {
+              services,
+              hostFunc,
+              entryPoints,
+              serverVal,
+              enableMiddlewares,
+            }:
+            (lib.mkMerge [
+              (lib.mkIf enableMiddlewares {
+                middlewares = builtins.listToAttrs (
+                  builtins.map (s: {
+                    name = "${mkServiceName s.src}";
+                    value = s.middleware;
+                  }) (builtins.filter (s: s.middleware != null) services)
+                );
+              })
+              {
+                routers = builtins.listToAttrs (
+                  builtins.map (s: {
+                    name = (mkServiceName s.src) + "-srv";
+                    value = {
+                      rule = hostFunc "${s.src}";
+                      service = (mkServiceName s.src) + "-service";
+                      entryPoints = entryPoints;
+                      middlewares = builtins.map (m: mkServiceName m) s.middlewares;
+                      tls = { };
+                    };
+                  }) services
+                );
 
-            routers = builtins.listToAttrs (
-              builtins.map (s: {
-                name = (mkServiceName s.src) + "-srv";
-                value = {
-                  rule = "HostRegexp(`${s.src}`)";
-                  service = (mkServiceName s.src) + "-service";
-                  entryPoints = [ "websecure" ];
-                  middlewares = builtins.map (m: mkServiceName m) s.middlewares;
-                  tls = { };
-                };
-              }) services
-            );
-
-            services = builtins.listToAttrs (
-              builtins.map (s: {
-                name = (mkServiceName s.src) + "-service";
-                value = {
-                  loadBalancer = {
-                    servers = [
-                      {
-                        address = "${s.dest}";
-                      }
-                    ];
-                  };
-                };
-              }) services
-            );
-          };
+                services = builtins.listToAttrs (
+                  builtins.map (s: {
+                    name = (mkServiceName s.src) + "-service";
+                    value = {
+                      loadBalancer = {
+                        servers = [
+                          {
+                            "${serverVal}" = "${s.dest}";
+                          }
+                        ];
+                      };
+                    };
+                  }) services
+                );
+              }
+            ]);
         in
         {
           http = lib.mkMerge [
             cfg.http
-            (mkServices httpServices)
+            (mkServices {
+              services = httpServices;
+              hostFunc = (src: "HostRegexp(`${src}`)");
+              entryPoints = [ "websecure" ];
+              serverVal = "url";
+              enableMiddlewares = true;
+            })
           ];
           https = cfg.https;
 
-          tcp = mkServices tcpServices;
+          tcp = mkServices {
+            services = tcpServices;
+            hostFunc = (src: "HostSNI(`${builtins.replaceStrings [ "\\." ] [ "." ] src}`)");
+            entryPoints = [
+              "ldaps"
+            ];
+            serverVal = "address";
+            enableMiddlewares = false;
+          };
 
           tls = {
             certificates = builtins.map (v: {
@@ -240,6 +278,7 @@ in
       8080
       80
       443
+      636
     ];
   };
 }
