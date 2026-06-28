@@ -14,7 +14,7 @@ let
 
   usersDir = "${cfg.fbRoot}/Users";
 
-  cacheDir = "/tmp";
+  cacheDir = "/tmp/filebrowser";
 
   types = with lib; {
     source = lib.types.submodule {
@@ -186,6 +186,7 @@ in
           port = cfg.port;
           baseURL = "/";
           database = "${cfg.fbData}/filebrowser.db";
+          cacheDir = cacheDir;
           sources = [
             {
               path = usersDir;
