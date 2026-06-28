@@ -255,8 +255,6 @@ in
         #"Z ${cfg.fbRoot} 0775 filebrowser filebrowser -"
         "d ${usersDir} 0755 root root -"
         "d ${cfg.fbData} 0775 filebrowser filebrowser -"
-        "d ${cacheDir} 0775 filebrowser filebrowser -"
-        "Z ${cacheDir} 0775 filebrowser filebrowser -"
       ];
 
       /*
