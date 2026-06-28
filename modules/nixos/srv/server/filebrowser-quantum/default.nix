@@ -185,93 +185,21 @@ in
         cfg.port
       ];
 
-      # Temporary filebrowser-quantum overlay to install v1.3.0
-      # Can be removed once said version gets packaged to nixpkgs
-      nixpkgs.overlays = [
-        (
-          final: prev:
-          let
-            version = "1.3.0-stable";
-
-            src = prev.fetchFromGitHub {
-              owner = "gtsteffaniak";
-              repo = "filebrowser";
-              rev = "v${version}";
-              hash = "sha256-U2J5ilP6fq7vsQ5qjLBvulzatAndlr13NRDF1KLoCWs=";
-            };
-
-            newFrontend = prev.buildNpmPackage {
-              pname = "filebrowser-quantum-frontend";
-              inherit version src;
-
-              sourceRoot = "${src.name}/frontend";
-
-              npmDepsHash = "sha256-926Wey0OyIKSiY0GBbzqh4pooB2Oz6QoRJs/SUUvlRE=";
-
-              buildPhase = ''
-                runHook preBuild
-                npm run build:docker
-                runHook postBuild
-              '';
-
-              installPhase = ''
-                runHook preInstall
-                mkdir -p $out
-                cp -r dist/* $out
-                runHook postInstall
-              '';
-            };
-          in
-          {
-            filebrowser-quantum = prev.filebrowser-quantum.overrideAttrs (oldAttrs: rec {
-              inherit version src;
-
-              sourceRoot = "${src.name}/backend";
-
-              vendorHash = "sha256-+IZ5sr7/nLgjEa2xxTbOdNQzh0DsffaAWWATw/45yyU=";
-
-              preBuild = ''
-                mkdir -p http/embed
-                cp -r ${newFrontend}/* http/embed/
-              '';
-            });
-          }
-        )
-      ];
-
       srv.server.samba = lib.mkIf cfg.sambaShares.enable {
-        shares =
-          let
-            set-nfs-acl = pkgs.writeShellScriptBin "samba-set-nfs-acl" ''
-              USER_NAME="$1"
-              SHARE_PATH="$2"
-
-              # Use the absolute path provided by Nix for id
-              USER_UID=$(${pkgs.coreutils}/bin/id -u "$USER_NAME")
-
-              # Log the attempt for debugging
-              echo "Applying ACL for $USER_NAME ($USER_UID) on $SHARE_PATH" >> /tmp/samba_debug.log
-
-              # Run nfs4-acl-tools
-              ${nfs4-acl-tools}/bin/nfs4_setfacl -R -a "A:fd:$USER_UID:rwaDxtTnNcCoy" "$SHARE_PATH" 2>> /tmp/samba_debug.log || echo "ACL set failed, continuing anyway" >> /tmp/samba_debug.log
-
-              exit 0  # Always exit successfully
-            '';
-          in
-          {
-            "my drive" = lib.mkIf cfg.sambaShares.userDrives.enable {
-              comment = "User drives";
-              path = "${usersDir}/%U";
-              browseable = "no";
-              "read only" = "no";
-              "valid users" = "%U";
-              "force user" = "%U";
-              "create mask" = "0700";
-              "directory mask" = "0700";
-              "preexec" =
-                "${lib.getExe pkgs.bash} -c '${pkgs.coreutils}/bin/mkdir -p ${usersDir}/%U; ${pkgs.coreutils}/bin/chown -R %U ${usersDir}/%U &; ${pkgs.coreutils}/bin/chmod -R 700 ${usersDir}/%U &'";
-            };
+        shares = {
+          "my drive" = lib.mkIf cfg.sambaShares.userDrives.enable {
+            comment = "User drives";
+            path = "${usersDir}/%U";
+            browseable = "no";
+            "read only" = "no";
+            "valid users" = "%U";
+            "force user" = "%U";
+            "create mask" = "0700";
+            "directory mask" = "0700";
+            "preexec" =
+              "${lib.getExe pkgs.bash} -c '${pkgs.coreutils}/bin/mkdir -p ${usersDir}/%U; ${pkgs.coreutils}/bin/chown -R %U ${usersDir}/%U &; ${pkgs.coreutils}/bin/chmod -R 700 ${usersDir}/%U &'";
           };
+        };
       };
 
       fileSystems = lib.mkMerge [
