@@ -41,6 +41,7 @@
 
   # GUI
   de.gnome.enable = true;
+  de.plasma-bigscreen.enable = false; # Not stable, enable on-demand
   de.hyprland.enable = true;
   de.dwl.enable = false;
   dm.gdm.enable = true;
@@ -64,10 +65,6 @@
     createHome = true;
     shell = pkgs.zsh;
   };
-
-  srv.lamp-test.enable = true;
-  srv.lamp-test.documentRoot = "/var/www/lamp-test";
-  srv.lamp-test.user = "${config.host.user.name}";
 
   # Virtualization
   virtualization = {

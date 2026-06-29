@@ -92,10 +92,6 @@
       -----END CERTIFICATE-----'';
   };
 
-  srv.lamp-test.enable = true;
-  srv.lamp-test.documentRoot = "/var/www/lamp-test";
-  srv.lamp-test.user = "${config.host.user.name}";
-
   # Use latest kernel.
   # 6.6 for webcam
   boot.kernelPackages = pkgs.linuxPackages_6_6; #pkgs.linuxPackages_latest;
