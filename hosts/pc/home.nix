@@ -53,12 +53,20 @@ in
       };
       bottles.enable = true;
     };
+    apps.games = {
+      minecraft = {
+        enable = true;
+        launchers = {
+          prism.enable = true;
+        };
+      };
+    };
     apps.office.onlyoffice.enable = true;
     apps.social.discord = {
       enable = true;
       clients.vesktop.enable = true;
     };
-    
+
     other.xdg-portal.enable = true;
 
     # Fonts
