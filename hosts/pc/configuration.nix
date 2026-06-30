@@ -41,7 +41,6 @@
 
   # GUI
   de.gnome.enable = true;
-  de.plasma-bigscreen.enable = false; # Not stable, enable on-demand
   de.hyprland.enable = true;
   de.dwl.enable = false;
   dm.gdm.enable = true;
