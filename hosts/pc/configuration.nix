@@ -48,6 +48,7 @@
 
   # Other
   other.apps.steam.enable = true;
+  other.apps.winbox.enable = true;
 
   # Music production
   other.audio.musnix.enable = true;
