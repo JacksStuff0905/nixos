@@ -47,26 +47,4 @@ in
     isProduction = true;
     isServer = true;
   };
-
-  opnsense-vm = {
-    networking = {
-      ip = "192.168.10.1";
-      publicServices.router = {
-        proto = "https";
-        port = 443;
-
-        middlewares = [ "auth.srv.lan" ];
-
-        access = [
-          {
-            policy = "one_factor";
-            subject = "group:netadmins";
-          }
-        ];
-      };
-    };
-
-    isProduction = true;
-    isServer = true;
-  };
 }
