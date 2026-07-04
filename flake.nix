@@ -263,18 +263,6 @@
             hostSpec
           ];
         };
-
-        vm-router = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit inputs util system;
-          };
-
-          modules = [
-            ./hosts/vm/router/configuration.nix
-            agenixModule
-            hostSpec
-          ];
-        };
       })
 
       # LXCs
