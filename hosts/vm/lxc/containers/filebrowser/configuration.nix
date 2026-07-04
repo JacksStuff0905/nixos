@@ -5,7 +5,7 @@
   ...
 }:
 let
-  nasIP = "192.168.10.6";
+  nasIP = "192.168.15.6";
   nfsPath = "/mnt/Main4TB";
 in
 {
