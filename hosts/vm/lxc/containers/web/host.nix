@@ -6,7 +6,8 @@
     hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHV8OQtXmKYXvME1bhoSf6hJT89BOwNxfBfmGif2BuUX";
 
     networking = {
-      ip = "192.168.10.15";
+      ip = "192.168.10.15/24";
+      mac = "BC:24:11:80:DD:7A";
       publicServices.home = {
         proto = "http";
         port = 80;

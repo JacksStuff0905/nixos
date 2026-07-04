@@ -7,12 +7,13 @@
 
     networking =
       let
-        ip = "192.168.10.7";
+        ip = "192.168.10.7/24";
         port = 9091;
         proto = "http";
       in
       {
         inherit ip;
+        mac = "BC:24:11:60:CF:10";
         publicServices = {
           ldap = {
             proto = "tcp";

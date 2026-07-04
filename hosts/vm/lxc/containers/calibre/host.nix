@@ -6,7 +6,8 @@
     hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICjv08OFWbD5qQ+YajLHSxfgyYEP1/yfnuUG8xxslbWz";
 
     networking = {
-      ip = "192.168.10.12";
+      ip = "192.168.10.12/24";
+      mac = "BC:24:11:49:2D:68";
       publicServices.books = {
         proto = "http";
         port = 8083;
