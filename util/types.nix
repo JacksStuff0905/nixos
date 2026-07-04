@@ -2,6 +2,20 @@
 let
   lib = pkgs.lib;
 
+  cidr =
+    lib.types.addCheck lib.types.str (
+      s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$" s != null
+    )
+    // {
+      description = "IP address with mask (e.g., 192.168.1.1/24)";
+    };
+
+  ip =
+    lib.types.addCheck lib.types.str (s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}$" s != null)
+    // {
+      description = "IP address without mask (e.g., 192.168.1.1)";
+    };
+
   publicService =
     with lib;
     with types;
@@ -60,13 +74,17 @@ let
     config:
     with lib;
     types.submodule {
-      options = with lib.types; {
+      options = with lib.types; rec {
         hostName = mkOption {
           type = str;
           description = "The hostname of the host";
         };
         networking = {
           ip = mkOption {
+            type = nullOr cidr;
+            default = null;
+          };
+          mac = mkOption {
             type = nullOr str;
             default = null;
           };
@@ -163,12 +181,9 @@ let
             description = "The home directory of the user";
             default =
               let
-                user = config.host.user.name;
+                n = config.host.user.name;
               in
-              if pkgs.stdenv.isLinux then
-                (if user == "root" then "/root" else "/home/${user}")
-              else
-                "/Users/${user}";
+              if pkgs.stdenv.isLinux then (if n == "root" then "/root" else "/home/${n}") else "/Users/${n}";
           };
           email = mkOption {
             type = attrsOf str;
@@ -211,5 +226,5 @@ let
     };
 in
 {
-  inherit host publicService;
+  inherit host publicService cidr ip;
 }
