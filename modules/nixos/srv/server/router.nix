@@ -2,237 +2,174 @@
   config,
   lib,
   pkgs,
+  util,
+  common,
   ...
 }:
 let
   cfg = config.srv.server.router;
 
-  types = {
-    # Validate CIDR
-    cidr =
-      lib.types.addCheck lib.types.str (
-        s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$" s != null
-      )
-      // {
-        description = "IP address with mask (e.g., 192.168.1.1/24)";
-      };
-
-    ip =
-      lib.types.addCheck lib.types.str (s: builtins.match "^([0-9]{1,3}\\.){3}[0-9]{1,3}$" s != null)
-      // {
-        description = "IP address without mask (e.g., 192.168.1.1)";
-      };
-
-    ipRange = lib.types.submodule {
-      options = {
-        start = lib.mkOption { type = types.ip; };
-        end = lib.mkOption { type = types.ip; };
-      };
+  separateCIDR =
+    cidr:
+    let
+      split = builtins.split "\/" cidr;
+      ip = builtins.elemAt split 0;
+      mask = lib.toIntBase10 (builtins.elemAt split 2);
+    in
+    {
+      inherit ip mask;
     };
-
-    interface = lib.types.submodule {
-      options = with lib.types; {
-        name = lib.mkOption { type = str; };
-
-        dhcp = {
-          client = lib.mkOption {
-            type = bool;
-            default = false;
-          };
-          server = {
-            enable = lib.mkOption {
-              type = bool;
-              default = false;
-            };
-
-            range = lib.mkOption {
-              type = types.ipRange;
-            };
-
-            duration = lib.mkOption {
-              type = str;
-              default = "6h";
-            };
-          };
-        };
-
-        dns = {
-          enable = lib.mkEnableOption "dns";
-          port = lib.mkOption {
-            type = port;
-            default = 53;
-          };
-          servers = lib.mkOption {
-            type = listOf types.ip;
-            default = [ "8.8.8.8" ];
-          };
-        };
-
-        address = {
-          enable = lib.mkEnableOption "ipv4 address";
-          cidr = lib.mkOption { type = types.cidr; };
-        };
-      };
-    };
-  };
-
-  mapInterfaces =
-    func:
-    (builtins.listToAttrs (
-      (builtins.map func (
-        [
-          cfg.interfaces.lan
-          cfg.interfaces.wan
-        ]
-        ++ cfg.interfaces.extra
-      ))
-    ));
 in
 {
   options.srv.server.router = {
     enable = lib.mkEnableOption "router";
 
-    interfaces = {
-      wan = lib.mkOption {
-        type = types.interface;
+    firewall = lib.mkOption {
+      type = lib.types.attrs;
+      default = { };
+    };
+
+    nat = {
+      enable = lib.mkEnableOption "nat";
+    };
+
+    wan = {
+      interface = lib.mkOption {
+        type = lib.types.str;
       };
 
-      lan = lib.mkOption {
-        type = types.interface;
+      dhcp = {
+        client = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+        };
       };
 
-      extra = lib.mkOption {
-        type = lib.types.listOf types.interface;
-        default = [ ];
+      address = lib.mkOption {
+        type = util.types.cidr;
+      };
+    };
+
+    lan = {
+      bridge = {
+        name = lib.mkOption {
+          type = lib.types.str;
+          default = "lanbr";
+        };
+        interfaces = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+        };
+      };
+
+      address = lib.mkOption {
+        type = util.types.cidr;
+        default = config.host.networking.ip;
       };
     };
   };
 
-  /*
   config = lib.mkIf cfg.enable {
+    # Enable IP forwarding
+    boot.kernel.sysctl = {
+      "net.ipv4.ip_forward" = 1;
+      "net.ipv6.conf.all.forwarding" = 1;
+    };
+
+    services.resolved = {
+      enable = false;
+    };
+
+    # Configure network interfaces
     networking = {
+      # Disable NetworkManager for manual configuration
       networkmanager.enable = false;
       useDHCP = false;
 
-      # Interface config
-      interfaces = mapInterfaces (i: {
-        name = i.name;
-        value = {
-          useDHCP = i.dhcp.client;
-          ipv4.addresses =
-            if i.address.enable then
+      bridges = {
+        "${cfg.lan.bridge.name}" = {
+          interfaces = cfg.lan.bridge.interfaces;
+        };
+      };
+
+      # WAN interface (adjust interface name as needed)
+      interfaces."${cfg.wan.interface}" =
+        if cfg.wan.dhcp.client then
+          {
+            useDHCP = true;
+          }
+        else
+          {
+            ipv4.addresses = [
               (
                 let
-                  parts = lib.splitString "/" i.address.cidr;
+                  split = separateCIDR cfg.wan.address;
                 in
-                [
-                  {
-                    address = lib.head parts;
-                    prefixLength = lib.toInt (lib.last parts);
-                  }
-                ]
+                {
+                  address = split.ip;
+                  prefixLength = split.mask;
+                }
               )
-            else
-              [ ];
-        };
-      });
+            ];
+          };
+
+      # LAN bridge
+      interfaces."${cfg.lan.bridge.name}" = {
+        useDHCP = false;
+
+        ipv4.addresses = [
+          (
+            let
+              split = separateCIDR cfg.lan.address;
+            in
+            {
+              address = split.ip;
+              prefixLength = split.mask;
+            }
+          )
+        ];
+      };
 
       # NAT for internet sharing
-        nat = {
-          enable = true;
-          externalInterface = cfg.interfaces.wan.name; # WAN
-          internalInterfaces = [
-            cfg.interfaces.lan.name
-          ]
-          ++ (builtins.map (f: f.name) cfg.interfaces.extra); # LAN
-        };
+      nat = {
+        enable = cfg.nat.enable;
+        externalInterface = "${cfg.wan.interface}"; # WAN
+        internalInterfaces = [ cfg.lan.bridge.name ]; # LAN
+      };
+
+      resolvconf.enable = true;
+
+      useNetworkd = lib.mkForce false;
+      dhcpcd = lib.mkIf cfg.wan.dhcp.client {
+        enable = true;
+        allowInterfaces = [ "${cfg.wan.interface}" ];
+      };
 
       # Simple firewall rules
-        firewall = {
+      firewall = lib.mkMerge [
+        {
           enable = true;
 
           # Allow SSH from LAN only
+          /*
+            extraCommands = ''
+              iptables -A nixos-fw -p tcp --dport 22 -s 192.168.1.0/24 -j ACCEPT
+            '';
+          */
+
+          allowedUDPPorts = [
+            53
+            67
+          ];
+          allowedTCPPorts = [ 53 ];
+
           extraCommands = ''
-            iptables -A nixos-fw -p tcp --dport 22 -s 192.168.1.0/24 -j ACCEPT
+            iptables -A FORWARD -i ${cfg.lan.bridge.name} -o ${cfg.wan.interface} -j ACCEPT
+            iptables -A FORWARD -i ${cfg.wan.interface} -o ${cfg.lan.bridge.name} -j ACCEPT
           '';
-        };
+        }
+        cfg.firewall
+      ];
     };
 
-    # DHCP and DNS server (dnsmasq provides both)
-    services.dnsmasq.enable = false;
-
-    # Define dnsmasq instances
-    systemd.services = mapInterfaces (
-      i:
-      lib.mkIf (i.dhcp.server.enable || i.dns.enable) {
-        name = "dnsmasq-${i.name}";
-        value = {
-          description = "Dnsmasq for eth0";
-          after = [ "network.target" ];
-          wantedBy = [ "multi-user.target" ];
-          serviceConfig = {
-            ExecStart = "${lib.getExe pkgs.dnsmasq} -k --conf-file=/etc/dnsmasq-${i.name}.conf";
-            Restart = "always";
-          };
-        };
-      }
-    );
-
-    # Write the config files manually
-    # TODO: add conditonal config for dns and dhcp
-    environment.etc = mapInterfaces (i: {
-      name = "dnsmasq-${i.name}.conf";
-      value = {
-        text =
-          ""
-
-          + (
-            if i.dhcp.server.enable then
-              ''
-                interface=${i.name}
-                dhcp-range=${i.dhcp.server.range.start},${i.dhcp.server.range.end},${i.dhcp.server.duration}
-              ''
-            else
-              ""
-          )
-
-          + (
-            if i.dns.enable then
-              ''
-                listen-address=${i.address.cidr}
-                bind-interfaces
-                port=${i.dns.port}
-              ''
-              + (lib.concatMapStringsSep "\n" (s: "server=${s}") cfg.dns.servers)
-            else
-              ""
-          );
-      };
-    });
-
-      services.dnsmasq = {
-        enable = true;
-        settings = {
-          # DHCP Configuration
-          dhcp-range = [ "192.168.1.100,192.168.1.200,12h" ];
-          interface = cfg.interfaces.lan;
-
-          # DNS Configuration
-          server = [
-            "8.8.8.8"
-            "8.8.4.4"
-          ]; # Upstream DNS servers
-
-          # Don't use /etc/hosts
-          no-hosts = true;
-
-          # DHCP Options
-          dhcp-option = [
-            "option:router,192.168.1.1"
-            "option:dns-server,192.168.1.1" # Use router as DNS server
-          ];
-        };
-      };
   };
-  */
 }
