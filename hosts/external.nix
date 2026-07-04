@@ -5,7 +5,8 @@ in
 {
   truenas-vm = {
     networking = {
-      ip = "192.168.10.6";
+      ip = "192.168.10.6/24";
+      mac = "BC:24:11:D0:A6:A3";
       publicServices.nas = {
         proto = "http";
         port = 80;
