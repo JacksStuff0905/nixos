@@ -21,6 +21,11 @@
             enable = true;
           };
 
+          nat = {
+            enable = true;
+            skipPrivate = true;
+          };
+
           wan = {
             interface = "wan";
 

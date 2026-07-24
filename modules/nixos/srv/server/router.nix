@@ -31,6 +31,7 @@ in
 
     nat = {
       enable = lib.mkEnableOption "nat";
+      skipPrivate = lib.mkEnableOption "don't nat private ip addresses";
     };
 
     wan = {
@@ -134,6 +135,15 @@ in
         enable = cfg.nat.enable;
         externalInterface = "${cfg.wan.interface}"; # WAN
         internalInterfaces = [ cfg.lan.bridge.name ]; # LAN
+        extraCommands = let
+            subnet = util.tools.ip-nix.getSubnet cfg.lan.address;
+            lanaddr = "${util.tools.ip-nix.prettyIp subnet.baseIp}/${toString subnet.cidr}";
+          in lib.mkIf (cfg.nat.enable && cfg.nat.skipPrivate) ''
+          iptables -t nat -A POSTROUTING -s ${builtins.trace lanaddr lanaddr} -d 10.0.0.0/8     -j ACCEPT
+          iptables -t nat -A POSTROUTING -s ${lanaddr} -d 172.16.0.0/12  -j ACCEPT
+          iptables -t nat -A POSTROUTING -s ${lanaddr} -d 192.168.0.0/16 -j ACCEPT
+          iptables -t nat -A POSTROUTING -s ${lanaddr} -o eth0 -j MASQUERADE
+        '';
       };
 
       resolvconf.enable = true;
