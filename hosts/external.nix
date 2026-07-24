@@ -28,7 +28,7 @@ in
 
   proxmox = {
     networking = {
-      ip = "192.168.8.11";
+      ip = "192.168.0.11";
       publicServices.pve = {
         proto = "https";
         port = 8006;
