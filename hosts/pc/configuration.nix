@@ -33,6 +33,12 @@
   bootloader.grub.enable = true;
   bootloader.splash.enable = true;
 
+  # Wake On LAN
+  other.wol = {
+    enable = true;
+    interface = "enp6s0";
+  };
+
   # Filesystems
   boot.supportedFilesystems = [ "ntfs" ];
 
