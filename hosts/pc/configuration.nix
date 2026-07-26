@@ -31,6 +31,7 @@
 
   # Bootloader
   bootloader.grub.enable = true;
+  bootloader.splash.enable = true;
 
   # Filesystems
   boot.supportedFilesystems = [ "ntfs" ];
