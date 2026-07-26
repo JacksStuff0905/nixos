@@ -1,14 +1,14 @@
 { config, ... }:
 {
   host = {
-    hostName = "ct-web";
+    hostName = "ct-adguard1";
 
-    hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHV8OQtXmKYXvME1bhoSf6hJT89BOwNxfBfmGif2BuUX";
+    hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZm2hVrbbTMv7yDYw6Yohh1cCGCiRv7ObVWvtFHzHDQ";
 
     networking = {
-      ip = "192.168.10.15/24";
-      mac = "BC:24:11:80:DD:7A";
-      publicServices.home = {
+      ip = "192.168.10.5/24";
+      mac = "bc:24:11:be:7b:ae";
+      publicServices.dns = {
         proto = "http";
         port = 80;
 
@@ -17,7 +17,7 @@
         access = [
           {
             policy = "one_factor";
-            subject = "group:netusers";
+            subject = "group:netadmins";
           }
         ];
       };

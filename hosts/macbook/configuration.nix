@@ -44,6 +44,10 @@
   de.dwl.enable = false;
   dm.gdm.enable = true;
 
+  # Other
+  other.apps.steam.enable = true;
+  other.apps.winbox.enable = true;
+
   # Users
   users.groups.nixos = { };
 

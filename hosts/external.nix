@@ -5,7 +5,8 @@ in
 {
   truenas-vm = {
     networking = {
-      ip = "192.168.10.6";
+      ip = "192.168.10.6/24";
+      mac = "BC:24:11:D0:A6:A3";
       publicServices.nas = {
         proto = "http";
         port = 80;
@@ -27,32 +28,10 @@ in
 
   proxmox = {
     networking = {
-      ip = "192.168.8.11";
+      ip = "192.168.0.11";
       publicServices.pve = {
         proto = "https";
         port = 8006;
-
-        middlewares = [ "auth.srv.lan" ];
-
-        access = [
-          {
-            policy = "one_factor";
-            subject = "group:netadmins";
-          }
-        ];
-      };
-    };
-
-    isProduction = true;
-    isServer = true;
-  };
-
-  opnsense-vm = {
-    networking = {
-      ip = "192.168.10.1";
-      publicServices.router = {
-        proto = "https";
-        port = 443;
 
         middlewares = [ "auth.srv.lan" ];
 

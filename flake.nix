@@ -40,6 +40,11 @@
 
     nix-minecraft.url = "github:Infinidoge/nix-minecraft";
 
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -257,18 +262,6 @@
               };
             }
             inputs.nvim-nix.nixosModules.default
-            hostSpec
-          ];
-        };
-
-        vm-router = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit inputs util system;
-          };
-
-          modules = [
-            ./hosts/vm/router/configuration.nix
-            agenixModule
             hostSpec
           ];
         };

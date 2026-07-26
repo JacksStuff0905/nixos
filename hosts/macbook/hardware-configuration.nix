@@ -6,12 +6,14 @@
   lib,
   pkgs,
   modulesPath,
+  inputs,
   ...
 }:
 
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
+    inputs.nixos-hardware.nixosModules.apple-macbook-air-6
   ];
 
   boot.initrd.availableKernelModules = [
@@ -64,7 +66,7 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   nixpkgs.config = {
     permittedInsecurePackages = [
-      "broadcom-sta-6.30.223.271-59-6.6.142"
+      "broadcom-sta-6.30.223.271-59-6.6.143"
     ];
   };
 

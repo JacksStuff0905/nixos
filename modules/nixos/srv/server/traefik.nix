@@ -63,7 +63,7 @@ let
             "${s.proto}://"
           else
             ""
-        }${s.ip or config.host.networking.ip}:${toString s.port}";
+        }${(util.tools.ip-nix.splitIp (s.ip or config.host.networking.ip)).ip}:${toString s.port}";
         middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
         middlewares = s.middlewares;
       })
@@ -83,7 +83,7 @@ let
         src = "${n}\\.${
           builtins.replaceStrings [ "." ] [ "\\." ] (s.domain or config.host.networking.domain)
         }";
-        dest = "${s.ip or config.host.networking.ip}:${toString s.port}";
+        dest = "${(util.tools.ip-nix.splitIp (s.ip or config.host.networking.ip)).ip}:${toString s.port}";
         middleware = if (s.middleware.enable or false) then s.middleware.extraConfig or { } else null;
         middlewares = s.middlewares;
       })

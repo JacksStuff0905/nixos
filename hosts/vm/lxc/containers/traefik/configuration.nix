@@ -4,9 +4,6 @@
   inputs,
   ...
 }:
-let
-  selfIP = "192.168.10.9";
-in
 {
   imports = [
     ../../base-lxc.nix
