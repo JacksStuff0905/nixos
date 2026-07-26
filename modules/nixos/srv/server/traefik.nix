@@ -17,12 +17,32 @@ let
     CERT_DIR="${certDir}/${domain}"
     if [ ! -d "$CERT_DIR" ]; then
       mkdir -p "$CERT_DIR"
-      ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 3650 \
-        -newkey rsa:2048 \
-        -keyout "$CERT_DIR/key" \
+
+      if [ ! -f "${certDir}/ca.srl" ]; then
+        echo "01" > "${certDir}/ca.srl"
+      fi
+
+      # Generate key + CSR
+      ${pkgs.openssl}/bin/openssl genrsa -out "$CERT_DIR/key" 2048
+      ${pkgs.openssl}/bin/openssl req -new \
+        -key "$CERT_DIR/key" \
+        -out "$CERT_DIR/csr" \
+        -subj "/CN=*.${domain}"
+
+      # Sign with CA
+      ${pkgs.openssl}/bin/openssl x509 -req \
+        -in "$CERT_DIR/csr" \
+        -CA "${cfg.certificates.ca.cert}" \
+        -CAkey "${cfg.certificates.ca.key}" \
+        -CAserial "${certDir}/ca.srl" \
         -out "$CERT_DIR/crt" \
-        -subj "/CN=*.${domain}" \
-        -addext "subjectAltName=DNS:*.${domain},DNS:${domain}"
+        -days 825 \
+        -sha256 \
+        -extfile <(printf "subjectAltName=DNS:*.${domain},DNS:${domain}")
+
+      rm "$CERT_DIR/csr"
+      chmod 640 "$CERT_DIR/key"
+      chmod 644 "$CERT_DIR/crt"
       chmod -R 750 "$CERT_DIR"
     fi
   '';
@@ -96,11 +116,20 @@ in
     certificates = {
       default = lib.mkOption {
         type = lib.types.str;
-        default = "lan";
       };
       extra = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
+      };
+
+      ca = {
+        cert = lib.mkOption {
+          type = lib.types.path;
+        };
+
+        key = lib.mkOption {
+          type = lib.types.path;
+        };
       };
     };
 
@@ -117,6 +146,8 @@ in
     systemd.tmpfiles.rules = [
       "d ${certDir} 0750 0 0"
     ];
+
+    srv.server."${name}".certificates.default = lib.mkDefault config.host.networking.domain;
 
     system.activationScripts.generateSSLCerts = builtins.concatStringsSep "\n" (
       builtins.map mkCert certificates

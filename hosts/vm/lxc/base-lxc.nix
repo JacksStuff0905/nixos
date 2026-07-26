@@ -41,6 +41,9 @@
       "flakes"
     ];
 
+    # Trust CA
+    security.pki.certificateFiles = [ ./ssl/ca.crt ];
+
     # Supress systemd units that don't work because of LXC
     systemd.suppressedSystemUnits = [
       "dev-mqueue.mount"
