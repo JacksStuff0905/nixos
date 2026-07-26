@@ -51,7 +51,7 @@ in
         # Use the system-wide module instead
         #steam.enable = true;
       };
-      bottles.enable = true;
+      bottles.enable = false; # Temporary disable
     };
     apps.games = {
       minecraft = {
