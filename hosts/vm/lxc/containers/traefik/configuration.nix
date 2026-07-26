@@ -11,8 +11,19 @@
   ];
 
   config = {
+    age.secrets.ca-key = {
+      rekeyFile = ../../ssl/ca-key.age;
+      owner = "traefik";
+      group = "traefik";
+      mode = "0600";
+    };
+
     srv.server.traefik = {
       enable = true;
+      certificates.ca = {
+        cert = ../../ssl/ca.crt;
+        key = config.age.secrets.ca-key.path;
+      };
       /*
         hosts = [
           {
