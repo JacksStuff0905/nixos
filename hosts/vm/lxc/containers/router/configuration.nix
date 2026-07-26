@@ -24,6 +24,14 @@
           nat = {
             enable = true;
             skipPrivate = true;
+            forwardPorts = [
+              {
+                # Wireguard
+                sourcePort = 51834;
+                proto = "udp";
+                destination = "192.168.10.10:51834";
+              }
+            ];
           };
 
           wan = {
