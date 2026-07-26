@@ -72,6 +72,54 @@
   sh.aliases.enable = true;
   sh.zsh.enable = true;
 
+  # Wireguard
+  age.secrets = {
+    wireguard-private-key = {
+      rekeyFile = ./secrets/wireguard-private-key.age;
+      owner = "root";
+      group = "root";
+      mode = "0600";
+    };
+    wireguard-server-ip = {
+      rekeyFile = ./secrets/wireguard-server-ip.age;
+      owner = "root";
+      group = "root";
+      mode = "0600";
+    };
+  };
+
+  networking.wg-quick.interfaces = {
+    wg0 = {
+      address = [
+        "192.168.100.16/24"
+      ];
+      dns = [
+        "192.168.10.5"
+      ];
+
+      # Public key: KcCv3S9PBVQABekikcr4uDVBuUtZ8T5pYU+DpSywYnE=
+      privateKeyFile = config.age.secrets.wireguard-private-key.path;
+
+      postUp = ''
+        SERVER_IP=$(${pkgs.coreutils}/bin/cat ${config.age.secrets.wireguard-server-ip.path} | ${pkgs.findutils}/bin/xargs)
+        ${pkgs.wireguard-tools}/bin/wg set wg0 \
+          peer "CPhvcGgH23lMyzzmfiOj+UGfa9MfCPYYxgrZcuylDjQ=" \
+          endpoint "$SERVER_IP:51834"
+      '';
+
+      peers = [
+        {
+          publicKey = "CPhvcGgH23lMyzzmfiOj+UGfa9MfCPYYxgrZcuylDjQ=";
+          allowedIPs = [
+            "0.0.0.0/0"
+            "::/0"
+          ];
+          persistentKeepalive = 25;
+        }
+      ];
+    };
+  };
+
   # Services
   srv.ssh.enable = true;
   srv.printing.enable = true;
@@ -98,7 +146,7 @@
 
   # Use latest kernel.
   # 6.6 for webcam
-  boot.kernelPackages = pkgs.linuxPackages_6_6; #pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_6_6; # pkgs.linuxPackages_latest;
 
   # Allow unfree packages
   nixpkgs.config = {

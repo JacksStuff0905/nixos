@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  util,
   ...
 }:
 let
@@ -11,120 +12,96 @@ let
 in
 {
   options.srv.server."${name}" = {
-    enable = lib.mkEnableOption "Enable ${name}";
+    enable = lib.mkEnableOption "${name}";
 
-    secret = {
-      directory = lib.mkOption {
-        type = lib.types.path;
-      };
+    interface = lib.mkOption {
+      type = lib.types.str;
+    };
 
-      firezone-admin-password = lib.mkOption {
-        type = lib.types.str;
-        default = "firezone-admin-password.age";
-      };
+    ip = lib.mkOption {
+      type = lib.types.str;
+    };
 
-      firezone-oidc-client-secret = lib.mkOption {
-        type = lib.types.str;
-        default = "firezone-oidc-client-secret.age";
-      };
-
-      firezone-db-encryption-key = lib.mkOption {
-        type = lib.types.str;
-        default = "firezone-db-encryption-key.age";
-      };
+    peers = lib.mkOption {
+      type = lib.types.listOf lib.types.attrs;
+      default = { };
     };
 
     publicKey = lib.mkOption {
       type = lib.types.str;
     };
+
+    privateKeySecret = lib.mkOption {
+      type = lib.types.path;
+    };
   };
 
   config = lib.mkIf cfg.enable {
-    age.secrets = {
-      firezone-admin-password = {
-        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-admin-password);
-        owner = "firezone";
-        group = "firezone";
-      };
-
-      firezone-oidc-client-secret = {
-        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-oidc-client-secret);
-        owner = "firezone";
-        group = "firezone";
-      };
-
-      firezone-db-encryption-key = {
-        rekeyFile = cfg.secret.directory + ("/" + cfg.secret.firezone-db-encryption-key);
-        owner = "firezone";
-        group = "firezone";
-      };
-    };
-
-    services.postgresql = {
+    networking.nat = {
       enable = true;
-      ensureDatabases = [ "firezone" ];
-      ensureUsers = [
-        {
-          name = "firezone";
-          ensureDBOwnership = true;
-        }
-      ];
+      enableIPv6 = true;
+      externalInterface = "eth0";
+      internalInterfaces = [ "wg0" ];
     };
-
-    services.firezone.server = {
-      enable = true;
-
-      enableLocalDB = true;
-
-      settings = {
-        # This is the external URL where users will access Firezone
-        # Must match the redirect_uri in Authelia config
-        EXTERNAL_URL = "https://vpn.srv.lan";
-
-        # Database
-        DATABASE_HOST = "/run/postgresql";
-        DATABASE_NAME = "firezone";
-        DATABASE_USER = "firezone";
-
-        # Admin
-        DEFAULT_ADMIN_EMAIL = "admin@example.com";
-
-        # WireGuard
-        WIREGUARD_PORT = "51820";
-        WIREGUARD_IPV4_NETWORK = "192.168.11.0/24";
-        WIREGUARD_ALLOWED_IPS = "10.0.0.0/8,192.168.0.0/16";
-        WIREGUARD_DNS = "192.168.10.5";
-        WIREGUARD_MTU = "1280";
-        WIREGUARD_PERSISTENT_KEEPALIVE = "25";
-
-        # OIDC - Authelia
-        AUTH_OIDC_ENABLED = "true";
-        AUTH_OIDC_CLIENT_ID = "vpn";
-        AUTH_OIDC_DISCOVERY_DOCUMENT_URI = "https://auth.srv.lan/.well-known/openid-configuration";
-        AUTH_OIDC_REDIRECT_URI = "https://vpn.srv.lan/auth/oidc/firezone/callback/";
-        AUTH_OIDC_RESPONSE_TYPE = "code";
-        AUTH_OIDC_SCOPE = "openid email profile";
-        AUTH_OIDC_LABEL = "Sign in with Authelia";
-        AUTH_OIDC_AUTO_CREATE_USERS = "true";
-
-        # Disable local authentication (optional - OIDC only)
-        # LOCAL_AUTH_ENABLED = "false";
-      };
-
-      # Secret settings - maps env var name to file path
-      settingsSecret = {
-        DEFAULT_ADMIN_PASSWORD = config.age.secrets.firezone-admin-password.path;
-        AUTH_OIDC_CLIENT_SECRET = config.age.secrets.firezone-oidc-client-secret.path;
-        SECRET_KEY_BASE = config.age.secrets.firezone-db-encryption-key.path;
-      };
-    };
-
+    # Open ports in the firewall
     networking.firewall = {
-      allowedUDPPorts = [ 51820 ];
-      allowedTCPPorts = [
-        80
-        443
+      allowedTCPPorts = [ 53 ];
+      allowedUDPPorts = [
+        53
+        51834
       ];
+      trustedInterfaces = [ "wg0" ];
     };
+
+    age.secrets = {
+      wireguard-private-key = {
+        rekeyFile = cfg.privateKeySecret;
+        mode = "0666";
+      };
+    };
+
+    environment.systemPackages = [
+      pkgs.wireguard-tools
+      pkgs.qrencode
+    ];
+
+    boot.kernel.sysctl = {
+      "net.ipv4.ip_forward" = 1;
+      "net.ipv6.conf.all.forwarding" = 1;
+    };
+
+    networking.wg-quick.interfaces =
+      let
+        net = util.tools.ip-nix.getSubnet cfg.ip;
+      in
+      {
+        # "wg0" is the network interface name. You can name the interface arbitrarily.
+        wg0 = {
+          # Determines the IP/IPv6 address and subnet of the client's end of the tunnel interface
+          address = [
+            cfg.ip
+          ];
+          # The port that WireGuard listens to - recommended that this be changed from default
+          listenPort = 51834;
+          # Path to the server's private key
+          privateKeyFile = config.age.secrets.wireguard-private-key.path;
+
+          # This allows the wireguard server to route your traffic to the internet and hence be like a VPN
+          postUp = ''
+            ${pkgs.iptables}/bin/iptables -A FORWARD -i wg0 -j ACCEPT
+            ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s ${cfg.ip} -o ${cfg.interface} -j MASQUERADE
+            ${pkgs.iptables}/bin/iptables -A FORWARD -o wg0 -j ACCEPT
+          '';
+
+          # Undo the above
+          preDown = ''
+            ${pkgs.iptables}/bin/iptables -D FORWARD -i wg0 -j ACCEPT
+            ${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s ${cfg.ip} -o ${cfg.interface} -j MASQUERADE
+            ${pkgs.iptables}/bin/iptables -D FORWARD -o wg0 -j ACCEPT
+          '';
+
+          peers = cfg.peers;
+        };
+      };
   };
 }
