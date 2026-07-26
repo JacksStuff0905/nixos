@@ -101,6 +101,7 @@
   # Services
   srv.ssh.enable = true;
   srv.printing.enable = true;
+  srv.sunshine.enable = true;
 
   srv.syncthing = {
     enable = true;
