@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, util, ... }:
 {
   host = {
     hostName = "ct-authelia";
@@ -27,7 +27,7 @@
               enable = true;
               extraConfig = {
                 forwardAuth = {
-                  address = "${proto}://${ip}:${toString port}/api/authz/forward-auth";
+                  address = "${proto}://${(util.tools.ip-nix.splitIp ip).ip}:${toString port}/api/authz/forward-auth";
                   trustForwardHeader = true;
                   authResponseHeaders = [
                     "Remote-User"
