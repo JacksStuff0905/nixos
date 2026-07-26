@@ -38,6 +38,8 @@
       url = "github:musnix/musnix";
     };
 
+    nix-minecraft.url = "github:Infinidoge/nix-minecraft";
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
