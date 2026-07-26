@@ -24,7 +24,7 @@ in
     };
     users = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
+      default = [ ];
     };
 
     use-for-oci = lib.mkOption {
@@ -43,6 +43,9 @@ in
       };
 
       enableOnBoot = true;
+      daemon.settings = {
+        features.cdi = true; # for nvidia gpu
+      };
     };
 
     users.groups.docker.members = cfg.users;
