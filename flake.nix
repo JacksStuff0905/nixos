@@ -211,6 +211,37 @@
           ];
         };
 
+        framework = nixpkgs.lib.nixosSystem {
+          specialArgs = {
+            inherit
+              inputs
+              util
+              system
+              common
+              ;
+          };
+
+          modules = [
+            ./hosts/framework/configuration.nix
+            inputs.home-manager.nixosModules.default
+            agenixModule
+            {
+              home-manager = {
+                extraSpecialArgs = {
+                  inherit
+                    util
+                    system
+                    common
+                    ;
+                };
+                sharedModules = [ hostSpec ];
+              };
+            }
+            inputs.nvim-nix.nixosModules.default
+            hostSpec
+          ];
+        };
+
         pc = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit
@@ -239,30 +270,6 @@
             }
             hostSpec
             inputs.nvim-nix.nixosModules.default
-          ];
-        };
-
-        vm-docker = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit
-              inputs
-              util
-              system
-              common
-              ;
-          };
-
-          modules = [
-            ./hosts/vm/docker/configuration.nix
-            agenixModule
-            inputs.home-manager.nixosModules.default
-            {
-              home-manager.extraSpecialArgs = {
-                inherit util system hostSpec;
-              };
-            }
-            inputs.nvim-nix.nixosModules.default
-            hostSpec
           ];
         };
       })

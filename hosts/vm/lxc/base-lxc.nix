@@ -82,7 +82,7 @@
     sh.zsh.enable = true;
 
     # Services
-    srv.ssh = {
+    srv.ssh.server = {
       enable = true;
       enableRoot = true;
     };

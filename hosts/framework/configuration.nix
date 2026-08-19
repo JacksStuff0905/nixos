@@ -63,6 +63,9 @@
     shell = pkgs.zsh;
   };
 
+  # Fingerprint
+  services.fprintd.enable = true;
+
   # Virtualization
   virtualization.docker = {
     enable = true;
@@ -74,8 +77,27 @@
   sh.zsh.enable = true;
 
   # Services
-  srv.ssh.enable = true;
+  srv.ssh.agent.enable = true;
   srv.printing.enable = true;
+  /*srv.syncthing = {
+    enable = true;
+
+    id = "63T63WH-6JM36QG-RMAZ3OJ-HGEIHY2-2R57EQR-IIBPBEC-MH7L2X2-NB34QQP";
+
+    keySecret = ./secrets/syncthing-key.age;
+
+    cert = ''-----BEGIN CERTIFICATE-----
+MIIBoDCCAVKgAwIBAgIJALYEvsV/LfhTMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
+dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
+EwlzeW5jdGhpbmcwHhcNMjYwODE5MDAwMDAwWhcNNDYwODE0MDAwMDAwWjBKMRIw
+EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
+dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQAEYgQsAsLTixq31VVM
+nlCDF2LeqUeiAfLYVYXP19g066NVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
+CXN5bmN0aGluZzAFBgMrZXADQQB5J/RWoNtr4LAJv/xf6Fb7ON8e+rB6g1TJFLeE
+a2znB+Na5fZsByhkA2nIcGOyjDVBXbK/mm50gImxCgW47pcL
+-----END CERTIFICATE-----'';
+  };*/
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;

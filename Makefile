@@ -4,6 +4,9 @@ main:
 macbook:
 	sudo nixos-rebuild switch --flake ./#macbook
 
+framework:
+	sudo nixos-rebuild switch --flake ./#framework
+
 pc:
 	sudo nixos-rebuild switch --flake ./#pc
 
