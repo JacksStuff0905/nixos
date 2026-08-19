@@ -106,37 +106,39 @@
   srv.syncthing = {
     enable = true;
 
-    id = "5XL6TVD-YLV522Y-HF3QXXN-X6NVRC7-E7SBMBY-4OAADUC-BHPR6KM-5YWUMQF";
+    users."${config.host.user.name}" = {
+      id = "5XL6TVD-YLV522Y-HF3QXXN-X6NVRC7-E7SBMBY-4OAADUC-BHPR6KM-5YWUMQF";
 
-    keySecret = ./secrets/syncthing-key.age;
+      keySecret = ./secrets/syncthing-key.age;
 
-    devices.extraDevices = {
-      "jacek S21FE" = {
-        id = "MVRIPLU-SETOKVI-BEDFUGD-RU4BQRE-H3LCJTZ-6VLJSRD-ETOA2U2-JEYHFAS";
-      };
-    };
-
-    folders = {
-      projects = {
-        enable = true;
-        path = "~/Projects";
+      devices.extraDevices = {
+        "jacek S21FE" = {
+          id = "MVRIPLU-SETOKVI-BEDFUGD-RU4BQRE-H3LCJTZ-6VLJSRD-ETOA2U2-JEYHFAS";
+        };
       };
 
-      secret.devices.extraDevices = [ "jacek S21FE" ];
-    };
+      folders = {
+        projects = {
+          enable = true;
+          path = "~/Projects";
+        };
 
-    cert = ''
-      -----BEGIN CERTIFICATE-----
-      MIIBnzCCAVGgAwIBAgIIIceivbfc9O0wBQYDK2VwMEoxEjAQBgNVBAoTCVN5bmN0
-      aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0ZWQxEjAQBgNVBAMT
-      CXN5bmN0aGluZzAeFw0yNjA0MjYwMDAwMDBaFw00NjA0MjEwMDAwMDBaMEoxEjAQ
-      BgNVBAoTCVN5bmN0aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0
-      ZWQxEjAQBgNVBAMTCXN5bmN0aGluZzAqMAUGAytlcAMhAPtq35PFWrxgaMnlQI/i
-      dYrkqAmvV1JXa2a3uJ7J/7kzo1UwUzAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYw
-      FAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwFAYDVR0RBA0wC4IJ
-      c3luY3RoaW5nMAUGAytlcANBAH6gdFW0P9guj1bLWbSC56bKoQDltDHILB9irIAp
-      OSOwN38Q16dQbSSNlHCJkwoaLFc7bmoQuvI0/EtJOgd4QQQ=
-      -----END CERTIFICATE-----'';
+        secret.devices.extraDevices = [ "jacek S21FE" ];
+      };
+
+      cert = ''
+        -----BEGIN CERTIFICATE-----
+        MIIBnzCCAVGgAwIBAgIIIceivbfc9O0wBQYDK2VwMEoxEjAQBgNVBAoTCVN5bmN0
+        aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0ZWQxEjAQBgNVBAMT
+        CXN5bmN0aGluZzAeFw0yNjA0MjYwMDAwMDBaFw00NjA0MjEwMDAwMDBaMEoxEjAQ
+        BgNVBAoTCVN5bmN0aGluZzEgMB4GA1UECxMXQXV0b21hdGljYWxseSBHZW5lcmF0
+        ZWQxEjAQBgNVBAMTCXN5bmN0aGluZzAqMAUGAytlcAMhAPtq35PFWrxgaMnlQI/i
+        dYrkqAmvV1JXa2a3uJ7J/7kzo1UwUzAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYw
+        FAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwFAYDVR0RBA0wC4IJ
+        c3luY3RoaW5nMAUGAytlcANBAH6gdFW0P9guj1bLWbSC56bKoQDltDHILB9irIAp
+        OSOwN38Q16dQbSSNlHCJkwoaLFc7bmoQuvI0/EtJOgd4QQQ=
+        -----END CERTIFICATE-----'';
+    };
   };
 
   # Use latest kernel.

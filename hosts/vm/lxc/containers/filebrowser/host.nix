@@ -8,18 +8,31 @@
     networking = {
       ip = "192.168.10.13/24";
       mac = "BC:24:11:C1:9A:F9";
-      publicServices.drive = {
-        proto = "http";
-        port = 80;
+      publicServices = {
+        sync = {
+          middlewares = [ "auth.srv.lan" ];
+          proto = "http";
+          port = 8384;
+          access = [
+            {
+              policy = "one_factor";
+              subject = [ "group:netusers" ];
+            }
+          ];
+        };
+        drive = {
+          proto = "http";
+          port = 80;
 
-        middlewares = [ "auth.srv.lan" ];
+          middlewares = [ "auth.srv.lan" ];
 
-        access = [
-          {
-            policy = "one_factor";
-            subject = "group:netusers";
-          }
-        ];
+          access = [
+            {
+              policy = "one_factor";
+              subject = "group:netusers";
+            }
+          ];
+        };
       };
 
       vpn.mesh = {

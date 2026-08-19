@@ -24,37 +24,49 @@ in
       };
     };
 
-    srv.ldap.enable = true;
-
     srv.syncthing = {
       enable = true;
-
-      id = "SZK7J52-D7XBZ5P-HI2DVH2-RAHCOYF-SQOWB3Z-BOGKG3U-DMQIVTS-H4IARQK";
-
-      folders = {
-        projects = {
-          enable = true;
-          path = "${config.srv.server.filebrowser-quantum.fbRoot}/Users/jacek/Projects";
-        };
-
-        secret.enable = false;
+      auth = {
+        mode = "proxy";
+        group = "netusers";
+        proxyHeader = "Remote-User";
       };
 
-      keySecret = ./secrets/syncthing-key.age;
+      configDir = "/var/lib/syncthing-users";
 
-      cert = ''
-        -----BEGIN CERTIFICATE-----
-        MIIBoDCCAVKgAwIBAgIJAL/xCSBzJhXpMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
-        dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
-        EwlzeW5jdGhpbmcwHhcNMjYwNDI4MDAwMDAwWhcNNDYwNDIzMDAwMDAwWjBKMRIw
-        EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
-        dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQDdqsW9zsQ6KnDcyXD8
-        TYgC+EECgJznzY9BMyYImdx7PKNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
-        MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
-        CXN5bmN0aGluZzAFBgMrZXADQQCPma/fDKh1abyWgiARunTMxBSCBWk/C/a2+CPJ
-        9hlYlk0MFrF+8/hHF1/AhGJ9yRUvUxIO9Oyn3+nKuW4uktcC
-        -----END CERTIFICATE-----
-      '';
+      users.jacek = {
+        id = "SZK7J52-D7XBZ5P-HI2DVH2-RAHCOYF-SQOWB3Z-BOGKG3U-DMQIVTS-H4IARQK";
+
+        folders = {
+          projects = {
+            enable = true;
+            path = "${config.srv.server.filebrowser-quantum.fbRoot}/Users/jacek/Projects";
+          };
+
+          secret.enable = true;
+        };
+
+        keySecret = ./secrets/syncthing-key.age;
+
+        cert = ''
+          -----BEGIN CERTIFICATE-----
+          MIIBoDCCAVKgAwIBAgIJAL/xCSBzJhXpMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
+          dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
+          EwlzeW5jdGhpbmcwHhcNMjYwNDI4MDAwMDAwWhcNNDYwNDIzMDAwMDAwWjBKMRIw
+          EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
+          dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQDdqsW9zsQ6KnDcyXD8
+          TYgC+EECgJznzY9BMyYImdx7PKNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+          MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
+          CXN5bmN0aGluZzAFBgMrZXADQQCPma/fDKh1abyWgiARunTMxBSCBWk/C/a2+CPJ
+          9hlYlk0MFrF+8/hHF1/AhGJ9yRUvUxIO9Oyn3+nKuW4uktcC
+          -----END CERTIFICATE-----
+        '';
+      };
+    };
+
+    srv.ldap = {
+      enable = true;
+      overrideHomeDir = "${config.srv.server.filebrowser-quantum.fbRoot}/Users";
     };
 
     # Services
@@ -121,11 +133,18 @@ in
         # Block external access to FileBrowser port
         iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -s 192.168.10.9 -j ACCEPT
         iptables -A INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -j DROP
+
+        # Block external access to Syncthing port
+        iptables -A INPUT -p tcp --dport ${toString config.srv.syncthing.proxyPort} -s 192.168.10.9 -j ACCEPT
+        iptables -A INPUT -p tcp --dport ${toString config.srv.syncthing.proxyPort} -j DROP
       '';
 
       extraStopCommands = ''
         iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -s 192.168.10.9 -j ACCEPT 2>/dev/null || true
         iptables -D INPUT -p tcp --dport ${toString config.srv.server.filebrowser-quantum.port} -j DROP 2>/dev/null || true
+
+        iptables -D INPUT -p tcp --dport ${toString config.srv.syncthing.proxyPort} -s 192.168.10.9 -j ACCEPT 2>/dev/null || true
+        iptables -D INPUT -p tcp --dport ${toString config.srv.syncthing.proxyPort} -j DROP 2>/dev/null || true
       '';
     };
 

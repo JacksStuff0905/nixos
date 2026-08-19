@@ -14,6 +14,10 @@ in
 {
   options.srv.ldap = {
     enable = lib.mkEnableOption "Enable ldap auth module";
+    overrideHomeDir = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -32,6 +36,9 @@ in
       server = serverUrl;
 
       daemon.enable = true;
+      daemon.extraConfig = lib.mkIf (cfg.overrideHomeDir != null) ''
+        map passwd homeDirectory "${cfg.overrideHomeDir}/$uid"
+      '';
 
       base = base;
       bind = {

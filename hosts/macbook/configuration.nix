@@ -30,6 +30,7 @@
 
   # Bootloader
   bootloader.grub.enable = true;
+  bootloader.splash.enable = true;
 
   # Filesystems
   boot.supportedFilesystems = [ "ntfs" ];
@@ -97,6 +98,8 @@
         "192.168.10.5"
       ];
 
+      mtu = 1370;
+
       # Public key: KcCv3S9PBVQABekikcr4uDVBuUtZ8T5pYU+DpSywYnE=
       privateKeyFile = config.age.secrets.wireguard-private-key.path;
 
@@ -126,22 +129,26 @@
   srv.syncthing = {
     enable = true;
 
-    id = "AEJQBMR-NQD5637-LBB5Y6M-YUUBFJU-CZTNQPV-NAYWTU7-NBNCH7Z-K42E4A7";
+    auth.applyGroup = true;
 
-    keySecret = ./secrets/syncthing-key.age;
+    users."${config.host.user.name}" = {
+      id = "AEJQBMR-NQD5637-LBB5Y6M-YUUBFJU-CZTNQPV-NAYWTU7-NBNCH7Z-K42E4A7";
 
-    cert = ''
-      -----BEGIN CERTIFICATE-----
-      MIIBoDCCAVKgAwIBAgIJAO0fTwymXmnIMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
-      dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
-      EwlzeW5jdGhpbmcwHhcNMjYwNDI3MDAwMDAwWhcNNDYwNDIyMDAwMDAwWjBKMRIw
-      EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
-      dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQBv3qnHvORREIMw7oXh
-      7qky0qQGHZbFM/SMMQIIXLGsFqNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
-      MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
-      CXN5bmN0aGluZzAFBgMrZXADQQAKmTTx3N97XGMh8eVJCNQVSq8Bi8P3EDc/Ku9Z
-      y/xVlZAxEyrwcPrUAVA9hJxf/JB9gCO/36IgpSil6mZO6lYC
-      -----END CERTIFICATE-----'';
+      keySecret = ./secrets/syncthing-key.age;
+
+      cert = ''
+        -----BEGIN CERTIFICATE-----
+        MIIBoDCCAVKgAwIBAgIJAO0fTwymXmnIMAUGAytlcDBKMRIwEAYDVQQKEwlTeW5j
+        dGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJhdGVkMRIwEAYDVQQD
+        EwlzeW5jdGhpbmcwHhcNMjYwNDI3MDAwMDAwWhcNNDYwNDIyMDAwMDAwWjBKMRIw
+        EAYDVQQKEwlTeW5jdGhpbmcxIDAeBgNVBAsTF0F1dG9tYXRpY2FsbHkgR2VuZXJh
+        dGVkMRIwEAYDVQQDEwlzeW5jdGhpbmcwKjAFBgMrZXADIQBv3qnHvORREIMw7oXh
+        7qky0qQGHZbFM/SMMQIIXLGsFqNVMFMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW
+        MBQGCCsGAQUFBwMBBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMBQGA1UdEQQNMAuC
+        CXN5bmN0aGluZzAFBgMrZXADQQAKmTTx3N97XGMh8eVJCNQVSq8Bi8P3EDc/Ku9Z
+        y/xVlZAxEyrwcPrUAVA9hJxf/JB9gCO/36IgpSil6mZO6lYC
+        -----END CERTIFICATE-----'';
+    };
   };
 
   # Use latest kernel.

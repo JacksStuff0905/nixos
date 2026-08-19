@@ -135,7 +135,7 @@ in
           cacheDir = cacheDir;
           sources = [
             {
-              path = usersDir;
+              path = "${usersDir}";
               name = "my drive";
               config = {
                 createUserDir = true;
