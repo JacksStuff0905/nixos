@@ -66,7 +66,7 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   nixpkgs.config = {
     permittedInsecurePackages = [
-      "broadcom-sta-6.30.223.271-59-6.6.143"
+      "broadcom-sta-6.30.223.271-59-6.6.144"
     ];
   };
 
