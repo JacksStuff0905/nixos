@@ -554,8 +554,6 @@ in
         pkgs.nginxModules.pam
       ];
 
-      group = "${cfg.auth.group}";
-
       appendHttpConfig = ''
         lua_package_path "${pkgs.luajitPackages.lua-resty-core}/lib/lua/5.1/?.lua;${pkgs.luajitPackages.lua-resty-lrucache}/lib/lua/5.1/?.lua;;";
       '';
