@@ -13,79 +13,50 @@
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    inputs.nixos-hardware.nixosModules.apple-macbook-air-6
+    inputs.nixos-hardware.nixosModules.framework-amd-ai-300-series
   ];
 
   boot.initrd.availableKernelModules = [
+    "nvme"
     "xhci_pci"
-    "ahci"
+    "thunderbolt"
     "usb_storage"
-    "usbhid"
     "sd_mod"
   ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [
-    "kvm-intel"
-    "wl"
-    "facetimehd"
-  ];
-  hardware.enableAllFirmware = true;
-  boot.extraModulePackages = with config.boot.kernelPackages; [
-    broadcom_sta
-    facetimehd
-  ];
-  boot.blacklistedKernelModules = [
-    "b43"
-    "bcma"
-    "brcmsmac"
-    "ssb"
-    "bdc_pci"
-  ];
-
-  # Webcam
-  hardware.facetimehd.enable = true;
+  boot.kernelModules = [ "kvm-amd" ];
+  boot.extraModulePackages = [ ];
 
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/5441f20c-0121-4781-af9f-779965251bfd";
-    fsType = "ext4";
+    device = "/dev/disk/by-label/NIXROOT";
+    fsType = "btrfs";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/0BBA-5AEB";
+    device = "/dev/disk/by-label/NIXBOOT";
     fsType = "vfat";
     options = [
-      "fmask=0077"
-      "dmask=0077"
+      "fmask=0022"
+      "dmask=0022"
     ];
   };
 
   swapDevices = [
-    { device = "/dev/disk/by-uuid/b074c940-b8b6-4d5b-8174-a18ab1606824"; }
+    {
+      device = "/.swapfile";
+      size = 16 * 1024;
+    }
   ];
-
-  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  nixpkgs.config = {
-    permittedInsecurePackages = [
-      "broadcom-sta-6.30.223.271-59-6.6.144"
-    ];
-  };
-
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
   hardware.graphics = {
     enable = true;
-    enable32Bit = true;
-
-    extraPackages = with pkgs; [
-      intel-media-driver # VAAPI Video accel
-      vulkan-loader
-      vulkan-validation-layers
-      vulkan-extension-layer
-    ];
   };
 
-  # Enable Vulkan 1.0
-  environment.variables = {
-    MESA_LOADER_DRIVER_OVERRIDE = "crocus";
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
   };
+
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }
