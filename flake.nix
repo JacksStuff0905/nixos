@@ -110,19 +110,18 @@
 
           config =
             let
-              masterHosts = lib.filterAttrs (
-                n: h:
+              isMasterHost =
+                host:
                 (
-                  h ? host
-                  && h.host ? user
-                  && h.host.user ? pubKey
-                  && h.host.user.pubKey != null
-                  && h.host.user ? keyPath
-                  && h.host.user.keyPath != null
-                  && h.host ? isDev
-                  && h.host.isDev
-                )
-              ) common.hosts;
+                  host ? user
+                  && host.user ? pubKey
+                  && host.user.pubKey != null
+                  && host.user ? keyPath
+                  && host.user.keyPath != null
+                  && host ? isDev
+                  && host.isDev
+                );
+              masterHosts = lib.filterAttrs (n: h: isMasterHost h.host) common.hosts;
               indexed = lib.imap0 (idx: h: {
                 inherit idx;
                 key = h.host.hostPubKey;
@@ -133,6 +132,8 @@
             {
               environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY = config.host.user.pubKey;
               #environment.sessionVariables.AGENIX_REKEY_PRIMARY_IDENTITY_ONLY = true;
+
+              services.openssh.enable = lib.mkIf (isMasterHost config.host) true;
 
               age.rekey = lib.mkMerge [
                 (lib.mkIf (config.host ? hostPubKey && config.host.hostPubKey != null) {

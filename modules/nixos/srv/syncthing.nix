@@ -138,6 +138,10 @@ let
     USER="$3"
     CONFIG_DIR="$(eval echo "${cfg.configDir}/$USER/.config/syncthing")"
 
+    if [ ! -f "$CONFIG_DIR/config.xml" ]; then
+      ${pkgs.syncthing}/bin/syncthing generate --home="$CONFIG_DIR"
+    fi
+
     while [ ! -S "$SOCKET" ]; do sleep 0.2; done
 
     API_KEY="$(grep -oP '(?<=<apikey>)[^<]+' "$CONFIG_DIR/config.xml")"
@@ -400,6 +404,10 @@ in
               CONFIG_DIR="$(eval echo "${cfg.configDir}/${n}/.config/syncthing")"
               SOCKET="/run/syncthing-users/${n}.sock"
 
+              if [ ! -f "$CONFIG_DIR/config.xml" ]; then
+                ${pkgs.syncthing}/bin/syncthing generate --home="$CONFIG_DIR"
+              fi
+
               while [ ! -S "$SOCKET" ]; do sleep 0.2; done
 
               API_KEY="$(${pkgs.sudo}/bin/sudo -u "$USER" grep -oP '(?<=<apikey>)[^<]+' "$CONFIG_DIR/config.xml")"
@@ -545,6 +553,8 @@ in
         pkgs.nginxModules.lua
         pkgs.nginxModules.pam
       ];
+
+      group = "${cfg.auth.group}";
 
       appendHttpConfig = ''
         lua_package_path "${pkgs.luajitPackages.lua-resty-core}/lib/lua/5.1/?.lua;${pkgs.luajitPackages.lua-resty-lrucache}/lib/lua/5.1/?.lua;;";
