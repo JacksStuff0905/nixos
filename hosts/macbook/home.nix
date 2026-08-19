@@ -54,6 +54,15 @@ in
       enable = true;
       clients.vesktop.enable = true;
     };
+    apps.streaming.moonlight.enable = true;
+    apps.games = {
+      minecraft = {
+        enable = true;
+        launchers = {
+          prism.enable = true;
+        };
+      };
+    };
 
     other.xdg-portal.enable = true;
 
