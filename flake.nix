@@ -272,30 +272,6 @@
             inputs.nvim-nix.nixosModules.default
           ];
         };
-
-        vm-docker = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit
-              inputs
-              util
-              system
-              common
-              ;
-          };
-
-          modules = [
-            ./hosts/vm/docker/configuration.nix
-            agenixModule
-            inputs.home-manager.nixosModules.default
-            {
-              home-manager.extraSpecialArgs = {
-                inherit util system hostSpec;
-              };
-            }
-            inputs.nvim-nix.nixosModules.default
-            hostSpec
-          ];
-        };
       })
 
       # LXCs
