@@ -121,7 +121,7 @@
   };
 
   # Services
-  srv.ssh.enable = true;
+  srv.ssh.agent.enable = true;
   srv.printing.enable = true;
   srv.syncthing = {
     enable = true;

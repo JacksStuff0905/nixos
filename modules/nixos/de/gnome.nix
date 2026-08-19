@@ -17,6 +17,8 @@ in
 
     services.desktopManager.gnome.enable = true;
 
+    services.gnome.gcr-ssh-agent.enable = lib.mkForce false;
+
     xdg.portal = {
       enable = true;
       xdgOpenUsePortal = true;

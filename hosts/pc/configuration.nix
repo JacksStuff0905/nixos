@@ -99,7 +99,7 @@
   sh.zsh.enable = true;
 
   # Services
-  srv.ssh.enable = true;
+  srv.ssh.agent.enable = true;
   srv.printing.enable = true;
   srv.sunshine.enable = true;
 

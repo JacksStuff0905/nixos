@@ -1,24 +1,39 @@
-{config, lib, pkgs, ...}:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.srv.ssh;
 in
 {
   options.srv.ssh = {
-    enable = lib.mkEnableOption "Enable openssh module";
-    enableRoot = lib.mkEnableOption "Enable root";
-    ports = lib.mkOption {
-      type = lib.types.listOf lib.types.int;
-      default = [22];
+    server = {
+      enable = lib.mkEnableOption "Enable openssh module";
+      enableRoot = lib.mkEnableOption "Enable root";
+      ports = lib.mkOption {
+        type = lib.types.listOf lib.types.int;
+        default = [ 22 ];
+      };
+    };
+    agent = {
+      enable = lib.mkEnableOption "ssh-agent";
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    services.openssh = {
-      enable = true;
-      ports = cfg.ports;
-      settings.PermitRootLogin = if cfg.enableRoot then "yes" else "no";
-    };
-    
-    networking.firewall.allowedTCPPorts = cfg.ports;
-  };
+  config = lib.mkMerge [
+    (lib.mkIf cfg.server.enable {
+      services.openssh = {
+        enable = true;
+        ports = cfg.server.ports;
+        settings.PermitRootLogin = if cfg.server.enableRoot then "yes" else "no";
+      };
+
+      networking.firewall.allowedTCPPorts = cfg.server.ports;
+    })
+    (lib.mkIf cfg.agent.enable {
+      programs.ssh.startAgent = true;
+    })
+  ];
 }
