@@ -85,6 +85,7 @@ in
 
     # Virtualization
     tools.virtualization.docker.enable = true;
+    tools.virtualization.distrobox.enable = true;
 
     tools.editors.neovim.enable = true;
 
