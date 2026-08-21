@@ -41,6 +41,8 @@
     ];
   };
 
+  nixpkgs.config.rocmSupport = true;
+
   swapDevices = [
     {
       device = "/.swapfile";
