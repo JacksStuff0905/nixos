@@ -36,6 +36,13 @@
               "192.168.100.16/32"
             ];
           }
+          {
+            # Laptop 2
+            publicKey = "BjYQiwSZkeCU5kAaDYCrdJU5dwizpNvNBvofpQEl+hc=";
+            allowedIPs = [
+              "192.168.100.17/32"
+            ];
+          }
         ];
       };
     };
