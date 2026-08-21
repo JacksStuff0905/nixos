@@ -81,6 +81,7 @@ in
     tools.cli.zoxide.enable = true;
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
+    tools.cli.btop.enable = true;
 
     # Virtualization
     tools.virtualization.docker.enable = true;

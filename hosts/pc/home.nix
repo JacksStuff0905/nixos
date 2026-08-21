@@ -85,6 +85,7 @@ in
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
     tools.cli.dev-flake-init.enable = true;
+    tools.cli.btop.enable = true;
 
     # Virtualization
     tools.virtualization.docker.enable = true;
