@@ -16,6 +16,7 @@ in
   config = lib.mkIf config.apps.launchers.games.lutris.enable {
     programs.lutris = {
       enable = true;
+      extraPackages = [ pkgs.mangohud ];
       protonPackages = [
         pkgs.proton-ge-bin
       ];
