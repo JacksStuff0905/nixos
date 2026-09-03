@@ -319,6 +319,7 @@ in
             Redhat = "󱄛";
             RedHatEnterprise = "󱄛";
             Pop = "";
+            NixOS = "";
           };
 
           username = {
