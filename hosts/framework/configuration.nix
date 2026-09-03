@@ -44,8 +44,8 @@
   de.plasma.enable = true;
   de.hyprland.enable = true;
   de.dwl.enable = false;
-  #dm.gdm.enable = true;
-  dm.sddm.enable = true;
+  dm.gdm.enable = true;
+  #dm.sddm.enable = true;
 
   # Other
   other.apps.steam.enable = true;
@@ -174,7 +174,15 @@
   ];
 
   # Use beta cache
-  nix.settings.substituters = [ "https://aseipp-nix-cache.global.ssl.fastly.net" ];
+  nix.settings = {
+    substituters = [
+      "https://nix-community.cachix.org"
+      "https://cache.nixos.org"
+    ];
+    trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+  };
 
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
@@ -204,7 +212,7 @@
   console.keyMap = "pl2";
 
   # Garbage collect
-  nix.gc.automatic = true;
+  nix.gc.automatic = false;
 
   # HM integration
   home-manager = {
