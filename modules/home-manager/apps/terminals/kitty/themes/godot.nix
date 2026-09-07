@@ -5,6 +5,7 @@
         selection_foreground = "#CDCFD2";
         selection_background = "#403D3D";
 
+        background_opacity = 0.9;
 
         #: Cursor colors
         cursor = "#F8F8F0";

@@ -26,6 +26,7 @@ in
     };
 
     theme = {
+      enable = lib.mkEnableOption "theme override";
       name = lib.mkOption {
         type = lib.types.str;
         default = config.themes.theme.name;
@@ -47,7 +48,7 @@ in
     profile = cfg.profile;
 
     themes = {
-      enable = true;
+      enable = cfg.theme.enable;
 
       theme = {
         name = cfg.theme.name;
