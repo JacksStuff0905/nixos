@@ -7,7 +7,7 @@
 
     networking = {
       ip = "192.168.10.127/24";
-      publicServices."[\w\\.]*films" = {
+      publicServices.films = {
         proto = "http";
         port = 80;
       };
