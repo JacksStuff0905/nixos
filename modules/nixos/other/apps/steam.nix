@@ -17,12 +17,21 @@ in
     programs = {
       gamescope = {
         enable = true;
-        capSysNice = true;
+        #capSysNice = true;
       };
       steam = {
         enable = true;
         gamescopeSession.enable = true;
       };
     };
+
+    # Temp fix
+    services.seatd.enable = true;
+
+    users.users."${config.host.user.name}".extraGroups = [
+      "video"
+      "input"
+      "audio"
+    ];
   };
 }
