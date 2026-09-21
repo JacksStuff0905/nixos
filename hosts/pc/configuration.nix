@@ -92,7 +92,6 @@
       users = [ "${config.host.user.name}" ];
     };
   };
-  hardware.nvidia-container-toolkit.enable = true;
 
   # Shell config
   sh.aliases.enable = true;
