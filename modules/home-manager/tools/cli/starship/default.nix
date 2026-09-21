@@ -32,6 +32,7 @@ in
     enable = lib.mkEnableOption "Enable starship module";
 
     theme = {
+      enable = lib.mkEnableOption "theme override";
       name = lib.mkOption {
         type = lib.types.enum available-themes;
         default = config.themes.theme.name;
@@ -77,7 +78,9 @@ in
         ];
 
         languages = (builtins.map (lang: "$" + lang) (builtins.attrNames cfg.elements.languages.symbols));
-        environments  = (builtins.map (env: "$" + env) (builtins.attrNames cfg.elements.environments.formats));
+        environments = (
+          builtins.map (env: "$" + env) (builtins.attrNames cfg.elements.environments.formats)
+        );
       };
     };
 
@@ -283,12 +286,13 @@ in
       enableFishIntegration = config.programs.fish.enable;
 
       settings = lib.mkMerge [
-        {
-          "$schema" = "https://starship.rs/config-schema.json";
-
+        (lib.mkIf cfg.theme.enable {
           palette = "${cfg.theme.name}";
 
           palettes."${cfg.theme.name}" = current-theme;
+        })
+        {
+          "$schema" = "https://starship.rs/config-schema.json";
 
           format = lib.concatStrings cfg.format;
 

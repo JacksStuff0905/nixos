@@ -12,6 +12,10 @@ in
     enable = lib.mkEnableOption "Enable gnome module";
   };
 
+  # FIX ICONS AFTER PLASMA:
+  # dconf reset /org/gnome/desktop/interface/cursor-theme
+  # dconf reset /org/gnome/desktop/interface/icon-theme
+
   config = lib.mkIf cfg.enable {
     services.xserver.enable = true;
 

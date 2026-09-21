@@ -1,89 +1,100 @@
-{pkgs, config, lib, ...}:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 
 let
-        cfg = config.apps.terminals.kitty;
-        font =
-                if (cfg.font-override.enable) then
-                        cfg.font-override.font
-                else
-                        "monospace";
+  cfg = config.apps.terminals.kitty;
 
-        available-themes = lib.mapAttrsToList (name: type: lib.removeSuffix ".nix" name) (builtins.readDir ./themes);
+  available-themes = lib.mapAttrsToList (name: type: lib.removeSuffix ".nix" name) (
+    builtins.readDir ./themes
+  );
 
-        current-theme = import (./themes + ("/" + cfg.theme.name + ".nix"));
+  current-theme = import (./themes + ("/" + cfg.theme.name + ".nix"));
 in
 {
-	options.apps.terminals.kitty = {
-		enable = lib.mkEnableOption "Enable kitty module";
-                font-override = {
-                        enable = lib.mkEnableOption "Enable font override";
-                        font = lib.mkOption {
-                                type = lib.types.str;
-                                default = "Caskaydia Cove Nerd Font";
-                        };
-                };
+  options.apps.terminals.kitty = {
+    enable = lib.mkEnableOption "Enable kitty module";
+    font-override = {
+      enable = lib.mkEnableOption "Enable font override";
+      font = lib.mkOption {
+        type = lib.types.str;
+        default = "Caskaydia Cove Nerd Font";
+      };
+    };
 
-                theme = {
-                        name = lib.mkOption {
-                                type = lib.types.enum available-themes;
-                                default = config.themes.theme.name;
-                        };
-                        style = lib.mkOption {
-                                type = lib.types.enum ["light" "dark"];
-                                default = config.themes.theme.style;
-                        };
-                };
+    theme = {
+      enable = lib.mkEnableOption "theme override";
+      name = lib.mkOption {
+        type = lib.types.enum available-themes;
+        default = config.themes.theme.name;
+      };
+      style = lib.mkOption {
+        type = lib.types.enum [
+          "light"
+          "dark"
+        ];
+        default = config.themes.theme.style;
+      };
+    };
 
-                font-size = lib.mkOption {
-                        type = lib.types.int;
-                        default = 14;
-                };
+    font-size = lib.mkOption {
+      type = lib.types.int;
+      default = 14;
+    };
 
-                settings = lib.mkOption {
-                        type = lib.types.attrs;
-                        default = {
-				scrollback_lines = 2000;
+    settings = lib.mkOption {
+      type = lib.types.attrs;
+      default = {
+        scrollback_lines = 2000;
 
-				background_opacity = 0.9;
+        confirm_os_window_close = 0;
 
-				confirm_os_window_close = 0;
+        # Hide mouse when typing
+        mouse_hide_wait = -3.0;
 
-				# Hide mouse when typing
-				mouse_hide_wait	= -3.0;
+        # Tab bar config
+        tab_bar_edge = "bottom";
 
+        #: OS Window titlebar colors
+        wayland_titlebar_color = "system";
+        macos_titlebar_color = "system";
 
-				# Tab bar config
-				tab_bar_edge = "bottom";
+        # Tab bar config
+        tab_bar_style = "separator";
+        #tab_powerline_style slanted
+        tab_separator = " | ";
+      };
+    };
 
-			};
-                };
+    keymaps = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {
+        "ctrl+shift+l" = "next_tab";
+        "ctrl+shift+h" = "previous_tab";
+        "ctrl+shift+n" = "new_tab";
+        "ctrl+shift+k" = "move_tab_forward";
+        "ctrl+shift+j" = "move_tab_backward";
+      };
+    };
+  };
 
-                keymaps = lib.mkOption {
-                        type = lib.types.attrsOf lib.types.str;
-                        default = {
-                                "ctrl+shift+l" = "next_tab";
-                                "ctrl+shift+h" = "previous_tab";
-                                "ctrl+shift+n" = "new_tab";
-                                "ctrl+shift+k" = "move_tab_forward";
-                                "ctrl+shift+j" = "move_tab_backward";
-                        };
-                };
-	};
+  config = lib.mkIf config.apps.terminals.kitty.enable {
+    programs.kitty = {
+      enable = true;
+      settings = lib.mkMerge [
+        cfg.settings
+        (lib.mkIf cfg.theme.enable current-theme)
+      ];
 
-	config = lib.mkIf config.apps.terminals.kitty.enable {
-		programs.kitty = {
-			enable = true;
-			settings = lib.mkMerge [
-                                cfg.settings
-                                current-theme
-                        ];
+      font = lib.mkIf cfg.font-override.enable {
+        name = cfg.font-override.font;
+        size = cfg.font-size;
+      };
 
-                        font = {
-                                name = font;
-				size = cfg.font-size;
-                        };
-
-			keybindings = cfg.keymaps;
-		};
-	};
+      keybindings = cfg.keymaps;
+    };
+  };
 }

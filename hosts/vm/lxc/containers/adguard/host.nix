@@ -1,13 +1,13 @@
 { config, ... }:
 {
   host = {
-    hostName = "ct-adguard2";
+    hostName = "ct-adguard";
 
-    hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKYZbo/H8gJY4/PzSHVcuw1PYnOh1Nlzrw1Jjn8v9ixP";
+    hostPubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZm2hVrbbTMv7yDYw6Yohh1cCGCiRv7ObVWvtFHzHDQ";
 
     networking = {
-      ip = "192.168.16.5/24";
-      mac = "BC:24:11:5F:2B:DD";
+      ip = "192.168.10.5/24";
+      mac = "bc:24:11:be:7b:ae";
       publicServices.dns = {
         proto = "http";
         port = 80;

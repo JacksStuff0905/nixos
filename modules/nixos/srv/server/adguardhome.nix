@@ -2,6 +2,8 @@
   config,
   lib,
   pkgs,
+  common,
+  util,
   ...
 }:
 let
@@ -15,6 +17,24 @@ let
     pro = "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.txt";
     pro-plus = "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.plus.txt";
   };
+
+  hostRewrites =
+    if cfg.rewrites.includeHosts then
+      builtins.foldl' (sum: srv: sum // srv) { } (
+        lib.mapAttrsToList (
+          n: h:
+          (builtins.mapAttrs (
+            name: serv:
+            serv
+            // {
+              domain = h.host.networking.domain;
+              ip = h.host.networking.ip;
+            }
+          ) h.host.networking.publicServices)
+        ) common.hosts
+      )
+    else
+      { };
 in
 {
   options.srv.server."${name}" = {
@@ -29,10 +49,16 @@ in
       default = [ "8.8.8.8" ];
     };
 
-    hosts = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = { };
-      description = "{name = ip;}";
+    rewrites = {
+      includeHosts = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+      };
+      extra = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = { };
+        description = "{name = ip;}";
+      };
     };
 
     lists = {
@@ -80,10 +106,19 @@ in
             "1.1.1.1"
           ];
 
-          rewrites = lib.mapAttrsToList (name: value: {
-            domain = "${name}.${cfg.domain}";
-            answer = "${value}";
-          }) cfg.hosts;
+          rewrites =
+            lib.mapAttrsToList
+              (name: value: {
+                domain = "${name}";
+                answer = "${value}";
+              })
+              (
+                (lib.mapAttrs' (n: v: {
+                  name = "host.${n}.${v.domain}";
+                  value = (util.tools.ip-nix.splitIp v.ip).ip;
+                }) hostRewrites)
+                // cfg.rewrites.extra
+              );
 
           upstream_dns = cfg.upstreams;
           #"127.0.0.1:5335"

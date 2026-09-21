@@ -40,12 +40,11 @@
   dev-utils.neovim.enable = false;
 
   # GUI
-  #de.gnome.enable = true;
-  de.plasma.enable = true;
+  de.gnome.enable = true;
+  #de.plasma.enable = true;
   de.hyprland.enable = true;
   de.dwl.enable = false;
   dm.gdm.enable = true;
-  #dm.sddm.enable = true;
 
   # Other
   other.apps.steam.enable = true;
@@ -69,9 +68,16 @@
   services.fprintd.enable = true;
 
   # Virtualization
-  virtualization.docker = {
-    enable = true;
-    users = [ "${config.host.user.name}" ];
+  virtualization = {
+    docker = {
+      enable = true;
+      users = [ "${config.host.user.name}" ];
+    };
+
+    gnome-boxes = {
+      enable = true;
+      users = [ "${config.host.user.name}" ];
+    };
   };
 
   # Shell config
