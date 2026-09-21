@@ -383,11 +383,13 @@ in
               "nss-user-lookup.target"
               "network-online.target"
               "syncthing-user@${n}.service"
+              "systemd-tmpfiles-setup.service"
             ];
             wants = [
               "nss-user-lookup.target"
               "network-online.target"
               "syncthing-user@${n}.service"
+              "systemd-tmpfiles-setup.service"
             ];
 
             wantedBy = [ "multi-user.target" ];
@@ -450,7 +452,10 @@ in
       {
         "syncthing-user@" = {
           description = "Dynamic Syncthing Instance for %i";
-          after = [ "network.target" ];
+          after = [
+            "network.target"
+            "systemd-tmpfiles-setup.service"
+          ];
           serviceConfig = {
             User = "%i";
             Group = cfg.auth.group;
