@@ -105,6 +105,8 @@
   srv.syncthing = {
     enable = true;
 
+    auth.applyGroup = true;
+
     users."${config.host.user.name}" = {
       id = "5XL6TVD-YLV522Y-HF3QXXN-X6NVRC7-E7SBMBY-4OAADUC-BHPR6KM-5YWUMQF";
 
