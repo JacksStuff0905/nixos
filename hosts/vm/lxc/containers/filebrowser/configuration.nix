@@ -37,6 +37,12 @@ in
       users.jacek = {
         id = "SZK7J52-D7XBZ5P-HI2DVH2-RAHCOYF-SQOWB3Z-BOGKG3U-DMQIVTS-H4IARQK";
 
+        devices.extraDevices = {
+          "jacek S21FE" = {
+            id = "MVRIPLU-SETOKVI-BEDFUGD-RU4BQRE-H3LCJTZ-6VLJSRD-ETOA2U2-JEYHFAS";
+          };
+        };
+
         folders = {
           projects = {
             enable = true;
@@ -44,6 +50,7 @@ in
           };
 
           secret.enable = true;
+          secret.devices.extraDevices = [ "jacek S21FE" ];
         };
 
         keySecret = ./secrets/syncthing-key.age;
