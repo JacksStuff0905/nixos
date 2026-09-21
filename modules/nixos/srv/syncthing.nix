@@ -35,13 +35,14 @@ let
     ) folders;
 
   hostDevices = builtins.foldl' (sum: dev: sum // dev) { } (
-    lib.mapAttrsToList (
+    (lib.mapAttrsToList (
       n: h:
       lib.mapAttrs' (u: v: {
         name = "${u}@${h.host.hostName or n}";
         value.id = v.id;
       }) (lib.filterAttrs (n: u: u.id != null) h.srv.syncthing.users)
-    ) (lib.filterAttrs (n: h: h.srv.syncthing.enable && h != config) common.nixosHosts)
+    ) (lib.filterAttrs (n: h: h.srv.syncthing.enable && h != config) common.nixosHosts))
+    ++ (lib.mapAttrsToList (un: u: u.devices.extraDevices) cfg.users)
   );
 
   folderHosts =
@@ -383,11 +384,13 @@ in
               "nss-user-lookup.target"
               "network-online.target"
               "syncthing-user@${n}.service"
+              "systemd-tmpfiles-setup.service"
             ];
             wants = [
               "nss-user-lookup.target"
               "network-online.target"
               "syncthing-user@${n}.service"
+              "systemd-tmpfiles-setup.service"
             ];
 
             wantedBy = [ "multi-user.target" ];
@@ -450,7 +453,10 @@ in
       {
         "syncthing-user@" = {
           description = "Dynamic Syncthing Instance for %i";
-          after = [ "network.target" ];
+          after = [
+            "network.target"
+            "systemd-tmpfiles-setup.service"
+          ];
           serviceConfig = {
             User = "%i";
             Group = cfg.auth.group;
