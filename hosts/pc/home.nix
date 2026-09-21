@@ -43,7 +43,7 @@ in
     apps.terminals.kitty.enable = true;
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;
-    apps.browsers.chromium.enable = true;
+    #apps.browsers.chromium.enable = true;
     apps.launchers = {
       games = {
         lutris.enable = true;
