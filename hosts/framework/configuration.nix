@@ -66,6 +66,7 @@
 
   # Fingerprint
   services.fprintd.enable = true;
+  services.framework-control.enable = true;
 
   # Virtualization
   virtualization = {
