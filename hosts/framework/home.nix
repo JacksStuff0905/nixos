@@ -48,7 +48,7 @@ in
     apps.browsers.firefox.enable = true;
     apps.launchers = {
       games = {
-        lutris.enable = true;
+        heroic.enable = true;
         steam.enable = true;
       };
       bottles.enable = true;
