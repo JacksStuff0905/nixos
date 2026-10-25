@@ -48,7 +48,7 @@ in
     apps.browsers.firefox.enable = true;
     apps.launchers = {
       games = {
-        lutris.enable = true;
+        heroic.enable = true;
         steam.enable = true;
       };
       bottles.enable = true;
@@ -91,6 +91,7 @@ in
     tools.cli.zoxide.enable = true;
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
+    tools.cli.nd.enable = true;
     tools.cli.btop = {
       enable = true;
       enableRocm = true;

@@ -94,6 +94,7 @@ in
     tools.cli.zoxide.enable = true;
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
+    tools.cli.nd.enable = true;
     tools.cli.dev-flake-init.enable = true;
     tools.cli.btop.enable = true;
 
