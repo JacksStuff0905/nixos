@@ -40,7 +40,10 @@ in
     apps.game-engines.godot.enable = false; # Godot will be enabled in project shells
     apps.media.music.spotify.enable = true;
     apps.media.calibre.enable = true;
-    apps.terminals.kitty.enable = true;
+    apps.terminals.kitty = {
+      enable = true;
+      theme.enable = true;
+    };
     apps.secrets.keepass.enable = true;
     apps.browsers.firefox.enable = true;
     #apps.browsers.chromium.enable = true;
@@ -73,14 +76,21 @@ in
     fonts.enable = true;
 
     # Themes
-    themes.theme = {
-      name = "godot";
-      style = "dark";
+    themes = {
+      enable = true;
+      stylix = false;
+      theme = {
+        name = "godot";
+        style = "dark";
+      };
     };
 
     # Tools
     tools.cli.fastfetch.enable = true;
-    tools.cli.starship.enable = true;
+    tools.cli.starship = {
+      enable = true;
+      theme.enable = true;
+    };
     tools.cli.zoxide.enable = true;
     tools.cli.git.enable = true;
     tools.cli.nrun.enable = true;
@@ -91,7 +101,10 @@ in
     # Virtualization
     tools.virtualization.docker.enable = true;
 
-    tools.editors.neovim.enable = true;
+    tools.editors.neovim = {
+      enable = true;
+      theme.enable = true;
+    };
 
     # Allow unfree packages
     nixpkgs.config = {
