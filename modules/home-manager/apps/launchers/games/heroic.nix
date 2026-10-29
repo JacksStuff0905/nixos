@@ -16,6 +16,7 @@ in
   config = lib.mkIf config.apps.launchers.games.heroic.enable {
     home.packages = [
       pkgs.heroic
+      pkgs.mangohud
     ];
   };
 }
