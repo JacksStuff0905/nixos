@@ -47,4 +47,14 @@ in
     isProduction = true;
     isServer = true;
   };
+
+  PSQL1 = {
+    networking = {
+      ip = "192.168.10.40/24";
+      mac = "BC:24:11:6C:21:26";
+    };
+
+    isProduction = true;
+    isServer = true;
+  };
 }
