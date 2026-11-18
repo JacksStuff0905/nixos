@@ -88,13 +88,11 @@ in
 
     services.adguardhome = {
       enable = true;
-      host = "0.0.0.0";
-      port = 80;
       openFirewall = true;
       mutableSettings = false;
 
       settings = {
-        schema_version = 20;
+        schema_version = 23;
 
         http = {
           address = "0.0.0.0:3000";
