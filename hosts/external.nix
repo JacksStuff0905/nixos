@@ -58,4 +58,27 @@ in
     isProduction = true;
     isServer = true;
   };
+
+  zabbix = {
+    networking = {
+      ip = "192.168.10.35/24";
+      mac = "BC:24:11:32:17:DC";
+      publicServices.mon = {
+        proto = "http";
+        port = 8080;
+
+        middlewares = [ "auth.srv.lan" ];
+
+        access = [
+          {
+            policy = "one_factor";
+            subject = "group:netadmins";
+          }
+        ];
+      };
+    };
+
+    isProduction = true;
+    isServer = true;
+  };
 }
