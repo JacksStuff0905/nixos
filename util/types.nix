@@ -23,15 +23,18 @@ let
       options = {
         port = mkOption {
           type = int;
+          default = -1;
         };
 
         proto = mkOption {
           type = enum [
+            ""
             "http"
             "https"
             "tcp"
             "tcp/udp"
           ];
+          default = "";
         };
 
         middleware = {

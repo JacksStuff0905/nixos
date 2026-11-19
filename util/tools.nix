@@ -12,7 +12,9 @@ let
     h:
     (builtins.mapAttrs (
       n: s:
-      s
+      {
+        proto = "";
+      } // s
       // {
         domain = h.host.networking.domain;
         ip = (ip-nix.splitIp h.host.networking.ip).ip;
