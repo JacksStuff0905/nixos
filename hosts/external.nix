@@ -52,6 +52,7 @@ in
     networking = {
       ip = "192.168.10.40/24";
       mac = "BC:24:11:6C:21:26";
+      publicServices.psql = {};
     };
 
     isProduction = true;
